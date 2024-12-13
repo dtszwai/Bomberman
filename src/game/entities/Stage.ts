@@ -110,4 +110,16 @@ export class Stage {
   public draw(context: CanvasRenderingContext2D, camera: Camera) {
     context.drawImage(this.stageCanvas, -camera.position.x, -camera.position.y);
   }
+
+  /**
+   * Serializes the current state of the stage.
+   *
+   * @returns The serialized stage state.
+   */
+  public serialize() {
+    return {
+      tileMap: this.tileMap,
+      collisionMap: this.collisionMap,
+    };
+  }
 }

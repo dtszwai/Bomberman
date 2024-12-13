@@ -125,4 +125,21 @@ export class BattleScene implements Scene {
     this.bombSystem.draw(context, camera);
     this.players.forEach((player) => player.draw(context, camera));
   }
+
+  /**
+   * Serializes the current state of the battle scene.
+   */
+  public serialize() {
+    return {
+      stage: this.stage.serialize(),
+      hud: this.hud.serialize(),
+      players: this.players.map((player) => player.serialize()),
+      powerups: this.powerupSystem.serialize(),
+      blocks: this.blockSystem.serialize(),
+      bombs: this.bombSystem.serialize(),
+      bombSystem: this.bombSystem.serialize(),
+      powerupSystem: this.powerupSystem.serialize(),
+      blockSystem: this.blockSystem.serialize(),
+    };
+  }
 }

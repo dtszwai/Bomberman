@@ -68,4 +68,15 @@ export class DestructibleBlock {
       TILE_SIZE
     );
   }
+
+  /**
+   * Serializes the destructible block's current state.
+   */
+  public serialize() {
+    return {
+      cell: this.cell,
+      animationFrameIndex: this.animationFrameIndex,
+      nextAnimationUpdate: this.nextAnimationUpdate,
+    };
+  }
 }

@@ -81,4 +81,16 @@ export class Bomb {
       TILE_SIZE
     );
   }
+
+  /**
+   * Serializes the bomb's current state.
+   */
+  public serialize() {
+    return {
+      cell: this.cell,
+      animationFrameIndex: this.animationFrameIndex,
+      nextAnimationUpdate: this.nextAnimationUpdate,
+      fuseExpiration: this.fuseExpiration,
+    };
+  }
 }

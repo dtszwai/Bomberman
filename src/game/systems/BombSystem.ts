@@ -228,4 +228,12 @@ export class BombSystem {
   public draw(context: CanvasRenderingContext2D, camera: Camera) {
     this.bombs.forEach((bomb) => bomb.draw(context, camera));
   }
+
+  /**
+   * Serializes the current state of all active bombs
+   * and bomb explosions in the system.
+   */
+  public serialize() {
+    return { bombs: this.bombs.map((bomb) => bomb.serialize()) };
+  }
 }

@@ -161,4 +161,17 @@ export class BlockSystem {
   public draw(context: CanvasRenderingContext2D, camera: Camera) {
     this.blocks.forEach((block) => block.entity?.draw(context, camera));
   }
+
+  /**
+   * Serializes the current state of all active Block entities.
+   */
+  public serialize() {
+    return {
+      blocks: this.blocks.map((block) => ({
+        cell: block.cell,
+        powerup: block.powerup,
+        entity: block.entity?.serialize(),
+      })),
+    };
+  }
 }

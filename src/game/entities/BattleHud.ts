@@ -88,4 +88,14 @@ export class BattleHud {
       drawText(context, winCount.toString(), xPosition, 8);
     });
   }
+
+  /**
+   * Serializes the current state of the HUD.
+   */
+  public serialize() {
+    return {
+      clock: this.clock,
+      nextAnimationUpdate: this.nextAnimationUpdate,
+    };
+  }
 }

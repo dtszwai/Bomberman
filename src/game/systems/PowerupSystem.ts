@@ -127,4 +127,20 @@ export class PowerupSystem {
       );
     }
   }
+
+  /**
+   * Serializes the current state of the PowerupSystem.
+   *
+   * @returns The serialized power-up state.
+   */
+  serialize() {
+    return {
+      powerups: this.powerups.map((powerup) => ({
+        cell: powerup.cell,
+        type: powerup.type,
+      })),
+      animationFrameIndex: this.animationFrameIndex,
+      nextAnimationUpdate: this.nextAnimationUpdate,
+    };
+  }
 }

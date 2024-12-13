@@ -112,4 +112,16 @@ export class BombExplosion {
       );
     }
   }
+
+  /**
+   * Serializes the bomb explosion's current state.
+   */
+  public serialize() {
+    return {
+      cell: this.cell,
+      animationFrameIndex: this.animationFrameIndex,
+      nextAnimationUpdate: this.nextAnimationUpdate,
+      flameCells: this.flameCells,
+    };
+  }
 }

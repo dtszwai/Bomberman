@@ -460,4 +460,23 @@ export class Bomberman {
     width: HALF_TILE_SIZE,
     height: HALF_TILE_SIZE,
   });
+
+  /**
+   * Serializes the current state of the Bomberman.
+   *
+   * @returns The serialized Bomberman state.
+   */
+  public serialize = () => ({
+    id: this.id,
+    position: this.position,
+    currentState: this.currentState.type,
+    velocity: this.velocity,
+    direction: this.direction,
+    bombAmount: this.bombAmount,
+    bombStrength: this.bombStrength,
+    availableBombs: this.availableBombs,
+    anmiationFrameIndex: this.animationFrameIndex,
+    nextAnimationUpdate: this.nextAnimationUpdate,
+    speedMultiplier: this.speedMultiplier,
+  });
 }
