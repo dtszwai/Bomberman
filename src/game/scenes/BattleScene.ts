@@ -134,12 +134,10 @@ export class BattleScene implements Scene {
       stage: this.stage.serialize(),
       hud: this.hud.serialize(),
       players: this.players.map((player) => player.serialize()),
+      blocks: this.blockSystem.serialize().blocks,
+      bombs: this.bombSystem.serialize().bombs,
+      explosions: this.bombSystem.serialize().bombExplosions,
       powerups: this.powerupSystem.serialize(),
-      blocks: this.blockSystem.serialize(),
-      bombs: this.bombSystem.serialize(),
-      bombSystem: this.bombSystem.serialize(),
-      powerupSystem: this.powerupSystem.serialize(),
-      blockSystem: this.blockSystem.serialize(),
     };
   }
 }

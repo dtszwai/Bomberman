@@ -76,7 +76,6 @@ export class DestructibleBlock {
     return {
       cell: this.cell,
       animationFrameIndex: this.animationFrameIndex,
-      nextAnimationUpdate: this.nextAnimationUpdate,
     };
   }
 }

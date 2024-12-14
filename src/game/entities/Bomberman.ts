@@ -475,8 +475,9 @@ export class Bomberman {
     bombAmount: this.bombAmount,
     bombStrength: this.bombStrength,
     availableBombs: this.availableBombs,
-    anmiationFrameIndex: this.animationFrameIndex,
+    animationFrameIndex: this.animationFrameIndex,
     nextAnimationUpdate: this.nextAnimationUpdate,
     speedMultiplier: this.speedMultiplier,
+    animation: this.animation,
   });
 }

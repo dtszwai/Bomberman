@@ -234,6 +234,18 @@ export class BombSystem {
    * and bomb explosions in the system.
    */
   public serialize() {
-    return { bombs: this.bombs.map((bomb) => bomb.serialize()) };
+    const bombs = [];
+    const bombExplosions = [];
+
+    for (const bomb of this.bombs) {
+      const serialized = bomb.serialize();
+      if ("fuseExpiration" in serialized) {
+        bombs.push(serialized);
+      } else if ("flameCells" in serialized) {
+        bombExplosions.push(serialized);
+      }
+    }
+
+    return { bombs, bombExplosions };
   }
 }

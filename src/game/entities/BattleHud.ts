@@ -95,7 +95,7 @@ export class BattleHud {
   public serialize() {
     return {
       clock: this.clock,
-      nextAnimationUpdate: this.nextAnimationUpdate,
+      state: this.state,
     };
   }
 }
