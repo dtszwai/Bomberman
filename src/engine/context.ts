@@ -21,7 +21,10 @@ export function createCanvasContext(
     throw new Error("Unable to find canvas context");
   }
 
-  return context;
+  return {
+    canvas,
+    context,
+  };
 }
 
 export function removeCanvas(container: HTMLElement) {

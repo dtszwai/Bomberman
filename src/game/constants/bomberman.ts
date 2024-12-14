@@ -156,7 +156,7 @@ export const frames: Record<FrameKey, FrameData> = {
    ============================ */
 
 // Type for animation frames ensuring consistency
-type AnimationFrame = [FrameKey, number];
+export type AnimationFrame = [FrameKey, number];
 
 // Animations mapped by state and direction
 export const animations = {
@@ -184,8 +184,8 @@ export const animations = {
       ["move-down-1", 8],
       ["idle-down", 8],
       ["move-down-2", 8],
-    ] as AnimationFrame[],
-  },
+    ],
+  } as Record<Direction, AnimationFrame[]>,
   deathAnimation: [
     ["death-1", 8],
     ["death-2", 8],
@@ -202,7 +202,7 @@ export const animations = {
     ["death-9", 8],
     ["death-9", -1],
   ] as AnimationFrame[],
-} as const;
+};
 
 // Frame data organized by Bomberman color
 export const bombermanFrames: Record<BombermanColor, [FrameKey, FrameData][]> =

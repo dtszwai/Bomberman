@@ -11,12 +11,12 @@ export type Rect = { x: number; y: number; width: number; height: number };
 
 export type Tile = { row: number; column: number };
 
-export type FrameDimensions = readonly [number, number, number, number];
-export type FrameOrigin = readonly [number, number];
-export type FrameData = readonly [FrameDimensions, FrameOrigin];
+export type FrameDimensions = [number, number, number, number];
+export type FrameOrigin = [number, number];
+export type FrameData = [FrameDimensions, FrameOrigin];
 export type FrameDataMap = Map<string, FrameData>;
 
-export type AnimationFrame = readonly [string, number];
+export type AnimationFrame = [string, number];
 
 export type onSceneEndHandler<T> = (newScene: ValueOf<T>) => void;
 

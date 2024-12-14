@@ -14,7 +14,7 @@ import {
   unregisterKeyEvents,
 } from "@/engine/inputHandler";
 import { GameState } from "./types";
-import { GameTime, Scene } from "@/engine/types";
+import { GameTime } from "@/engine/types";
 
 /**
  * Class representing the main Bomberman game.
@@ -22,7 +22,7 @@ import { GameTime, Scene } from "@/engine/types";
  */
 export class BombermanGame {
   /** Current active scene */
-  private scene: Scene;
+  private scene: BattleScene;
   /** Canvas rendering context */
   private context: CanvasRenderingContext2D;
   /** Camera handling viewport transformations */
@@ -51,7 +51,7 @@ export class BombermanGame {
       wins: new Array(NUM_PLAYERS).fill(0),
       maxWins: MAX_WINS,
     };
-    this.context = createCanvasContext(container, width, height);
+    this.context = createCanvasContext(container, width, height).context;
     this.camera = new Camera(0, 0);
     this.scene = this.createBattleScene(-1);
   }
@@ -69,7 +69,7 @@ export class BombermanGame {
     this.frameTime.previous = currentTime;
 
     // Update and render the scene
-    this.scene.update(this.frameTime, this.context, this.camera);
+    this.scene.update(this.frameTime);
     this.scene.draw(this.context, this.camera);
   };
 
@@ -79,7 +79,7 @@ export class BombermanGame {
    * @param winnerId - The ID of the player who won the previous battle. Use -1 if no winner.
    * @returns A new instance of BattleScene.
    */
-  private createBattleScene = (winnerId: number): Scene => {
+  private createBattleScene = (winnerId: number) => {
     if (winnerId >= 0) this.gameState.wins[winnerId]++;
 
     return new BattleScene(
