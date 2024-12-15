@@ -1,4 +1,3 @@
-export * from "./BattleHud";
 export * from "./Block";
 export * from "./Bomb";
 export * from "./Bomberman";

@@ -1,6 +1,5 @@
 import { GameTime } from "../engine/types";
 import { Stage } from "../entities/Stage";
-import { BattleHud } from "../entities/BattleHud";
 import { Bomberman } from "../entities/Bomberman";
 import { BombSystem } from "../systems/BombSystem";
 import { BlockSystem } from "../systems/BlockSystem";
@@ -15,8 +14,6 @@ import type { GameState } from "../types";
 export class BattleScene {
   /** The game stage containing the map and related data */
   private stage: Stage;
-  /** Heads-Up Display managing UI elements like scores and timers */
-  private hud: BattleHud;
   /** System managing power-ups within the game */
   private powerupSystem: PowerupSystem;
   /** System managing destructible blocks */
@@ -28,17 +25,10 @@ export class BattleScene {
 
   /**
    * Creates an instance of BattleScene.
-   *
-   * @param time - The current game time.
    * @param state - The current state of the game, including player scores.
    * @param onEnd - Callback invoked when the battle ends, receiving the winner's ID.
    */
-  constructor(
-    time: GameTime,
-    state: GameState,
-    private onEnd: (winnerId: number) => void
-  ) {
-    this.hud = new BattleHud(time, state);
+  constructor(state: GameState, private onEnd: (winnerId: number) => void) {
     this.stage = new Stage();
     this.powerupSystem = new PowerupSystem(this.players);
     this.blockSystem = new BlockSystem(
@@ -99,7 +89,6 @@ export class BattleScene {
    * Updates all game systems and players.
    */
   public update(time: GameTime) {
-    this.hud.update(time);
     this.blockSystem.update(time);
     this.bombSystem.update(time);
     this.powerupSystem.update(time);
@@ -115,7 +104,6 @@ export class BattleScene {
   public serialize() {
     return {
       stage: this.stage.serialize(),
-      hud: this.hud.serialize(),
       players: this.players.map((player) => player.serialize()),
       blocks: this.blockSystem.serialize().blocks,
       bombs: this.bombSystem.serialize().bombs,

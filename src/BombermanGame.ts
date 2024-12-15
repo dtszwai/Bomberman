@@ -78,7 +78,7 @@ export class BombermanGame {
     // Render the scene
     const snapshot = this.scene.serialize();
     this.renderer.update({
-      hud: snapshot.hud,
+      hud: { time: this.frameTime, state: this.gameState },
       players: snapshot.players,
       blocks: snapshot.blocks
         .map((block) => block.entity)
@@ -101,7 +101,6 @@ export class BombermanGame {
     if (winnerId >= 0) this.gameState.wins[winnerId]++;
 
     return new BattleScene(
-      this.frameTime,
       this.gameState,
       (winnerId) => (this.scene = this.createBattleScene(winnerId))
     );
