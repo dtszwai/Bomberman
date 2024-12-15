@@ -14,6 +14,7 @@ import {
   Direction,
   MovementLookup,
   Control,
+  AnimationFrame,
 } from "../constants";
 import { collisionOffsets } from "../utils/collisions";
 
@@ -21,6 +22,21 @@ interface State {
   type: BombermanStateType;
   init: (time: GameTime) => void;
   update: (time: GameTime) => void;
+}
+
+export interface BombermanSnapshot {
+  id: number;
+  position: Position;
+  currentState: BombermanStateType;
+  velocity: Velocity;
+  direction: Direction;
+  bombAmount: number;
+  bombStrength: number;
+  availableBombs: number;
+  animationFrameIndex: number;
+  nextAnimationUpdate: number;
+  speedMultiplier: number;
+  animation: AnimationFrame[];
 }
 
 export class Bomberman {
@@ -399,7 +415,7 @@ export class Bomberman {
    *
    * @returns The serialized Bomberman state.
    */
-  public serialize = () => ({
+  public serialize = (): BombermanSnapshot => ({
     id: this.id,
     position: this.position,
     currentState: this.currentState.type,

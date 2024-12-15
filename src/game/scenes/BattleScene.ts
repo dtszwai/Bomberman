@@ -1,8 +1,30 @@
 import { GameTime } from "../engine/types";
-import { Bomberman, Stage } from "../entities";
-import { BlockSystem, BombSystem, PowerupSystem } from "../systems";
+import {
+  Bomberman,
+  BombermanSnapshot,
+  BombSnapshot,
+  ExplosionSnapshot,
+  Stage,
+  StageSnapshot,
+} from "../entities";
+import {
+  BlocksSnapshot,
+  BlockSystem,
+  BombSystem,
+  PowerupsSnapshot,
+  PowerupSystem,
+} from "../systems";
 import { BombermanStateType } from "../constants/bomberman";
 import type { GameState } from "../types";
+
+export interface GameSnapshot {
+  stage: StageSnapshot;
+  players: BombermanSnapshot[];
+  blocks: BlocksSnapshot["blocks"];
+  bombs: BombSnapshot[];
+  explosions: ExplosionSnapshot[];
+  powerups: PowerupsSnapshot;
+}
 
 /**
  * Class representing the battle scene in the game.
@@ -98,13 +120,13 @@ export class BattleScene {
   /**
    * Serializes the current state of the battle scene.
    */
-  public serialize() {
+  public serialize(): GameSnapshot {
     return {
       stage: this.stage.serialize(),
       players: this.players.map((player) => player.serialize()),
       blocks: this.blockSystem.serialize().blocks,
       bombs: this.bombSystem.serialize().bombs,
-      explosions: this.bombSystem.serialize().bombExplosions,
+      explosions: this.bombSystem.serialize().explosions,
       powerups: this.powerupSystem.serialize(),
     };
   }

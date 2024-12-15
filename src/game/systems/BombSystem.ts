@@ -1,11 +1,16 @@
 import { GameTime, Tile } from "../engine/types";
-import { Bomb, Explosion } from "../entities";
+import { Bomb, BombSnapshot, Explosion, ExplosionSnapshot } from "../entities";
 import {
   CollisionTile,
   BOMB_EXPLODE_DELAY,
   FlameDirectionLookup,
 } from "../constants";
 import { FlameCell } from "../types";
+
+export interface BombSystemSnapshot {
+  bombs: BombSnapshot[];
+  explosions: ExplosionSnapshot[];
+}
 
 /**
  * BombSystem manages all bomb-related activities within the game stage,
@@ -227,19 +232,19 @@ export class BombSystem {
    * Serializes the current state of all active bombs
    * and bomb explosions in the system.
    */
-  public serialize() {
+  public serialize(): BombSystemSnapshot {
     const bombs = [];
-    const bombExplosions = [];
+    const explosions = [];
 
     for (const bomb of this.bombs) {
       const serialized = bomb.serialize();
       if ("fuseExpiration" in serialized) {
         bombs.push(serialized);
       } else if ("flameCells" in serialized) {
-        bombExplosions.push(serialized);
+        explosions.push(serialized);
       }
     }
 
-    return { bombs, bombExplosions };
+    return { bombs, explosions };
   }
 }
