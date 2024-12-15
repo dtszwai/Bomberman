@@ -15,6 +15,7 @@ import {
 } from "@/engine/inputHandler";
 import { GameState } from "./types";
 import { GameTime } from "@/engine/types";
+import { BattleSceneRenderer } from "@/views/BattleSceneRenderer";
 
 /**
  * Class representing the main Bomberman game.
@@ -33,6 +34,8 @@ export class BombermanGame {
   private gameState: GameState;
   /** ID of the current animation frame for cancellation */
   private animationFrameId: number | null = null;
+  /** Renderer for the current scene */
+  private renderer: BattleSceneRenderer;
 
   /**
    * Creates an instance of BombermanGame.
@@ -54,6 +57,7 @@ export class BombermanGame {
     this.context = createCanvasContext(container, width, height).context;
     this.camera = new Camera(0, 0);
     this.scene = this.createBattleScene(-1);
+    this.renderer = new BattleSceneRenderer(this.context, this.camera);
   }
 
   /**
@@ -70,7 +74,21 @@ export class BombermanGame {
 
     // Update and render the scene
     this.scene.update(this.frameTime);
-    this.scene.draw(this.context, this.camera);
+
+    // Render the scene
+    const snapshot = this.scene.serialize();
+    this.renderer.update({
+      hud: snapshot.hud,
+      players: snapshot.players,
+      blocks: snapshot.blocks
+        .map((block) => block.entity)
+        .filter((entity) => typeof entity !== "undefined"),
+      stage: snapshot.stage.tileMap,
+      bombs: snapshot.bombs,
+      explosions: snapshot.explosions,
+      powerups: snapshot.powerups,
+    });
+    this.renderer.render();
   };
 
   /**
