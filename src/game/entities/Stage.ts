@@ -3,8 +3,8 @@ import {
   MapTile,
   MapToCollisionTileLookup,
   stageData,
-} from "@/game/constants/levelData";
-import { Tile } from "@/game/engine/types";
+} from "../constants/levelData";
+import type { Tile } from "../engine/types";
 
 /**
  * Class representing the game stage.

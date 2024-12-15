@@ -2,14 +2,14 @@ import {
   EPLOSION_FRAME_DELAY,
   EXPLOSION_ANIMATION_SEQUENCE,
 } from "../constants/bombs";
-import { GameTime, Tile } from "@/game/engine/types";
+import { GameTime, Tile } from "../engine/types";
 import { FlameCell } from "../types";
 
 /**
  * Class representing a bomb explosion in the game.
  * Manages the explosion animation and lifecycle.
  */
-export class BombExplosion {
+export class Explosion {
   /** Current frame index for the explosion animation */
   private animationFrameIndex = 0;
   /** Timestamp for scheduling the next frame update */
@@ -25,7 +25,7 @@ export class BombExplosion {
   constructor(
     public cell: Tile,
     public flameCells: FlameCell[],
-    private onExplosionComplete: (explosion: BombExplosion) => void
+    private onExplosionComplete: (explosion: Explosion) => void
   ) {}
 
   /**

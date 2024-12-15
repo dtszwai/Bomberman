@@ -1,8 +1,7 @@
-import { GameTime, Tile } from "@/game/engine/types";
-import { FRAME_TIME, TILE_SIZE } from "../constants/game";
+import { GameTime, Tile } from "../engine/types";
 import { Bomberman } from "../entities/Bomberman";
+import { FRAME_TIME, TILE_SIZE, PowerupType } from "../constants";
 import { rectanglesOverlap } from "../utils/collisions";
-import { PowerupType } from "../constants/levelData";
 
 /**
  * Interface representing a power-up entity within the game.

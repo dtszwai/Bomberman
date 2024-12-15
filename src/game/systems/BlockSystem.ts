@@ -1,5 +1,5 @@
-import { GameTime, Tile } from "@/game/engine/types";
-import { DestructibleBlock } from "../entities/Block";
+import { GameTime, Tile } from "../engine/types";
+import { DestructionAnimationBlock } from "../entities/DestructionAnimationBlock";
 import {
   CollisionTile,
   MapTile,
@@ -15,7 +15,7 @@ interface BlockEntry {
   /** The tile coordinates of the block. */
   cell: Tile;
   /** The Block entity associated with this block, if any. */
-  entity?: DestructibleBlock;
+  entity?: DestructionAnimationBlock;
   /** The type of power-up contained in this block, if any. */
   powerup?: PowerupType;
 }
@@ -113,7 +113,7 @@ export class BlockSystem {
     );
 
     if (blockEntry && !blockEntry.entity) {
-      blockEntry.entity = new DestructibleBlock(cell, this.removeBlock);
+      blockEntry.entity = new DestructionAnimationBlock(cell, this.removeBlock);
     }
   };
 
@@ -134,7 +134,7 @@ export class BlockSystem {
    *
    * @param destroyedBlock - The Block entity to be removed.
    */
-  public removeBlock = (destroyedBlock: DestructibleBlock) => {
+  public removeBlock = (destroyedBlock: DestructionAnimationBlock) => {
     const index = this.blocks.findIndex(
       (block) =>
         block.cell.row === destroyedBlock.cell.row &&

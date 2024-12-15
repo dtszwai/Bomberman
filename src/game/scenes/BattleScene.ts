@@ -1,9 +1,6 @@
 import { GameTime } from "../engine/types";
-import { Stage } from "../entities/Stage";
-import { Bomberman } from "../entities/Bomberman";
-import { BombSystem } from "../systems/BombSystem";
-import { BlockSystem } from "../systems/BlockSystem";
-import { PowerupSystem } from "../systems/PowerupSystem";
+import { Bomberman, Stage } from "../entities";
+import { BlockSystem, BombSystem, PowerupSystem } from "../systems";
 import { BombermanStateType } from "../constants/bomberman";
 import type { GameState } from "../types";
 

@@ -1,4 +1,5 @@
-export * from "./Block";
+export * from "./DestructionAnimationBlock";
 export * from "./Bomb";
 export * from "./Bomberman";
-export * from "./BombExplosion";
+export * from "./Explosion";
+export * from "./Stage";

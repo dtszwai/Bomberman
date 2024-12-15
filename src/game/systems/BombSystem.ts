@@ -1,8 +1,10 @@
-import { GameTime, Tile } from "@/game/engine/types";
-import { Bomb } from "../entities/Bomb";
-import { CollisionTile } from "../constants/levelData";
-import { BOMB_EXPLODE_DELAY, FlameDirectionLookup } from "../constants/bombs";
-import { BombExplosion } from "../entities/BombExplosion";
+import { GameTime, Tile } from "../engine/types";
+import { Bomb, Explosion } from "../entities";
+import {
+  CollisionTile,
+  BOMB_EXPLODE_DELAY,
+  FlameDirectionLookup,
+} from "../constants";
 import { FlameCell } from "../types";
 
 /**
@@ -11,7 +13,7 @@ import { FlameCell } from "../types";
  */
 export class BombSystem {
   /** Array holding active Bombs and BombExplosions */
-  private bombs: (Bomb | BombExplosion)[] = [];
+  private bombs: (Bomb | Explosion)[] = [];
 
   /**
    * Creates an instance of BombSystem.
@@ -53,7 +55,7 @@ export class BombSystem {
    *
    * @param bombExplosion - The BombExplosion to be removed.
    */
-  private removeBombExplosion(bombExplosion: BombExplosion) {
+  private removeBombExplosion(bombExplosion: Explosion) {
     const index = this.bombs.indexOf(bombExplosion);
     if (index === -1) return;
 
@@ -85,7 +87,7 @@ export class BombSystem {
     const flameCells = this.calculateFlameCells(bomb.cell, strength, time);
 
     // Replace the Bomb with BombExplosion in the bombs array
-    this.bombs[bombIndex] = new BombExplosion(
+    this.bombs[bombIndex] = new Explosion(
       bomb.cell,
       flameCells,
       this.removeBombExplosion.bind(this)

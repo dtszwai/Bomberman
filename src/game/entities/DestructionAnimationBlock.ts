@@ -1,15 +1,14 @@
-import { GameTime, Tile } from "@/game/engine/types";
-import { MapTile } from "../constants/levelData";
-import { BLOCK_FRAME_DELAY } from "../constants/bombs";
+import { GameTime, Tile } from "../engine/types";
+import { BLOCK_FRAME_DELAY, MapTile } from "../constants";
 
 const TOTAL_FRAMES = 8;
 
 /**
- * Class representing a destructible block in the game.
+ * Class representing a destroyed block in the game.
  * This block is instantiated when a regular block is destroyed by a bomb,
  * triggering a destruction animation before being removed from the game.
  */
-export class DestructibleBlock {
+export class DestructionAnimationBlock {
   /** Current frame index for the destruction animation */
   private animationFrameIndex = MapTile.BLOCK;
   /** Timestamp for the next frame update */
@@ -23,7 +22,7 @@ export class DestructibleBlock {
    */
   constructor(
     public readonly cell: Tile,
-    private onDestructionComplete: (block: DestructibleBlock) => void
+    private onDestructionComplete: (block: DestructionAnimationBlock) => void
   ) {}
 
   /**

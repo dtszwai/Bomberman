@@ -1,4 +1,4 @@
-import { GameTime, Tile } from "@/game/engine/types";
+import { GameTime, Tile } from "../engine/types";
 import {
   BOMB_ANIMATION_SEQUENCE,
   BOMB_FRAME_DELAY,
