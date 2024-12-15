@@ -1,4 +1,4 @@
-import { Context2D, FrameData, FrameDimensions } from "./types";
+import { Context2D, FrameData, FrameDimensions } from "../types";
 
 export function createCanvasContext(
   container: HTMLElement,
@@ -21,7 +21,10 @@ export function createCanvasContext(
     throw new Error("Unable to find canvas context");
   }
 
-  return context;
+  return {
+    canvas,
+    context,
+  };
 }
 
 export function removeCanvas(container: HTMLElement) {

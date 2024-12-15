@@ -1,4 +1,4 @@
-import { FrameData } from "@/engine/types";
+import { FrameData } from "@/views/types";
 import { Direction } from "./entities";
 
 /* ============================
@@ -16,7 +16,7 @@ export enum BombermanStateType {
 }
 
 // Available colors for Bomberman characters
-export enum BombermanColor {
+enum BombermanColor {
   WHITE = "white",
   BLACK = "black",
   BLUE = "blue",
@@ -24,21 +24,14 @@ export enum BombermanColor {
   GREEN = "green",
 }
 
-// Type definition for player data
-type BombermanPlayerDataItem = {
-  color: BombermanColor;
-  column: number;
-  row: number;
-};
-
 // Predefined player data for each color
-export const BombermanPlayerData: readonly BombermanPlayerDataItem[] = [
+export const BombermanPlayerData = [
   { color: BombermanColor.WHITE, column: 1, row: 2 },
   { color: BombermanColor.BLACK, column: 11, row: 14 },
   { color: BombermanColor.BLUE, column: 11, row: 2 },
   { color: BombermanColor.RED, column: 1, row: 14 },
   { color: BombermanColor.GREEN, column: 6, row: 8 },
-] as const;
+];
 
 /* ============================
    Frame Data Definitions
@@ -67,96 +60,12 @@ type FrameKey =
   | "death-8"
   | "death-9";
 
-// Centralized frame data for animations
-export const frames: Record<FrameKey, FrameData> = {
-  "idle-down": [
-    [4, 5, 17, 22],
-    [8, 15],
-  ],
-  "move-down-1": [
-    [30, 5, 17, 22],
-    [7, 15],
-  ],
-  "move-down-2": [
-    [61, 5, 17, 22],
-    [9, 15],
-  ],
-  "idle-side": [
-    [79, 5, 18, 22],
-    [7, 15],
-  ],
-  "move-side-1": [
-    [104, 5, 17, 21],
-    [8, 15],
-  ],
-  "move-side-2": [
-    [129, 5, 18, 22],
-    [8, 15],
-  ],
-  "idle-up": [
-    [154, 4, 17, 22],
-    [8, 15],
-  ],
-  "move-up-1": [
-    [180, 4, 17, 22],
-    [7, 15],
-  ],
-  "move-up-2": [
-    [211, 5, 17, 22],
-    [9, 15],
-  ],
-  "idle-down-left": [
-    [5, 55, 17, 20],
-    [6, 15],
-  ],
-  "idle-up-left": [
-    [30, 55, 17, 20],
-    [6, 15],
-  ],
-  "death-1": [
-    [10, 30, 21, 20],
-    [10, 15],
-  ],
-  "death-2": [
-    [44, 30, 19, 19],
-    [9, 15],
-  ],
-  "death-3": [
-    [75, 30, 22, 20],
-    [11, 15],
-  ],
-  "death-4": [
-    [108, 30, 22, 21],
-    [11, 15],
-  ],
-  "death-5": [
-    [142, 31, 20, 20],
-    [10, 15],
-  ],
-  "death-6": [
-    [175, 32, 20, 19],
-    [10, 15],
-  ],
-  "death-7": [
-    [207, 33, 21, 19],
-    [11, 15],
-  ],
-  "death-8": [
-    [240, 32, 22, 21],
-    [11, 15],
-  ],
-  "death-9": [
-    [273, 32, 22, 21],
-    [11, 15],
-  ],
-};
-
 /* ============================
    Animation Definitions
    ============================ */
 
 // Type for animation frames ensuring consistency
-type AnimationFrame = [FrameKey, number];
+export type AnimationFrame = [FrameKey, number];
 
 // Animations mapped by state and direction
 export const animations = {
@@ -184,8 +93,8 @@ export const animations = {
       ["move-down-1", 8],
       ["idle-down", 8],
       ["move-down-2", 8],
-    ] as AnimationFrame[],
-  },
+    ],
+  } as Record<Direction, AnimationFrame[]>,
   deathAnimation: [
     ["death-1", 8],
     ["death-2", 8],
@@ -202,7 +111,7 @@ export const animations = {
     ["death-9", 8],
     ["death-9", -1],
   ] as AnimationFrame[],
-} as const;
+};
 
 // Frame data organized by Bomberman color
 export const bombermanFrames: Record<BombermanColor, [FrameKey, FrameData][]> =

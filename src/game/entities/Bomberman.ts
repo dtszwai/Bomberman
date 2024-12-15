@@ -1,38 +1,21 @@
-import { Camera } from "@/engine";
-import * as control from "@/engine/inputHandler";
+import * as control from "../engine/inputHandler";
+import { GameTime, Position, Rect, Tile, Velocity } from "../engine/types";
 import {
-  FrameData,
-  GameTime,
-  Position,
-  Rect,
-  Tile,
-  Velocity,
-} from "@/engine/types";
-import BombermanUrl from "@assets/images/bomberman.png";
-import {
-  CounterDirectionsLookup,
-  Direction,
-  MovementLookup,
-} from "../constants/entities";
-import {
-  animations,
-  BombermanPlayerData,
-  BombermanStateType,
-  getBombermanFrames,
-  WALK_SPEED,
-} from "../constants/bomberman";
-import {
-  DEBUG,
   FRAME_TIME,
   HALF_TILE_SIZE,
   TILE_SIZE,
-} from "../constants/game";
-import { drawFrameOrigin } from "@/engine/context";
-import { isZero, loadImage } from "../utils/utils";
-import { CollisionTile, PowerupType } from "../constants/levelData";
-import { drawBox, drawCross } from "../utils/debug";
-import { Control } from "../constants/controls";
-import { collisionOffsets } from "@/engine/utils/collisions";
+  CollisionTile,
+  PowerupType,
+  animations,
+  BombermanPlayerData,
+  BombermanStateType,
+  WALK_SPEED,
+  CounterDirectionsLookup,
+  Direction,
+  MovementLookup,
+  Control,
+} from "../constants";
+import { collisionOffsets } from "../utils/collisions";
 
 interface State {
   type: BombermanStateType;
@@ -50,8 +33,6 @@ export class Bomberman {
   private velocity: Velocity = { x: 0, y: 0 };
   /** Current direction the Bomberman is facing */
   private direction: Direction = Direction.DOWN;
-  /** Image asset for the Bomberman */
-  private image = loadImage(BombermanUrl);
   /** Current animation frames based on direction */
   private animation = animations.moveAnimations[this.direction];
   /** All possible states of the Bomberman */
@@ -70,8 +51,6 @@ export class Bomberman {
 
   /** The last cell where a bomb was placed */
   private lastBombCell?: Tile;
-  /** Frames data for animations */
-  private frames: Map<string, FrameData>;
   /** Current frame index in the animation */
   private animationFrameIndex = 0;
   /** Timestamp for scheduling the next frame update */
@@ -96,12 +75,11 @@ export class Bomberman {
     ) => void,
     private onBombermanDeath: (id: number) => void
   ) {
-    const { row, column, color } = BombermanPlayerData[id];
+    const { row, column } = BombermanPlayerData[id];
     this.position = {
       x: row * TILE_SIZE + HALF_TILE_SIZE,
       y: column * TILE_SIZE + HALF_TILE_SIZE,
     };
-    this.frames = getBombermanFrames(color);
     this.states = this.initializeStates();
     this.currentState = this.states[BombermanStateType.IDLE];
   }
@@ -164,12 +142,14 @@ export class Bomberman {
 
   private handleIdleState = (time: GameTime) => {
     const velocity = this.handleGeneralState(time);
-    if (!isZero(velocity)) this.changeState(BombermanStateType.MOVING, time);
+    if (!this.isZero(velocity))
+      this.changeState(BombermanStateType.MOVING, time);
   };
 
   private handleMovingState = (time: GameTime) => {
     this.velocity = this.handleGeneralState(time);
-    if (isZero(this.velocity)) this.changeState(BombermanStateType.IDLE, time);
+    if (this.isZero(this.velocity))
+      this.changeState(BombermanStateType.IDLE, time);
   };
 
   private handleDeathState = () => {
@@ -400,53 +380,6 @@ export class Bomberman {
     this.updateCellUnderneath(time);
   }
 
-  // --------------------- Rendering ---------------------
-
-  /**
-   * Draws the Bomberman on the canvas.
-   */
-  public draw(context: CanvasRenderingContext2D, camera: Camera) {
-    const [frameKey] = this.animation[this.animationFrameIndex];
-    const frame = this.frames.get(frameKey)!;
-
-    drawFrameOrigin(
-      context,
-      this.image,
-      frame,
-      Math.floor(this.position.x - camera.position.x),
-      Math.floor(this.position.y - camera.position.y),
-      [this.direction === Direction.LEFT ? 1 : -1, 1]
-    );
-
-    if (!DEBUG) return;
-
-    const collisionBox = this.getCollisionRect();
-
-    // Draw the full tile collision box
-    drawBox(
-      context,
-      camera,
-      [
-        this.position.x - HALF_TILE_SIZE,
-        this.position.y - HALF_TILE_SIZE,
-        TILE_SIZE - 1,
-        TILE_SIZE - 1,
-      ],
-      "#FFFF00"
-    );
-
-    // Draw the collision rectangle
-    drawBox(
-      context,
-      camera,
-      [collisionBox.x, collisionBox.y, collisionBox.width, collisionBox.height],
-      "#FF0000"
-    );
-
-    // Draw a cross at Bomberman's position for debugging
-    drawCross(context, camera, this.position, "#FFF");
-  }
-
   // --------------------- Utility Methods ---------------------
 
   /**
@@ -460,4 +393,26 @@ export class Bomberman {
     width: HALF_TILE_SIZE,
     height: HALF_TILE_SIZE,
   });
+
+  /**
+   * Serializes the current state of the Bomberman.
+   *
+   * @returns The serialized Bomberman state.
+   */
+  public serialize = () => ({
+    id: this.id,
+    position: this.position,
+    currentState: this.currentState.type,
+    velocity: this.velocity,
+    direction: this.direction,
+    bombAmount: this.bombAmount,
+    bombStrength: this.bombStrength,
+    availableBombs: this.availableBombs,
+    animationFrameIndex: this.animationFrameIndex,
+    nextAnimationUpdate: this.nextAnimationUpdate,
+    speedMultiplier: this.speedMultiplier,
+    animation: this.animation,
+  });
+
+  private isZero = (point: Velocity) => point.x === 0 && point.y === 0;
 }

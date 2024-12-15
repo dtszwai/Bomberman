@@ -1,22 +1,15 @@
-import { GameTime, Tile } from "@/engine/types";
-import StageUrl from "@assets/images/stage.png";
+import { GameTime, Tile } from "../engine/types";
 import {
-  BASE_FRAME,
   BOMB_ANIMATION_SEQUENCE,
   BOMB_FRAME_DELAY,
   FUSE_TIMER,
 } from "../constants/bombs";
-import { Camera } from "@/engine";
-import { drawTile } from "@/engine/context";
-import { TILE_SIZE } from "../constants/game";
-import { loadImage } from "../utils/utils";
 
 /**
  * Class representing a bomb in the game.
  * Manages bomb animation and fuse timer.
  */
 export class Bomb {
-  private static image = loadImage(StageUrl);
   /** Current frame index for bomb animation */
   private animationFrameIndex = 0;
   /** Timestamp for scheduling the next animation frame update */
@@ -69,16 +62,14 @@ export class Bomb {
   }
 
   /**
-   * Draws the bomb onto the canvas.
+   * Serializes the bomb's current state.
    */
-  public draw(context: CanvasRenderingContext2D, camera: Camera) {
-    drawTile(
-      context,
-      Bomb.image,
-      BASE_FRAME + BOMB_ANIMATION_SEQUENCE[this.animationFrameIndex],
-      this.cell.column * TILE_SIZE - camera.position.x,
-      this.cell.row * TILE_SIZE - camera.position.y,
-      TILE_SIZE
-    );
+  public serialize() {
+    return {
+      cell: this.cell,
+      animationFrameIndex: this.animationFrameIndex,
+      nextAnimationUpdate: this.nextAnimationUpdate,
+      fuseExpiration: this.fuseExpiration,
+    };
   }
 }

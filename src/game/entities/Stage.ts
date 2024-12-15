@@ -2,15 +2,9 @@ import {
   CollisionTile,
   MapTile,
   MapToCollisionTileLookup,
-  STAGE_MAP_MAX_SIZE,
   stageData,
-} from "@/game/constants/levelData";
-import { drawTile } from "@/engine/context";
-import { TILE_SIZE } from "@/game/constants/game";
-import { Camera } from "@/engine";
-import StageUrl from "@assets/images/stage.png";
-import { Tile } from "@/engine/types";
-import { loadImage } from "../utils/utils";
+} from "../constants/levelData";
+import type { Tile } from "../engine/types";
 
 /**
  * Class representing the game stage.
@@ -23,36 +17,12 @@ export class Stage {
   public collisionMap: CollisionTile[][] = stageData.tiles.map((row) =>
     row.map((tile) => MapToCollisionTileLookup[tile])
   );
-  /** Offscreen canvas used for pre-rendering the stage */
-  private stageCanvas: OffscreenCanvas;
-  /** Rendering context for the offscreen canvas */
-  private StageContext: OffscreenCanvasRenderingContext2D;
-  /** Image asset containing all stage tiles */
-  private static image = loadImage(StageUrl);
 
   /**
-   * Creates an instance of Stage.
-   * Initializes the offscreen canvas and begins building the stage map once the image is loaded.
-   *
-   * @throws Will throw an error if the offscreen canvas context cannot be retrieved.
+   * Creates an instance of Stage and initializes the stage map.
    */
   constructor() {
-    this.stageCanvas = new OffscreenCanvas(
-      STAGE_MAP_MAX_SIZE,
-      STAGE_MAP_MAX_SIZE
-    );
-    const context = this.stageCanvas.getContext("2d");
-    if (!context) {
-      throw new Error("Unable to get canvas context for stageImage.");
-    }
-    this.StageContext = context;
-    if (Stage.image.complete) {
-      this.initializeStageMap();
-    } else {
-      Stage.image.onload = () => {
-        this.initializeStageMap();
-      };
-    }
+    this.initializeStageMap();
   }
 
   /**
@@ -92,22 +62,17 @@ export class Stage {
     const { row, column } = cell;
     this.tileMap[row][column] = tileType;
     this.collisionMap[row][column] = MapToCollisionTileLookup[tileType];
-
-    drawTile(
-      this.StageContext,
-      Stage.image,
-      tileType,
-      column * TILE_SIZE,
-      row * TILE_SIZE,
-      TILE_SIZE
-    );
   };
 
   /**
-   * Renders the pre-rendered stage onto the main canvas context,
-   * adjusted by the camera's position.
+   * Serializes the current state of the stage.
+   *
+   * @returns The serialized stage state.
    */
-  public draw(context: CanvasRenderingContext2D, camera: Camera) {
-    context.drawImage(this.stageCanvas, -camera.position.x, -camera.position.y);
+  public serialize() {
+    return {
+      tileMap: this.tileMap,
+      collisionMap: this.collisionMap,
+    };
   }
 }

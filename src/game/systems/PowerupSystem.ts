@@ -1,12 +1,7 @@
-import { Camera } from "@/engine";
-import { drawFrame } from "@/engine/context";
-import { GameTime, Tile } from "@/engine/types";
-import PowerupsUrl from "@assets/images/powerups.png";
-import { FRAME_TIME, TILE_SIZE } from "../constants/game";
+import { GameTime, Tile } from "../engine/types";
 import { Bomberman } from "../entities/Bomberman";
-import { rectanglesOverlap } from "@/engine/utils/collisions";
-import { loadImage } from "../utils/utils";
-import { PowerupType } from "../constants/levelData";
+import { FRAME_TIME, TILE_SIZE, PowerupType } from "../constants";
+import { rectanglesOverlap } from "../utils/collisions";
 
 /**
  * Interface representing a power-up entity within the game.
@@ -23,8 +18,6 @@ const FRAME_DELAY = 8 * FRAME_TIME;
  * including their spawning, rendering, and player interactions.
  */
 export class PowerupSystem {
-  /** Image asset for power-ups */
-  private static image = loadImage(PowerupsUrl);
   /** Current frame of the power-up animation */
   private animationFrameIndex = 0;
   /** Timer to control animation frame changes */
@@ -111,20 +104,18 @@ export class PowerupSystem {
   }
 
   /**
-   * Draws all active power-ups onto the canvas.
+   * Serializes the current state of the PowerupSystem.
+   *
+   * @returns The serialized power-up state.
    */
-  public draw(context: CanvasRenderingContext2D, camera: Camera) {
-    for (const powerup of this.powerups) {
-      const spriteX = 8 + this.animationFrameIndex * TILE_SIZE;
-      const spriteY = 8 + (powerup.type - 1) * TILE_SIZE;
-
-      drawFrame(
-        context,
-        PowerupSystem.image,
-        [spriteX, spriteY, TILE_SIZE, TILE_SIZE],
-        powerup.cell.column * TILE_SIZE - camera.position.x,
-        powerup.cell.row * TILE_SIZE - camera.position.y
-      );
-    }
+  serialize() {
+    return {
+      powerups: this.powerups.map((powerup) => ({
+        cell: powerup.cell,
+        type: powerup.type,
+      })),
+      animationFrameIndex: this.animationFrameIndex,
+      nextAnimationUpdate: this.nextAnimationUpdate,
+    };
   }
 }

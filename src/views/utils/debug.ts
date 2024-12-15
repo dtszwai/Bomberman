@@ -1,5 +1,5 @@
-import { Camera } from "@/engine";
-import { Context2D, FrameDimensions, Position } from "@/engine/types";
+import { Context2D, FrameDimensions, Position } from "../types";
+import { Camera } from "../Camera";
 
 /**
  * Helper function to translate and floor coordinates based on camera position.

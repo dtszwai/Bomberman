@@ -1,9 +1,10 @@
-import { Camera } from "@/engine";
-import { GameTime, Tile } from "@/engine/types";
-import { Bomb } from "../entities/Bomb";
-import { CollisionTile } from "../constants/levelData";
-import { BOMB_EXPLODE_DELAY, FlameDirectionLookup } from "../constants/bombs";
-import { BombExplosion } from "../entities/BombExplosion";
+import { GameTime, Tile } from "../engine/types";
+import { Bomb, Explosion } from "../entities";
+import {
+  CollisionTile,
+  BOMB_EXPLODE_DELAY,
+  FlameDirectionLookup,
+} from "../constants";
 import { FlameCell } from "../types";
 
 /**
@@ -12,7 +13,7 @@ import { FlameCell } from "../types";
  */
 export class BombSystem {
   /** Array holding active Bombs and BombExplosions */
-  private bombs: (Bomb | BombExplosion)[] = [];
+  private bombs: (Bomb | Explosion)[] = [];
 
   /**
    * Creates an instance of BombSystem.
@@ -54,7 +55,7 @@ export class BombSystem {
    *
    * @param bombExplosion - The BombExplosion to be removed.
    */
-  private removeBombExplosion(bombExplosion: BombExplosion) {
+  private removeBombExplosion(bombExplosion: Explosion) {
     const index = this.bombs.indexOf(bombExplosion);
     if (index === -1) return;
 
@@ -86,7 +87,7 @@ export class BombSystem {
     const flameCells = this.calculateFlameCells(bomb.cell, strength, time);
 
     // Replace the Bomb with BombExplosion in the bombs array
-    this.bombs[bombIndex] = new BombExplosion(
+    this.bombs[bombIndex] = new Explosion(
       bomb.cell,
       flameCells,
       this.removeBombExplosion.bind(this)
@@ -223,9 +224,22 @@ export class BombSystem {
   }
 
   /**
-   * Draws all active bombs and bomb explosions onto the canvas.
+   * Serializes the current state of all active bombs
+   * and bomb explosions in the system.
    */
-  public draw(context: CanvasRenderingContext2D, camera: Camera) {
-    this.bombs.forEach((bomb) => bomb.draw(context, camera));
+  public serialize() {
+    const bombs = [];
+    const bombExplosions = [];
+
+    for (const bomb of this.bombs) {
+      const serialized = bomb.serialize();
+      if ("fuseExpiration" in serialized) {
+        bombs.push(serialized);
+      } else if ("flameCells" in serialized) {
+        bombExplosions.push(serialized);
+      }
+    }
+
+    return { bombs, bombExplosions };
   }
 }

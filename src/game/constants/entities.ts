@@ -1,4 +1,4 @@
-import { Velocity } from "@/engine/types";
+import { Velocity } from "@/game/engine/types";
 
 export enum Direction {
   UP = "direction-up",

@@ -1,5 +1,5 @@
-import { GameTime, Tile } from "@/engine/types";
-import { DestructibleBlock } from "../entities/Block";
+import { GameTime, Tile } from "../engine/types";
+import { DestructionAnimationBlock } from "../entities/DestructionAnimationBlock";
 import {
   CollisionTile,
   MapTile,
@@ -7,7 +7,6 @@ import {
   PowerupType,
   stageData,
 } from "../constants/levelData";
-import { Camera } from "@/engine";
 
 /**
  * Represents a block entry within the BlockSystem.
@@ -16,7 +15,7 @@ interface BlockEntry {
   /** The tile coordinates of the block. */
   cell: Tile;
   /** The Block entity associated with this block, if any. */
-  entity?: DestructibleBlock;
+  entity?: DestructionAnimationBlock;
   /** The type of power-up contained in this block, if any. */
   powerup?: PowerupType;
 }
@@ -114,7 +113,7 @@ export class BlockSystem {
     );
 
     if (blockEntry && !blockEntry.entity) {
-      blockEntry.entity = new DestructibleBlock(cell, this.removeBlock);
+      blockEntry.entity = new DestructionAnimationBlock(cell, this.removeBlock);
     }
   };
 
@@ -135,7 +134,7 @@ export class BlockSystem {
    *
    * @param destroyedBlock - The Block entity to be removed.
    */
-  public removeBlock = (destroyedBlock: DestructibleBlock) => {
+  public removeBlock = (destroyedBlock: DestructionAnimationBlock) => {
     const index = this.blocks.findIndex(
       (block) =>
         block.cell.row === destroyedBlock.cell.row &&
@@ -156,9 +155,15 @@ export class BlockSystem {
   }
 
   /**
-   * Draws all active Block entities to the canvas.
+   * Serializes the current state of all active Block entities.
    */
-  public draw(context: CanvasRenderingContext2D, camera: Camera) {
-    this.blocks.forEach((block) => block.entity?.draw(context, camera));
+  public serialize() {
+    return {
+      blocks: this.blocks.map((block) => ({
+        cell: block.cell,
+        powerup: block.powerup,
+        entity: block.entity?.serialize(),
+      })),
+    };
   }
 }

@@ -1,12 +1,6 @@
-import { Camera } from "@/engine";
-import { GameTime, Scene } from "@/engine/types";
-import { Stage } from "@/game/entities/Stage";
-import { HALF_TILE_SIZE, STAGE_OFFSET_Y } from "../constants/game";
-import { BattleHud } from "../entities/BattleHud";
-import { Bomberman } from "../entities/Bomberman";
-import { BombSystem } from "../systems/BombSystem";
-import { BlockSystem } from "../systems/BlockSystem";
-import { PowerupSystem } from "../systems/PowerupSystem";
+import { GameTime } from "../engine/types";
+import { Bomberman, Stage } from "../entities";
+import { BlockSystem, BombSystem, PowerupSystem } from "../systems";
 import { BombermanStateType } from "../constants/bomberman";
 import type { GameState } from "../types";
 
@@ -14,11 +8,9 @@ import type { GameState } from "../types";
  * Class representing the battle scene in the game.
  * Manages game entities, systems, and handles game logic specific to the battle.
  */
-export class BattleScene implements Scene {
+export class BattleScene {
   /** The game stage containing the map and related data */
   private stage: Stage;
-  /** Heads-Up Display managing UI elements like scores and timers */
-  private hud: BattleHud;
   /** System managing power-ups within the game */
   private powerupSystem: PowerupSystem;
   /** System managing destructible blocks */
@@ -30,19 +22,10 @@ export class BattleScene implements Scene {
 
   /**
    * Creates an instance of BattleScene.
-   *
-   * @param time - The current game time.
-   * @param camera - The camera handling viewport transformations.
    * @param state - The current state of the game, including player scores.
    * @param onEnd - Callback invoked when the battle ends, receiving the winner's ID.
    */
-  constructor(
-    time: GameTime,
-    camera: Camera,
-    state: GameState,
-    private onEnd: (winnerId: number) => void
-  ) {
-    this.hud = new BattleHud(time, state);
+  constructor(state: GameState, private onEnd: (winnerId: number) => void) {
     this.stage = new Stage();
     this.powerupSystem = new PowerupSystem(this.players);
     this.blockSystem = new BlockSystem(
@@ -56,7 +39,6 @@ export class BattleScene implements Scene {
     );
 
     state.wins.forEach((_, id) => this.addPlayer(id));
-    camera.position = { x: HALF_TILE_SIZE, y: -STAGE_OFFSET_Y };
   }
 
   /**
@@ -104,7 +86,6 @@ export class BattleScene implements Scene {
    * Updates all game systems and players.
    */
   public update(time: GameTime) {
-    this.hud.update(time);
     this.blockSystem.update(time);
     this.bombSystem.update(time);
     this.powerupSystem.update(time);
@@ -115,14 +96,16 @@ export class BattleScene implements Scene {
   }
 
   /**
-   * Draws all game elements onto the canvas.
+   * Serializes the current state of the battle scene.
    */
-  public draw(context: CanvasRenderingContext2D, camera: Camera) {
-    this.stage.draw(context, camera);
-    this.hud.draw(context);
-    this.powerupSystem.draw(context, camera);
-    this.blockSystem.draw(context, camera);
-    this.bombSystem.draw(context, camera);
-    this.players.forEach((player) => player.draw(context, camera));
+  public serialize() {
+    return {
+      stage: this.stage.serialize(),
+      players: this.players.map((player) => player.serialize()),
+      blocks: this.blockSystem.serialize().blocks,
+      bombs: this.bombSystem.serialize().bombs,
+      explosions: this.bombSystem.serialize().bombExplosions,
+      powerups: this.powerupSystem.serialize(),
+    };
   }
 }
