@@ -1,7 +1,6 @@
-import { loadImage } from "@/game/utils/utils";
-import BombermanUrl from "@assets/images/bomberman.png";
 import { BaseRenderer } from "../BaseRenderer";
-import type { Position, Rect } from "@/engine/types";
+import { loadImage, drawBox, drawCross, drawFrameOrigin } from "../utils";
+import BombermanUrl from "@assets/images/bomberman.png";
 import {
   AnimationFrame,
   BombermanPlayerData,
@@ -11,8 +10,7 @@ import {
   HALF_TILE_SIZE,
   TILE_SIZE,
 } from "@/game/constants";
-import { drawBox, drawCross } from "@/game/utils/debug";
-import { drawFrameOrigin } from "@/engine/context";
+import type { Position, Rect } from "@/engine/types";
 
 export interface BombermanRenderData {
   id: number;

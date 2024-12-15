@@ -1,8 +1,7 @@
-import { loadImage } from "@/game/utils/utils";
-import StageUrl from "@assets/images/stage.png";
 import { BaseRenderer } from "../BaseRenderer";
+import { loadImage, drawTile } from "../utils";
+import StageUrl from "@assets/images/stage.png";
 import { MapTile, stageData, TILE_SIZE } from "@/game/constants";
-import { drawTile } from "@/engine/context";
 
 export type StageRenderData = MapTile[][];
 

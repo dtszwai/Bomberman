@@ -1,9 +1,8 @@
-import { loadImage } from "@/game/utils/utils";
-import StageUrl from "@assets/images/stage.png";
 import { BaseRenderer } from "../BaseRenderer";
-import { Tile } from "@/engine/types";
+import { loadImage, drawTile } from "../utils";
+import StageUrl from "@assets/images/stage.png";
 import { MapTile, TILE_SIZE } from "@/game/constants";
-import { drawTile } from "@/engine/context";
+import { Tile } from "@/engine/types";
 
 export interface BlockRenderData {
   cell: Tile;

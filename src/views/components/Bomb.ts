@@ -1,7 +1,6 @@
-import { loadImage } from "@/game/utils/utils";
-import StageUrl from "@assets/images/stage.png";
 import { BaseRenderer } from "../BaseRenderer";
-import { drawTile } from "@/engine/context";
+import { loadImage, drawTile } from "../utils";
+import StageUrl from "@assets/images/stage.png";
 import {
   BASE_FRAME,
   BOMB_ANIMATION_SEQUENCE,

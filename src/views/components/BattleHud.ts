@@ -1,8 +1,7 @@
-import { loadImage } from "@/game/utils/utils";
-import HudUrl from "@assets/images/hud.png";
 import { BaseRenderer } from "../BaseRenderer";
+import { loadImage, drawText } from "../utils";
+import HudUrl from "@assets/images/hud.png";
 import { SCREEN_WIDTH, STAGE_OFFSET_Y } from "@/game/constants";
-import { drawText } from "@/game/utils/drawText";
 import { GameState } from "@/game/types";
 
 export interface BattleHudRenderData {

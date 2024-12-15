@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { BombermanGame } from "@/game/BombermanGame";
+import { BombermanGame } from "./BombermanGame";
 
 function App() {
   const containerRef = useRef<HTMLDivElement>(null);

@@ -1,21 +1,21 @@
-import { BattleScene } from "./scenes/BattleScene";
 import {
   MAX_WINS,
   NUM_PLAYERS,
   SCREEN_HEIGHT,
   SCREEN_WIDTH,
-} from "./constants/game";
+} from "@/game/constants/game";
+import { GameState } from "@/game/types";
+import { BattleScene } from "@/game/scenes/BattleScene";
 import { Camera } from "@/engine";
-import { createCanvasContext, removeCanvas } from "@/engine/context";
 import {
   registerGamepadEvents,
   registerKeyEvents,
   unregisterGamepadEvents,
   unregisterKeyEvents,
 } from "@/engine/inputHandler";
-import { GameState } from "./types";
 import { GameTime } from "@/engine/types";
 import { BattleSceneRenderer } from "@/views/BattleSceneRenderer";
+import { createCanvasContext, removeCanvas } from "@/views/utils";
 
 /**
  * Class representing the main Bomberman game.

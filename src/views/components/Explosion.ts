@@ -1,5 +1,5 @@
-import { drawTile } from "@/engine/context";
 import { BaseRenderer } from "../BaseRenderer";
+import { loadImage, drawTile } from "../utils";
 import StageUrl from "@assets/images/stage.png";
 import {
   BASE_FRAME,
@@ -9,7 +9,6 @@ import {
   TILE_SIZE,
 } from "@/game/constants";
 import { FlameCell } from "@/game/types";
-import { loadImage } from "@/game/utils/utils";
 import { Tile } from "@/engine/types";
 
 export interface ExplosionRenderData {

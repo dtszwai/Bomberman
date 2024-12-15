@@ -1,21 +1,21 @@
 import * as control from "@/engine/inputHandler";
 import { GameTime, Position, Rect, Tile, Velocity } from "@/engine/types";
 import {
-  CounterDirectionsLookup,
-  Direction,
-  MovementLookup,
-} from "../constants/entities";
-import {
+  FRAME_TIME,
+  HALF_TILE_SIZE,
+  TILE_SIZE,
+  CollisionTile,
+  PowerupType,
   animations,
   BombermanPlayerData,
   BombermanStateType,
   WALK_SPEED,
-} from "../constants/bomberman";
-import { FRAME_TIME, HALF_TILE_SIZE, TILE_SIZE } from "../constants/game";
-import { isZero } from "../utils/utils";
-import { CollisionTile, PowerupType } from "../constants/levelData";
-import { Control } from "../constants/controls";
-import { collisionOffsets } from "@/engine/utils/collisions";
+  CounterDirectionsLookup,
+  Direction,
+  MovementLookup,
+  Control,
+} from "../constants";
+import { collisionOffsets } from "../utils/collisions";
 
 interface State {
   type: BombermanStateType;
@@ -142,12 +142,14 @@ export class Bomberman {
 
   private handleIdleState = (time: GameTime) => {
     const velocity = this.handleGeneralState(time);
-    if (!isZero(velocity)) this.changeState(BombermanStateType.MOVING, time);
+    if (!this.isZero(velocity))
+      this.changeState(BombermanStateType.MOVING, time);
   };
 
   private handleMovingState = (time: GameTime) => {
     this.velocity = this.handleGeneralState(time);
-    if (isZero(this.velocity)) this.changeState(BombermanStateType.IDLE, time);
+    if (this.isZero(this.velocity))
+      this.changeState(BombermanStateType.IDLE, time);
   };
 
   private handleDeathState = () => {
@@ -411,4 +413,6 @@ export class Bomberman {
     speedMultiplier: this.speedMultiplier,
     animation: this.animation,
   });
+
+  private isZero = (point: Velocity) => point.x === 0 && point.y === 0;
 }

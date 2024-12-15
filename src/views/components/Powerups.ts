@@ -1,8 +1,7 @@
-import { loadImage } from "@/game/utils/utils";
-import PowerupsUrl from "@assets/images/powerups.png";
 import { BaseRenderer } from "../BaseRenderer";
+import { loadImage, drawFrame } from "../utils";
+import PowerupsUrl from "@assets/images/powerups.png";
 import { PowerupType, TILE_SIZE } from "@/game/constants";
-import { drawFrame } from "@/engine/context";
 import { Tile } from "@/engine/types";
 
 interface PowerupData {
