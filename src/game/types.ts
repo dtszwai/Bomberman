@@ -1,4 +1,4 @@
-import { Tile } from "@/engine/types";
+import { Tile } from "@/game/engine/types";
 import { CollisionTile, MapTile } from "./constants/levelData";
 
 /**

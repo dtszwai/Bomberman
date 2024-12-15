@@ -10,7 +10,7 @@ import {
   HALF_TILE_SIZE,
   TILE_SIZE,
 } from "@/game/constants";
-import type { Position, Rect } from "@/engine/types";
+import type { Position } from "../types";
 
 export interface BombermanRenderData {
   id: number;
@@ -53,7 +53,7 @@ export class BombermanRenderer extends BaseRenderer {
   };
 
   private renderDebug = (player: BombermanRenderData) => {
-    const collisionBox: Rect = {
+    const collisionBox = {
       x: player.position.x - HALF_TILE_SIZE / 2,
       y: player.position.y - HALF_TILE_SIZE / 2,
       width: HALF_TILE_SIZE,

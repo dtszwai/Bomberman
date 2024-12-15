@@ -1,4 +1,4 @@
-import { GameTime, Tile } from "@/engine/types";
+import { GameTime, Tile } from "@/game/engine/types";
 import { MapTile } from "../constants/levelData";
 import { BLOCK_FRAME_DELAY } from "../constants/bombs";
 

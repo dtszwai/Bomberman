@@ -6,7 +6,7 @@ import {
   BOMB_ANIMATION_SEQUENCE,
   TILE_SIZE,
 } from "@/game/constants";
-import { Tile } from "@/engine/types";
+import { Tile } from "@/game/engine/types";
 
 export interface BombRenderData {
   cell: Tile;

@@ -1,5 +1,5 @@
-import * as control from "@/engine/inputHandler";
-import { GameTime, Position, Rect, Tile, Velocity } from "@/engine/types";
+import * as control from "@/game/engine/inputHandler";
+import { GameTime, Position, Rect, Tile, Velocity } from "@/game/engine/types";
 import {
   FRAME_TIME,
   HALF_TILE_SIZE,

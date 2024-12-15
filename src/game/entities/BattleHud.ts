@@ -1,4 +1,4 @@
-import { GameTime } from "@/engine/types";
+import { GameTime } from "@/game/engine/types";
 import { GAME_TIME } from "../constants/levelData";
 import { GameState } from "../types";
 

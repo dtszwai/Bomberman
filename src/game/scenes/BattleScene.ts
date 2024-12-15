@@ -1,7 +1,5 @@
-import { Camera } from "@/engine";
-import { GameTime } from "@/engine/types";
-import { Stage } from "@/game/entities/Stage";
-import { HALF_TILE_SIZE, STAGE_OFFSET_Y } from "../constants/game";
+import { GameTime } from "../engine/types";
+import { Stage } from "../entities/Stage";
 import { BattleHud } from "../entities/BattleHud";
 import { Bomberman } from "../entities/Bomberman";
 import { BombSystem } from "../systems/BombSystem";
@@ -32,13 +30,11 @@ export class BattleScene {
    * Creates an instance of BattleScene.
    *
    * @param time - The current game time.
-   * @param camera - The camera handling viewport transformations.
    * @param state - The current state of the game, including player scores.
    * @param onEnd - Callback invoked when the battle ends, receiving the winner's ID.
    */
   constructor(
     time: GameTime,
-    camera: Camera,
     state: GameState,
     private onEnd: (winnerId: number) => void
   ) {
@@ -56,7 +52,6 @@ export class BattleScene {
     );
 
     state.wins.forEach((_, id) => this.addPlayer(id));
-    camera.position = { x: HALF_TILE_SIZE, y: -STAGE_OFFSET_Y };
   }
 
   /**

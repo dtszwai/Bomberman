@@ -1,7 +1,7 @@
 import { loadImage } from "../utils/image";
 import FontUrl from "@assets/images/font.png";
 import { drawFrame } from "../utils";
-import { Context2D, FrameDimensions } from "@/engine/types";
+import { Context2D, FrameDimensions } from "../types";
 
 type FrameKey = `alpha-${
   | "0"

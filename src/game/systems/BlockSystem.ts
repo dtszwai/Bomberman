@@ -1,4 +1,4 @@
-import { GameTime, Tile } from "@/engine/types";
+import { GameTime, Tile } from "@/game/engine/types";
 import { DestructibleBlock } from "../entities/Block";
 import {
   CollisionTile,

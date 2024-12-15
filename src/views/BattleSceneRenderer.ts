@@ -1,5 +1,5 @@
-import { Camera } from "@/engine";
-import { Context2D } from "@/engine/types";
+import { Camera } from "./Camera";
+import { Context2D } from "./types";
 import { StageRenderData, StageRenderer } from "./components/Stage";
 import { BattleHudRenderData, BattleHudView } from "./components/BattleHud";
 import { BlockRenderData, BlockRenderer } from "./components/Block";
@@ -8,6 +8,7 @@ import { BombRenderer, BombRenderData } from "./components/Bomb";
 import { BombermanRenderData, BombermanRenderer } from "./components/Bomberman";
 import { ExplosionRenderer, ExplosionRenderData } from "./components/Explosion";
 import { BaseRenderer } from "./BaseRenderer";
+import { HALF_TILE_SIZE, STAGE_OFFSET_Y } from "@/game/constants";
 
 export interface Snapshot {
   hud: BattleHudRenderData;
@@ -38,6 +39,7 @@ export class BattleSceneRenderer extends BaseRenderer<Snapshot> {
    */
   constructor(context: Context2D, camera: Camera) {
     super(context, camera);
+    this.camera.position = { x: HALF_TILE_SIZE, y: -STAGE_OFFSET_Y };
     this.stageRenderer = new StageRenderer(context, camera);
     this.hudRenderer = new BattleHudView(context, camera);
     this.blockRenderer = new BlockRenderer(context, camera);

@@ -6,14 +6,14 @@ import {
 } from "@/game/constants/game";
 import { GameState } from "@/game/types";
 import { BattleScene } from "@/game/scenes/BattleScene";
-import { Camera } from "@/engine";
 import {
   registerGamepadEvents,
   registerKeyEvents,
   unregisterGamepadEvents,
   unregisterKeyEvents,
-} from "@/engine/inputHandler";
-import { GameTime } from "@/engine/types";
+} from "@/game/engine/inputHandler";
+import { GameTime } from "@/game/engine/types";
+import { Camera } from "@/views/Camera";
 import { BattleSceneRenderer } from "@/views/BattleSceneRenderer";
 import { createCanvasContext, removeCanvas } from "@/views/utils";
 
@@ -102,7 +102,6 @@ export class BombermanGame {
 
     return new BattleScene(
       this.frameTime,
-      this.camera,
       this.gameState,
       (winnerId) => (this.scene = this.createBattleScene(winnerId))
     );

@@ -1,4 +1,3 @@
-import { GamepadThumbstick } from "@/engine/constants/control";
 import { Control } from "@/game/constants/controls";
 import { controls } from "@/game/config/controls";
 const heldKeys = new Set();
@@ -91,51 +90,19 @@ export function isButtonPressed(padId: number, button: number) {
   return false;
 }
 
-export const isAxeGreater = (padId: number, axe: number, value: number) =>
-  gamePads.get(padId)?.axes[axe] >= value;
-
-export const isAxeLower = (padId: number, axe: number, value: number) =>
-  gamePads.get(padId)?.axes[axe] <= value;
-
 export const isControlDown = (id: number, control: string) =>
-  isKeyDown(controls[id].keyboard[control]) ||
-  isButtonDown(id, controls[id].gamePad[control]);
+  isKeyDown(controls[id].keyboard[control]);
 
 export const isControlPressed = (id: number, control: string) =>
-  isKeyPressed(controls[id].keyboard[control]) ||
-  isButtonPressed(id, controls[id].gamePad[control]);
+  isKeyPressed(controls[id].keyboard[control]);
 
-export const isLeft = (id: number) =>
-  isControlDown(id, Control.LEFT) ||
-  isAxeLower(
-    id,
-    controls[id].gamePad[GamepadThumbstick.HORIZONTAL_AXE_ID],
-    -controls[id].gamePad[GamepadThumbstick.DEAD_ZONE]
-  );
+export const isLeft = (id: number) => isControlDown(id, Control.LEFT);
 
-export const isRight = (id: number) =>
-  isControlDown(id, Control.RIGHT) ||
-  isAxeGreater(
-    id,
-    controls[id].gamePad[GamepadThumbstick.HORIZONTAL_AXE_ID],
-    controls[id].gamePad[GamepadThumbstick.DEAD_ZONE]
-  );
+export const isRight = (id: number) => isControlDown(id, Control.RIGHT);
 
-export const isUp = (id: number) =>
-  isControlDown(id, Control.UP) ||
-  isAxeLower(
-    id,
-    controls[id].gamePad[GamepadThumbstick.VERTICAL_AXE_ID],
-    -controls[id].gamePad[GamepadThumbstick.DEAD_ZONE]
-  );
+export const isUp = (id: number) => isControlDown(id, Control.UP);
 
-export const isDown = (id: number) =>
-  isControlDown(id, Control.DOWN) ||
-  isAxeGreater(
-    id,
-    controls[id].gamePad[GamepadThumbstick.VERTICAL_AXE_ID],
-    controls[id].gamePad[GamepadThumbstick.DEAD_ZONE]
-  );
+export const isDown = (id: number) => isControlDown(id, Control.DOWN);
 
 export const isIdle = (id: number) =>
   !(isLeft(id) || isRight(id) || isUp(id) || isDown(id));

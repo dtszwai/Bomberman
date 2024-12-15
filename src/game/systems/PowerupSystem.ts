@@ -1,4 +1,4 @@
-import { GameTime, Tile } from "@/engine/types";
+import { GameTime, Tile } from "@/game/engine/types";
 import { FRAME_TIME, TILE_SIZE } from "../constants/game";
 import { Bomberman } from "../entities/Bomberman";
 import { rectanglesOverlap } from "../utils/collisions";

@@ -9,7 +9,7 @@ import {
   TILE_SIZE,
 } from "@/game/constants";
 import { FlameCell } from "@/game/types";
-import { Tile } from "@/engine/types";
+import { Tile } from "@/game/engine/types";
 
 export interface ExplosionRenderData {
   cell: Tile;

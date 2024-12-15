@@ -1,4 +1,4 @@
-import { GameTime, Tile } from "@/engine/types";
+import { GameTime, Tile } from "@/game/engine/types";
 import { Bomb } from "../entities/Bomb";
 import { CollisionTile } from "../constants/levelData";
 import { BOMB_EXPLODE_DELAY, FlameDirectionLookup } from "../constants/bombs";

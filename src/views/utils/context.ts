@@ -1,4 +1,4 @@
-import { Context2D, FrameData, FrameDimensions } from "@/engine/types";
+import { Context2D, FrameData, FrameDimensions } from "../types";
 
 export function createCanvasContext(
   container: HTMLElement,

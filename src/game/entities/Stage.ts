@@ -4,7 +4,7 @@ import {
   MapToCollisionTileLookup,
   stageData,
 } from "@/game/constants/levelData";
-import { Tile } from "@/engine/types";
+import { Tile } from "@/game/engine/types";
 
 /**
  * Class representing the game stage.

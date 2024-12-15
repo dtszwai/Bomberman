@@ -1,5 +1,5 @@
-import { Camera } from "@/engine";
-import { Context2D } from "@/engine/types";
+import { Camera } from "./Camera";
+import { Context2D } from "./types";
 
 /**
  * Abstract base class for all views.

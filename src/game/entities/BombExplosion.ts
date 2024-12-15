@@ -2,7 +2,7 @@ import {
   EPLOSION_FRAME_DELAY,
   EXPLOSION_ANIMATION_SEQUENCE,
 } from "../constants/bombs";
-import { GameTime, Tile } from "@/engine/types";
+import { GameTime, Tile } from "@/game/engine/types";
 import { FlameCell } from "../types";
 
 /**
