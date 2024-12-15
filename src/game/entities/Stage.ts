@@ -4,12 +4,7 @@ import {
   MapToCollisionTileLookup,
   stageData,
 } from "@/game/constants/levelData";
-import { drawTile } from "@/engine/context";
-import { TILE_SIZE } from "@/game/constants/game";
-import { Camera } from "@/engine";
-import StageUrl from "@assets/images/stage.png";
-import { Context2D, Tile } from "@/engine/types";
-import { loadImage } from "../utils/utils";
+import { Tile } from "@/engine/types";
 
 /**
  * Class representing the game stage.
@@ -22,23 +17,12 @@ export class Stage {
   public collisionMap: CollisionTile[][] = stageData.tiles.map((row) =>
     row.map((tile) => MapToCollisionTileLookup[tile])
   );
-  /** Image asset containing all stage tiles */
-  private static image = loadImage(StageUrl);
 
   /**
-   * Creates an instance of Stage.
-   * Initializes the offscreen canvas and begins building the stage map once the image is loaded.
-   *
-   * @throws Will throw an error if the offscreen canvas context cannot be retrieved.
+   * Creates an instance of Stage and initializes the stage map.
    */
   constructor() {
-    if (Stage.image.complete) {
-      this.initializeStageMap();
-    } else {
-      Stage.image.onload = () => {
-        this.initializeStageMap();
-      };
-    }
+    this.initializeStageMap();
   }
 
   /**
@@ -79,22 +63,6 @@ export class Stage {
     this.tileMap[row][column] = tileType;
     this.collisionMap[row][column] = MapToCollisionTileLookup[tileType];
   };
-
-  /**
-   * Renders the pre-rendered stage onto the main canvas context,
-   * adjusted by the camera's position.
-   */
-  public draw(context: Context2D, camera: Camera) {
-    for (let row = 0; row < this.tileMap.length; row++) {
-      for (let col = 0; col < this.tileMap[row].length; col++) {
-        const tileType = this.tileMap[row][col];
-        const x = col * TILE_SIZE - camera.position.x;
-        const y = row * TILE_SIZE - camera.position.y;
-
-        drawTile(context, Stage.image, tileType, x, y, TILE_SIZE);
-      }
-    }
-  }
 
   /**
    * Serializes the current state of the stage.

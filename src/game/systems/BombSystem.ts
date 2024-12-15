@@ -1,4 +1,3 @@
-import { Camera } from "@/engine";
 import { GameTime, Tile } from "@/engine/types";
 import { Bomb } from "../entities/Bomb";
 import { CollisionTile } from "../constants/levelData";
@@ -220,13 +219,6 @@ export class BombSystem {
    */
   public update(time: GameTime) {
     this.bombs.forEach((bomb) => bomb.update(time));
-  }
-
-  /**
-   * Draws all active bombs and bomb explosions onto the canvas.
-   */
-  public draw(context: CanvasRenderingContext2D, camera: Camera) {
-    this.bombs.forEach((bomb) => bomb.draw(context, camera));
   }
 
   /**

@@ -1,5 +1,5 @@
 import { Camera } from "@/engine";
-import { GameTime, Scene } from "@/engine/types";
+import { GameTime } from "@/engine/types";
 import { Stage } from "@/game/entities/Stage";
 import { HALF_TILE_SIZE, STAGE_OFFSET_Y } from "../constants/game";
 import { BattleHud } from "../entities/BattleHud";
@@ -14,7 +14,7 @@ import type { GameState } from "../types";
  * Class representing the battle scene in the game.
  * Manages game entities, systems, and handles game logic specific to the battle.
  */
-export class BattleScene implements Scene {
+export class BattleScene {
   /** The game stage containing the map and related data */
   private stage: Stage;
   /** Heads-Up Display managing UI elements like scores and timers */
@@ -112,18 +112,6 @@ export class BattleScene implements Scene {
     this.players.sort((a, b) => a.position.y - b.position.y);
     this.players.forEach((player) => player.update(time));
     this.checkEndGame();
-  }
-
-  /**
-   * Draws all game elements onto the canvas.
-   */
-  public draw(context: CanvasRenderingContext2D, camera: Camera) {
-    this.stage.draw(context, camera);
-    this.hud.draw(context);
-    this.powerupSystem.draw(context, camera);
-    this.blockSystem.draw(context, camera);
-    this.bombSystem.draw(context, camera);
-    this.players.forEach((player) => player.draw(context, camera));
   }
 
   /**

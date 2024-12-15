@@ -7,7 +7,6 @@ import {
   PowerupType,
   stageData,
 } from "../constants/levelData";
-import { Camera } from "@/engine";
 
 /**
  * Represents a block entry within the BlockSystem.
@@ -153,13 +152,6 @@ export class BlockSystem {
    */
   public update(time: GameTime) {
     this.blocks.forEach((block) => block.entity?.update(time));
-  }
-
-  /**
-   * Draws all active Block entities to the canvas.
-   */
-  public draw(context: CanvasRenderingContext2D, camera: Camera) {
-    this.blocks.forEach((block) => block.entity?.draw(context, camera));
   }
 
   /**

@@ -1,10 +1,5 @@
-import { Camera } from "@/engine";
 import { GameTime, Tile } from "@/engine/types";
-import { drawTile } from "@/engine/context";
-import StageUrl from "@assets/images/stage.png";
-import { TILE_SIZE } from "../constants/game";
 import { MapTile } from "../constants/levelData";
-import { loadImage } from "../utils/utils";
 import { BLOCK_FRAME_DELAY } from "../constants/bombs";
 
 const TOTAL_FRAMES = 8;
@@ -15,8 +10,6 @@ const TOTAL_FRAMES = 8;
  * triggering a destruction animation before being removed from the game.
  */
 export class DestructibleBlock {
-  /** Image asset for block sprites */
-  private static image = loadImage(StageUrl);
   /** Current frame index for the destruction animation */
   private animationFrameIndex = MapTile.BLOCK;
   /** Timestamp for the next frame update */
@@ -53,20 +46,6 @@ export class DestructibleBlock {
    */
   public update(time: GameTime) {
     this.updateAnimation(time);
-  }
-
-  /**
-   * Draws the destructible block's current animation frame onto the canvas.
-   */
-  public draw(context: CanvasRenderingContext2D, camera: Camera) {
-    drawTile(
-      context,
-      DestructibleBlock.image,
-      this.animationFrameIndex,
-      this.cell.column * TILE_SIZE - camera.position.x,
-      this.cell.row * TILE_SIZE - camera.position.y,
-      TILE_SIZE
-    );
   }
 
   /**
