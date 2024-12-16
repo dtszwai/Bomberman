@@ -2,7 +2,7 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 import { Lobby } from "./Lobby";
 import { registerViteHmrServerRestart } from "./vite-hmr-restart";
-import { CreateRoomDto, OperationResult, PlayerInput } from "./types";
+import { ClientEvents, Events, ServerEvents } from "@/events";
 
 const DEBUG = (process.env.DEBUG || "false").toLowerCase() === "true";
 const PORT = Number(process.env.PORT) || 3000;
@@ -19,14 +19,17 @@ io.on("connection", (socket) => {
 
   lobby.addPlayer(socket.id);
   // Send the player ID back to the client immediately after connection
-  socket.emit("playerConnected", { playerId: socket.id });
+  socket.emit(Events.PLAYER_CONNECTED, { playerId: socket.id });
   // Send current room list to newly connected client
-  socket.emit("lobbyState", lobby.getLobbyState());
+  socket.emit(Events.LOBBY_STATE, lobby.getLobbyState());
 
   // Room creation
   socket.on(
-    "createRoom",
-    (config: CreateRoomDto, callback: (result: OperationResult) => void) => {
+    Events.CREATE_ROOM,
+    (
+      config: ClientEvents["createRoom"],
+      callback: (result: ServerEvents["createRoom"]) => void
+    ) => {
       const result = lobby.createRoom(socket.id, config);
       if (result.success) {
         socket.join(result.data!.id);
@@ -38,8 +41,11 @@ io.on("connection", (socket) => {
 
   // Room joining
   socket.on(
-    "joinRoom",
-    (roomId: string, callback: (result: OperationResult) => void) => {
+    Events.JOIN_ROOM,
+    (
+      { roomId }: ClientEvents["joinRoom"],
+      callback: (result: ServerEvents["joinRoom"]) => void
+    ) => {
       const result = lobby.joinRoom(roomId, socket.id);
       if (result.success) {
         socket.join(roomId);
@@ -48,25 +54,28 @@ io.on("connection", (socket) => {
     }
   );
 
-  // Handle starting the game
+  // Leave Room
   socket.on(
-    "startGame",
-    (roomId: string, callback: (result: OperationResult) => void) => {
-      const result = lobby.initiateGame(roomId, socket.id);
+    Events.LEAVE_ROOM,
+    (_, callback: (result: ServerEvents["leaveRoom"]) => void) => {
+      const result = lobby.leaveRoom(socket.id);
+      if (result.success) {
+        socket.leave(result.data!.id);
+      }
       callback(result);
     }
   );
 
-  // Leave Room
-  socket.on("leaveRoom", (_, callback: (result: OperationResult) => void) => {
-    const result = lobby.leaveRoom(socket.id);
-    if (result.success) {
-      socket.leave(result.data!.id);
+  // Handle starting the game
+  socket.on(
+    Events.START_GAME,
+    (_, callback: (result: ServerEvents["startGame"]) => void) => {
+      const result = lobby.initiateGame(socket.id);
+      callback(result);
     }
-    callback(result);
-  });
+  );
 
-  socket.on("playerInput", (input: PlayerInput) => {
+  socket.on(Events.PLAYER_ACTION, (input: ClientEvents["playerAction"]) => {
     const state = lobby.getLobbyState();
     const player = state.players[socket.id];
 

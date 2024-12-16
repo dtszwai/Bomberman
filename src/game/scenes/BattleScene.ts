@@ -24,6 +24,7 @@ export interface GameSnapshot {
   bombs: BombSnapshot[];
   explosions: ExplosionSnapshot[];
   powerups: PowerupsSnapshot;
+  state: GameState;
 }
 
 /**
@@ -47,7 +48,10 @@ export class BattleScene {
    * @param state - The current state of the game, including player scores.
    * @param onEnd - Callback invoked when the battle ends, receiving the winner's ID.
    */
-  constructor(state: GameState, private onEnd: (winnerId: number) => void) {
+  constructor(
+    private state: GameState,
+    private onEnd: (winnerId: number) => void
+  ) {
     this.stage = new Stage();
     this.powerupSystem = new PowerupSystem(this.players);
     this.blockSystem = new BlockSystem(
@@ -128,6 +132,7 @@ export class BattleScene {
       bombs: this.bombSystem.serialize().bombs,
       explosions: this.bombSystem.serialize().explosions,
       powerups: this.powerupSystem.serialize(),
+      state: this.state,
     };
   }
 }

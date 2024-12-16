@@ -1,12 +1,13 @@
 import { Server } from "socket.io";
 import {
-  CreateRoomDto,
-  Lobby as ILobby,
+  LobbyState as ILobby,
   OperationResult,
   Player,
-  PlayerInput as PlayerCommand,
+  PlayerAction,
+  RoomState,
 } from "./types";
 import { Room } from "./Room";
+import { Events } from "@/events";
 
 export class Lobby {
   private players: Record<string, Player> = {};
@@ -29,7 +30,13 @@ export class Lobby {
     this.broadcastLobbyUpdate();
   }
 
-  public createRoom(hostId: string, config: CreateRoomDto = {}) {
+  public createRoom(
+    hostId: string,
+    config: {
+      name?: string;
+      maxPlayers?: number;
+    } = {}
+  ) {
     const host = this.players[hostId];
 
     if (!host) {
@@ -60,7 +67,10 @@ export class Lobby {
     return result;
   }
 
-  public joinRoom(roomId: string, playerId: string): OperationResult {
+  public joinRoom(
+    roomId: string,
+    playerId: string
+  ): OperationResult<RoomState> {
     const room = this.rooms[roomId];
     const player = this.players[playerId];
 
@@ -73,22 +83,26 @@ export class Lobby {
       this.broadcastLobbyUpdate();
     }
 
-    return result;
+    return { ...result, data: room.getState() };
   }
 
   public handlePlayerInput(
     roomId: string,
     playerId: string,
-    input: PlayerCommand
+    input: PlayerAction
   ) {
     this.rooms[roomId]?.handlePlayerInput(playerId, input);
   }
 
-  public initiateGame(roomId: string, initiatorId: string): OperationResult {
-    const room = this.rooms[roomId];
-    if (!room) {
-      return { success: false, message: "Room not found." };
+  public initiateGame(initiatorId: string): OperationResult {
+    const player = this.players[initiatorId];
+    if (!player) {
+      return { success: false, message: "Player not found." };
     }
+    if (!player.roomId) {
+      return { success: false, message: "Not in a room." };
+    }
+    const room = this.rooms[player.roomId];
 
     const result = room.startGame(initiatorId);
     if (result.success) {
@@ -130,7 +144,7 @@ export class Lobby {
    * This includes all rooms and all players (with their room affiliations).
    */
   private broadcastLobbyUpdate() {
-    this.io.emit("lobbyState", this.getLobbyState());
+    this.io.emit(Events.LOBBY_STATE, this.getLobbyState());
   }
 
   /**

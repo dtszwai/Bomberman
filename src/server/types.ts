@@ -1,5 +1,5 @@
-export interface Lobby {
-  rooms: Record<string, IRoom>;
+export interface LobbyState {
+  rooms: Record<string, RoomState>;
   players: Record<string, Player>;
 }
 
@@ -9,7 +9,7 @@ export interface Player {
   index?: number; // Index of the player in the room
 }
 
-export interface IRoom {
+export interface RoomState {
   id: string;
   players: Player[];
   maxPlayers: number;
@@ -25,11 +25,7 @@ type PlayerMovementAction = {
 
 type PlaceBombAction = { type: "placeBomb" };
 
-export type PlayerInput = PlayerMovementAction | PlaceBombAction;
-
-export interface JoinRoomRequest {
-  roomId: string;
-}
+export type PlayerAction = PlayerMovementAction | PlaceBombAction;
 
 export interface OperationResult<T = unknown> {
   success: boolean;
@@ -37,7 +33,10 @@ export interface OperationResult<T = unknown> {
   data?: T;
 }
 
-export interface CreateRoomDto {
-  maxPlayers?: number;
-  name?: string;
+export enum GameStatus {
+  INITIALIZING,
+  ACTIVE,
+  PAUSED,
+  ROUND_ENDED,
+  GAME_ENDED,
 }

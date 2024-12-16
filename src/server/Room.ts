@@ -1,10 +1,10 @@
 import { Server } from "socket.io";
-import { GameController } from "./GameController";
-import { Player, OperationResult, PlayerInput, IRoom } from "./types";
+import { GameSession } from "./GameSession";
+import { Player, OperationResult, PlayerAction, RoomState } from "./types";
 
 export class Room {
   private readonly players: Player[] = [];
-  private gameController?: GameController;
+  private gameSession?: GameSession;
 
   constructor(
     private readonly io: Server,
@@ -14,7 +14,7 @@ export class Room {
     public hostId: string
   ) {}
 
-  public addPlayer(player: Player): OperationResult<IRoom> {
+  public addPlayer(player: Player): OperationResult<RoomState> {
     if (!this.canAddPlayer(player)) {
       return {
         success: false,
@@ -34,6 +34,7 @@ export class Room {
     if (playerIndex === -1) return;
 
     const player = this.players[playerIndex];
+    this.gameSession?.handlePlayerDisconnect(player.id);
     this.players.splice(playerIndex, 1);
     this.resetPlayerState(player);
 
@@ -41,6 +42,8 @@ export class Room {
     if (playerId === this.hostId && this.players.length > 0) {
       this.hostId = this.players[0].id;
     }
+
+    // Cleanup is handled by the Lobby
   }
 
   public startGame(initiatorId: string): OperationResult {
@@ -51,42 +54,44 @@ export class Room {
       };
     }
 
-    this.gameController = new GameController(this.io, {
+    this.gameSession = new GameSession(this.io, {
       id: this.id,
-      players: this.players,
+      players: [...this.players],
       maxPlayers: this.maxPlayers,
       started: true,
       hostId: this.hostId,
       name: this.name,
     });
 
-    this.gameController.start();
+    this.gameSession.start();
     return { success: true };
   }
 
-  public handlePlayerInput(playerId: string, input: PlayerInput): void {
-    this.gameController?.handlePlayerInput(playerId, input);
+  public handlePlayerInput(playerId: string, input: PlayerAction) {
+    if (this.players.some((p) => p.id === playerId)) {
+      this.gameSession?.handlePlayerInput(playerId, input);
+    }
   }
 
   public cleanup(): void {
-    this.gameController?.stop();
-    delete this.gameController;
+    this.gameSession?.stop();
+    this.gameSession = undefined;
     this.players.forEach(this.resetPlayerState);
   }
 
-  public getState = (): IRoom => ({
+  public getState = (): RoomState => ({
     id: this.id,
     name: this.name,
-    players: this.players,
+    players: [...this.players],
     maxPlayers: this.maxPlayers,
-    started: !!this.gameController,
+    started: !!this.gameSession,
     hostId: this.hostId,
   });
 
   public shouldClose = () =>
     this.players.length === 0 || (this.isStarted() && this.players.length < 2);
 
-  public isStarted = () => !!this.gameController;
+  public isStarted = () => !!this.gameSession;
 
   private canAddPlayer = (player: Player) =>
     !this.isStarted() &&
