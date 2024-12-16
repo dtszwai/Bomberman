@@ -122,9 +122,8 @@ export class Lobby {
     }
 
     const roomId = player.roomId;
-
-    this.rooms[player.roomId]?.removePlayer(playerId);
-    this.cleanupRoomIfNeeded(player.roomId);
+    this.rooms[roomId]?.removePlayer(playerId);
+    this.cleanupRoomIfNeeded(roomId);
     this.broadcastLobbyUpdate();
     return { success: true, data: { id: roomId } };
   }

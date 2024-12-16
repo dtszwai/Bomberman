@@ -15,9 +15,14 @@ io.on("connection", (socket) => {
 
   lobby.addPlayer(socket.id);
   // Send the player ID back to the client immediately after connection
-  socket.emit(Events.PLAYER_CONNECTED, { playerId: socket.id });
+  socket.emit(Events.PLAYER_STATE, {
+    id: socket.id,
+  } as ServerEvents["playerState"]);
   // Send current room list to newly connected client
-  socket.emit(Events.LOBBY_STATE, lobby.getLobbyState());
+  socket.emit(
+    Events.LOBBY_STATE,
+    lobby.getLobbyState() as ServerEvents["lobbyState"]
+  );
 
   // Room creation
   socket.on(

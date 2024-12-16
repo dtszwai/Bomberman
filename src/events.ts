@@ -5,11 +5,12 @@ import {
   PlayerAction,
   OperationResult,
   GameStatus,
+  Player,
 } from "./server/types";
 
 export const Events = {
   LOBBY_STATE: "lobbyState",
-  PLAYER_CONNECTED: "playerConnected",
+  PLAYER_STATE: "playerState",
 
   // Room Events
   CREATE_ROOM: "createRoom",
@@ -41,6 +42,7 @@ export interface ClientEvents {
 
 // Server-to-client responses and broadcasts
 export interface ServerEvents {
+  [Events.PLAYER_STATE]: Player;
   [Events.LOBBY_STATE]: LobbyState;
   [Events.ROOM_STATE]: RoomState;
   [Events.GAME_STATE]: GameSnapshot & { status: GameStatus };
