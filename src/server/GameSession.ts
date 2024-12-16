@@ -4,6 +4,7 @@ import { BattleScene } from "@/game/scenes/BattleScene";
 import { GameState } from "@/game/types";
 import { FRAME_TIME, MAX_WINS } from "@/game/constants";
 import { Events, ServerEvents } from "@/events";
+import { logger } from "./logger";
 
 export class GameSession {
   private readonly settings = {
@@ -40,7 +41,7 @@ export class GameSession {
     this.gameStatus = GameStatus.ACTIVE;
     this.lastUpdateTime = Date.now();
     this.gameLoop = setInterval(() => this.update(), this.settings.tickRate);
-    console.log(`Game started for room ${this.room.id}`);
+    logger.info(`Game started for room ${this.room.id}`);
   }
 
   /**
@@ -53,7 +54,7 @@ export class GameSession {
     }
 
     this.gameStatus = GameStatus.GAME_ENDED;
-    console.log(`Game stopped for room ${this.room.id}`);
+    logger.info(`Game stopped for room ${this.room.id}`);
   }
 
   public pause() {

@@ -3,11 +3,7 @@ import { Server } from "socket.io";
 import { Lobby } from "./Lobby";
 import { registerViteHmrServerRestart } from "./vite-hmr-restart";
 import { ClientEvents, Events, ServerEvents } from "@/events";
-
-const DEBUG = (process.env.DEBUG || "false").toLowerCase() === "true";
-const PORT = Number(process.env.PORT) || 3000;
-
-if (!DEBUG) console.log = () => {};
+import { logger } from "./logger";
 
 // CORS allows the client to connect to the server from a different origin
 const httpServer = createServer();
@@ -15,7 +11,7 @@ const io = new Server(httpServer, { cors: { origin: "*" } });
 const lobby = new Lobby(io);
 
 io.on("connection", (socket) => {
-  console.log(`Player connected: ${socket.id}`);
+  logger.info(`Player connected: ${socket.id}`);
 
   lobby.addPlayer(socket.id);
   // Send the player ID back to the client immediately after connection
@@ -33,7 +29,7 @@ io.on("connection", (socket) => {
       const result = lobby.createRoom(socket.id, config);
       if (result.success) {
         socket.join(result.data!.id);
-        console.log(`Player ${socket.id} created room ${result.data!.id}`);
+        logger.info(`Player ${socket.id} created room ${result.data!.id}`);
       }
       callback(result);
     }
@@ -85,13 +81,14 @@ io.on("connection", (socket) => {
   });
 
   socket.on("disconnect", () => {
-    console.log(`Player disconnected: ${socket.id}`);
+    logger.info(`Player disconnected: ${socket.id}`);
     lobby.removePlayer(socket.id);
   });
 });
 
+const PORT = Number(process.env.PORT) || 3000;
 httpServer.listen(PORT, () => {
-  console.log(`Server started on port ${PORT}\n`);
+  logger.info(`Server started on port ${PORT}`);
 });
 
 registerViteHmrServerRestart(io, httpServer);
