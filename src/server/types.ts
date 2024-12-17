@@ -18,14 +18,7 @@ export interface RoomState {
   name: string;
 }
 
-type PlayerMovementAction = {
-  type: "move";
-  direction: "up" | "down" | "left" | "right";
-};
-
-type PlaceBombAction = { type: "placeBomb" };
-
-export type PlayerAction = PlayerMovementAction | PlaceBombAction;
+export type PlayerAction = "UP" | "DOWN" | "LEFT" | "RIGHT" | "PLACE_BOMB";
 
 export interface OperationResult<T = unknown> {
   success: boolean;

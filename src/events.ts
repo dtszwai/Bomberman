@@ -1,4 +1,6 @@
+import { GameTime } from "./game/engine/types";
 import { GameSnapshot } from "./game/scenes/BattleScene";
+import { GameState } from "./game/types";
 import {
   RoomState,
   LobbyState,
@@ -45,7 +47,9 @@ export interface ServerEvents {
   [Events.PLAYER_STATE]: Player;
   [Events.LOBBY_STATE]: LobbyState;
   [Events.ROOM_STATE]: RoomState;
-  [Events.GAME_STATE]: GameSnapshot & { status: GameStatus };
+  [Events.GAME_STATE]: GameSnapshot & { status: GameStatus } & {
+    hud: { time: GameTime; state: GameState };
+  };
   [Events.CREATE_ROOM]: OperationResult<RoomState>;
   [Events.JOIN_ROOM]: OperationResult<RoomState>;
   [Events.LEAVE_ROOM]: OperationResult;

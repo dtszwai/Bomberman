@@ -114,9 +114,7 @@ export class GameSession {
   };
 
   public handlePlayerInput(_playerId: string, _action: PlayerAction) {
-    if (this.gameStatus !== GameStatus.ACTIVE) return;
-    // Future: Transform player actions into game commands
-    // For now, the BattleScene handles the raw actions
+    // TODO: Implement player input handling
   }
 
   public handlePlayerDisconnect(_playerId: string) {
@@ -133,6 +131,16 @@ export class GameSession {
     const gameState: ServerEvents["gameState"] = {
       ...this.battleScene.serialize(),
       status: this.gameStatus,
+      hud: {
+        time: {
+          previous: this.lastUpdateTime,
+          secondsPassed: this.settings.tickRate / 1000,
+        },
+        state: {
+          wins: this.gameState.wins,
+          maxWins: this.settings.maxWins,
+        },
+      },
     };
     this.io.to(this.room.id).emit(Events.GAME_STATE, gameState);
   }

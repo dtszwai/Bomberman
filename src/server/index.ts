@@ -86,8 +86,8 @@ io.on("connection", (socket) => {
   });
 
   socket.on("disconnect", () => {
-    logger.info(`Player disconnected: ${socket.id}`);
     lobby.removePlayer(socket.id);
+    logger.info(`Player disconnected: ${socket.id}`);
   });
 });
 

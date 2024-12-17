@@ -8,8 +8,6 @@ export const controls = [
       [Control.UP]: "ArrowUp",
       [Control.DOWN]: "ArrowDown",
       [Control.ACTION]: "Space",
-      [Control.START]: "Enter",
-      [Control.ESCAPE]: "Escape",
     },
   },
   {
@@ -19,7 +17,6 @@ export const controls = [
       [Control.DOWN]: "KeyS",
       [Control.RIGHT]: "KeyD",
       [Control.ACTION]: "KeyF",
-      [Control.START]: "Enter",
     },
   },
 ];

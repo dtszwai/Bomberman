@@ -25,22 +25,6 @@ function handleKeyUp(event: KeyboardEvent) {
   pressedKeys.delete(event.code);
 }
 
-function handleGamepadConnected(event: GamepadEvent) {
-  const {
-    gamepad: { index, axes, buttons },
-  } = event;
-
-  gamePads.set(index, { axes, buttons });
-}
-
-function handleGamepadDisconnected(event: GamepadEvent) {
-  const {
-    gamepad: { index },
-  } = event;
-
-  gamePads.delete(index);
-}
-
 // Control event handlers
 
 export function registerKeyEvents() {
@@ -48,19 +32,9 @@ export function registerKeyEvents() {
   window.addEventListener("keyup", handleKeyUp);
 }
 
-export function registerGamepadEvents() {
-  window.addEventListener("gamepadconnected", handleGamepadConnected);
-  window.addEventListener("gamepaddisconnected", handleGamepadDisconnected);
-}
-
 export function unregisterKeyEvents() {
   window.removeEventListener("keydown", handleKeyDown);
   window.removeEventListener("keyup", handleKeyUp);
-}
-
-export function unregisterGamepadEvents() {
-  window.removeEventListener("gamepadconnected", handleGamepadConnected);
-  window.removeEventListener("gamepaddisconnected", handleGamepadDisconnected);
 }
 
 // Control helpers

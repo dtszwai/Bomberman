@@ -22,9 +22,10 @@ export class Lobby {
 
   public removePlayer(playerId: string): void {
     const player = this.players[playerId];
-    if (player?.roomId) {
-      this.rooms[player.roomId]?.removePlayer(playerId);
-      this.cleanupRoomIfNeeded(player.roomId);
+    const roomId = player?.roomId;
+    if (roomId) {
+      this.rooms[roomId]?.removePlayer(playerId);
+      this.cleanupRoomIfNeeded(roomId);
     }
     delete this.players[playerId];
     this.broadcastLobbyUpdate();
@@ -43,7 +44,7 @@ export class Lobby {
       return { success: false, message: "Host player not found" };
     }
     if (host.roomId) {
-      return { success: false, message: "Host already in another room" };
+      return { success: false, message: "Already in room" };
     }
 
     const roomId = this.generateRoomId();
@@ -81,6 +82,7 @@ export class Lobby {
     const result = room.addPlayer(player);
     if (result.success) {
       this.broadcastLobbyUpdate();
+      this.broadcastRoomUpdate(roomId);
     }
 
     return { ...result, data: room.getState() };
@@ -107,6 +109,7 @@ export class Lobby {
     const result = room.startGame(initiatorId);
     if (result.success) {
       this.broadcastLobbyUpdate();
+      this.broadcastRoomUpdate(room.id);
     }
 
     return result;
@@ -125,6 +128,7 @@ export class Lobby {
     this.rooms[roomId]?.removePlayer(playerId);
     this.cleanupRoomIfNeeded(roomId);
     this.broadcastLobbyUpdate();
+    this.broadcastRoomUpdate(roomId);
     return { success: true, data: { id: roomId } };
   }
 
@@ -144,6 +148,10 @@ export class Lobby {
    */
   private broadcastLobbyUpdate() {
     this.io.emit(Events.LOBBY_STATE, this.getLobbyState());
+  }
+
+  private broadcastRoomUpdate(roomId: string) {
+    this.io.to(roomId).emit(Events.ROOM_STATE, this.rooms[roomId]?.getState());
   }
 
   /**
