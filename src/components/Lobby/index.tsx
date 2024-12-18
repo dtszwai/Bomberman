@@ -9,7 +9,11 @@ interface ToastMessage {
   type: "success" | "error" | "info";
 }
 
-const Lobby = () => {
+interface LobbyProps {
+  onStartLocalGame: () => void;
+}
+
+const Lobby = ({ onStartLocalGame }: LobbyProps) => {
   const { state, joinRoom, createRoom, leaveRoom, startGame } = useLobby();
   const { rooms, players, currentPlayer } = state;
   const [toast, setToast] = useState<ToastMessage | null>(null);
@@ -74,9 +78,17 @@ const Lobby = () => {
       )}
       <div className={styles.header}>
         <h1>Bomberman Lobby</h1>
-        <button className={styles.createButton} onClick={handleCreateRoom}>
-          Create Room
-        </button>
+        <div className={styles.headerButtons}>
+          <button
+            className={`${styles.createButton} ${styles.localPlayButton}`}
+            onClick={onStartLocalGame}
+          >
+            Play Local
+          </button>
+          <button className={styles.createButton} onClick={handleCreateRoom}>
+            Create Room
+          </button>
+        </div>
       </div>
       <div className={styles.content}>
         <div className={styles.roomsGrid}>

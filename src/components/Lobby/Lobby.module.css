@@ -36,47 +36,6 @@
   align-content: start;
 }
 
-/* Room Styles */
-.room {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  padding: 1rem;
-  transition: all 0.2s ease-in-out;
-  min-height: 320px;
-}
-
-.roomHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.roomActions {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  display: flex;
-  gap: 0.5rem;
-  justify-content: center;
-  padding: 0.75rem;
-  background: linear-gradient(
-    to top,
-    rgba(26, 31, 54, 0.9),
-    rgba(26, 31, 54, 0)
-  );
-  backdrop-filter: blur(4px);
-}
-
-.currentRoom {
-  border: 2px solid #4f46e5;
-  box-shadow: 0 0 0 1px rgba(79, 70, 229, 0.1), 0 0 15px rgba(79, 70, 229, 0.2);
-  transform: scale(1.02);
-  transition: all 0.2s ease-in-out;
-}
-
 /* Sidebar */
 .sidebar {
   width: 280px;
@@ -140,9 +99,12 @@
 }
 
 /* Buttons */
-.joinButton,
-.leaveButton,
-.startButton,
+.headerButtons {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
 .createButton {
   border: none;
   border-radius: 4px;
@@ -151,37 +113,19 @@
   font-size: 1rem;
   transition: background-color 0.2s;
   color: #ffffff;
-}
-
-.joinButton,
-.createButton {
   background-color: #4f46e5;
 }
 
-.joinButton:hover,
 .createButton:hover {
   background-color: #4338ca;
 }
 
-.leaveButton {
-  background-color: #dc2626;
+.localPlayButton {
+  background-color: #7c3aed;
 }
 
-.leaveButton:hover {
-  background-color: #b91c1c;
-}
-
-.startButton {
-  background-color: #059669;
-}
-
-.startButton:hover {
-  background-color: #047857;
-}
-
-.joinButton:disabled {
-  background-color: #4b5563;
-  cursor: not-allowed;
+.localPlayButton:hover {
+  background-color: #6d28d9;
 }
 
 /* Scrollbar Styles */
