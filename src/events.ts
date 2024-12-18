@@ -46,9 +46,7 @@ export interface ServerEvents {
   [Events.PLAYER_STATE]: Player;
   [Events.LOBBY_STATE]: LobbyState;
   [Events.ROOM_STATE]: RoomState;
-  [Events.GAME_STATE]: GameSnapshot & { status: GameStatus } & {
-    hud: { time: [number, number]; state: GameState };
-  };
+  [Events.GAME_STATE]: GameSnapshot & { status: GameStatus };
   [Events.CREATE_ROOM]: OperationResult<RoomState>;
   [Events.JOIN_ROOM]: OperationResult<RoomState>;
   [Events.LEAVE_ROOM]: OperationResult;

@@ -65,8 +65,18 @@ export class BombermanGame {
    */
   private frame = (currentTime: DOMHighResTimeStamp) => {
     this.animationFrameId = window.requestAnimationFrame(this.frame);
-    // Calculate time passed
-    const delta = (currentTime - this.frameTime.previous) / 1000;
+
+    // If it's the first frame, just set the time and return
+    if (this.frameTime.previous === 0) {
+      this.frameTime.previous = currentTime;
+      return;
+    }
+
+    // Calculate time passed, capped at a maximum of 1/30th of a second to prevent huge jumps
+    const delta = Math.min(
+      (currentTime - this.frameTime.previous) / 1000,
+      1 / 30
+    );
     this.frameTime.secondsPassed = delta;
     this.frameTime.previous = currentTime;
 
@@ -76,15 +86,11 @@ export class BombermanGame {
     // Render the scene
     const snapshot = this.scene.serialize();
     this.renderer.update({
-      hud: { time: this.frameTime, state: this.gameState },
-      players: snapshot.players,
+      ...snapshot,
       blocks: snapshot.blocks
         .map((block) => block.entity)
         .filter((entity) => typeof entity !== "undefined"),
       stage: snapshot.stage.tileMap,
-      bombs: snapshot.bombs,
-      explosions: snapshot.explosions,
-      powerups: snapshot.powerups,
     });
     this.renderer.render();
   };

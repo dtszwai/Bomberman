@@ -1,7 +1,7 @@
 import { GameStatus, RoomState, PlayerControls, GameSettings } from "./types";
 import { BattleScene } from "@/game/scenes/BattleScene";
 import { GameState } from "@/game/types";
-import { FRAME_TIME, GAME_TIME, MAX_WINS } from "@/game/constants";
+import { FRAME_TIME, MAX_WINS } from "@/game/constants";
 import { logger } from "./logger";
 import { ActionHandler } from "@/server/ActionHandler";
 import { emitter } from ".";
@@ -13,8 +13,6 @@ export class GameSession {
     roundStartDelay: 3000,
     inactivityTimeout: 30000,
   };
-  private static readonly ROUND_TIME_MS =
-    (GAME_TIME[0] * 60 + GAME_TIME[1]) * 1000;
 
   private battleScene: BattleScene;
   private lastUpdateTime: number;
@@ -23,7 +21,6 @@ export class GameSession {
   private readonly gameState: GameState;
   private readonly inputHandlers: ActionHandler[] = [];
   private readonly settings: GameSettings;
-  private roundStartTime = Date.now();
 
   /**
    * Creates an instance of GameController.
@@ -49,7 +46,6 @@ export class GameSession {
     }
 
     this.gameStatus = GameStatus.ACTIVE;
-    this.roundStartTime = Date.now();
     this.startGameLoop();
     logger.info(`Game started for room ${this.room.id}`);
   }
@@ -157,34 +153,15 @@ export class GameSession {
   private startNextRound() {
     setTimeout(() => {
       this.battleScene = this.createBattleScene();
-      this.roundStartTime = Date.now();
       this.gameStatus = GameStatus.ACTIVE;
       emitter.notifyRoundStart(this.room.id);
     }, this.settings.roundStartDelay);
-  }
-
-  private getRoundTimeLeft(): [number, number] {
-    const elapsedMs = Date.now() - this.roundStartTime;
-    const remainingMs = Math.max(0, GameSession.ROUND_TIME_MS - elapsedMs);
-
-    const totalSeconds = Math.ceil(remainingMs / 1000);
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
-
-    return [minutes, seconds];
   }
 
   private broadcastGameState(): void {
     const gameState = {
       ...this.battleScene.serialize(),
       status: this.gameStatus,
-      hud: {
-        time: this.getRoundTimeLeft(),
-        state: {
-          wins: this.gameState.wins,
-          maxWins: this.settings.maxWins,
-        },
-      },
     };
     emitter.broadcastGameState(this.room.id, gameState);
   }
