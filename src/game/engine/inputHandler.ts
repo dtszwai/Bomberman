@@ -3,9 +3,6 @@ import { controls } from "@/game/config/controls";
 const heldKeys = new Set();
 const pressedKeys = new Set();
 
-const gamePads = new Map();
-const pressedButtons = new Set();
-
 const mappedKeys = controls
   .map(({ keyboard }) => Object.values(keyboard))
   .flat();
@@ -44,20 +41,6 @@ export const isKeyDown = (code: string) => heldKeys.has(code);
 export function isKeyPressed(code: string) {
   if (heldKeys.has(code) && !pressedKeys.has(code)) {
     pressedKeys.add(code);
-    return true;
-  }
-
-  return false;
-}
-
-export const isButtonDown = (padId: number, button: number) =>
-  gamePads.get(padId)?.buttons[button].pressed ?? false;
-
-export function isButtonPressed(padId: number, button: number) {
-  const key = `${padId}-${button}`;
-
-  if (isButtonDown(padId, button) && !pressedButtons.has(key)) {
-    pressedButtons.add(key);
     return true;
   }
 

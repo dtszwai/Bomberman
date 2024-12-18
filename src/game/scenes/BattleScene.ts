@@ -1,12 +1,12 @@
+import * as control from "../engine/inputHandler";
 import { GameTime } from "../engine/types";
 import {
-  Bomberman,
-  BombermanSnapshot,
   BombSnapshot,
   ExplosionSnapshot,
   Stage,
   StageSnapshot,
 } from "../entities";
+import { BombermanSnapshot, Bomberman } from "../entities/Bomberman";
 import {
   BlocksSnapshot,
   BlockSystem,
@@ -16,6 +16,8 @@ import {
 } from "../systems";
 import { BombermanStateType } from "../constants/bomberman";
 import type { GameState } from "../types";
+import { ActionHandler } from "../../server/ActionHandler";
+import { Control } from "../constants";
 
 export interface GameSnapshot {
   stage: StageSnapshot;
@@ -50,7 +52,8 @@ export class BattleScene {
    */
   constructor(
     private state: GameState,
-    private onEnd: (winnerId: number) => void
+    private onEnd: (winnerId: number) => void,
+    private inputHandlers?: ActionHandler[]
   ) {
     this.stage = new Stage();
     this.powerupSystem = new PowerupSystem(this.players);
@@ -67,6 +70,16 @@ export class BattleScene {
     state.wins.forEach((_, id) => this.addPlayer(id));
   }
 
+  private createLocalInputHandler(playerId: number) {
+    return {
+      isLeft: () => control.isLeft(playerId),
+      isRight: () => control.isRight(playerId),
+      isUp: () => control.isUp(playerId),
+      isDown: () => control.isDown(playerId),
+      isAction: () => control.isControlPressed(playerId, Control.ACTION),
+    };
+  }
+
   /**
    * Adds a new player to the battle.
    *
@@ -74,12 +87,17 @@ export class BattleScene {
    * @param time - The current game time.
    */
   private addPlayer(id: number) {
+    const inputHandler = this.inputHandlers
+      ? this.inputHandlers[id]
+      : this.createLocalInputHandler(id);
+
     this.players.push(
       new Bomberman(
         id,
         this.stage.getCollisionTileAt,
         this.bombSystem.addBomb,
-        this.removePlayer
+        this.removePlayer,
+        inputHandler
       )
     );
   }
