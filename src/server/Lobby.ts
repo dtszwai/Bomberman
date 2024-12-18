@@ -58,7 +58,7 @@ export class Lobby {
     );
 
     this.rooms[roomId] = room;
-    const result = room.addPlayer(host);
+    const result = room.addPlayer(host, 0);
 
     emitter.broadcastPlayerState(hostId, host);
 
@@ -70,8 +70,9 @@ export class Lobby {
   }
 
   public joinRoom(
+    playerId: string,
     roomId: string,
-    playerId: string
+    seat: number
   ): OperationResult<RoomState> {
     const room = this.rooms[roomId];
     const player = this.players[playerId];
@@ -84,7 +85,7 @@ export class Lobby {
       this.leaveRoom(playerId);
     }
 
-    const result = room.addPlayer(player);
+    const result = room.addPlayer(player, seat);
     emitter.broadcastPlayerState(playerId, player);
     return { ...result, data: room.getState() };
   }

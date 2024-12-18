@@ -25,9 +25,9 @@ const Lobby = ({ onStartLocalGame }: LobbyProps) => {
     setToast({ message, type });
   };
 
-  const handleJoinRoom = async (roomId: string) => {
+  const handleJoinRoom = async (roomId: string, seat: number) => {
     try {
-      await joinRoom({ roomId });
+      await joinRoom({ roomId, seat });
       showToast("Successfully joined the room", "success");
     } catch (error) {
       showToast(error instanceof Error ? error.message : "Failed to join room");

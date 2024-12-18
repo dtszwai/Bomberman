@@ -37,7 +37,7 @@ export type EventType = (typeof Events)[keyof typeof Events];
 // Client-to-server requests
 export interface ClientEvents {
   [Events.CREATE_ROOM]: { maxPlayers?: number; name?: string };
-  [Events.JOIN_ROOM]: { roomId: string };
+  [Events.JOIN_ROOM]: { roomId: string; seat: number };
   [Events.PLAYER_CONTROLS]: PlayerControls;
 }
 

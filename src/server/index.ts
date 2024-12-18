@@ -9,7 +9,7 @@ import { EventBroadcaster } from "./broadcast";
 // CORS allows the client to connect to the server from a different origin
 const httpServer = createServer();
 const io = new Server(httpServer, { cors: { origin: "*" } });
-export const emitter = new EventBroadcaster(io); 
+export const emitter = new EventBroadcaster(io);
 const lobby = new Lobby();
 
 io.on("connection", (socket) => {
@@ -39,10 +39,10 @@ io.on("connection", (socket) => {
   socket.on(
     Events.JOIN_ROOM,
     (
-      { roomId }: ClientEvents["joinRoom"],
+      { roomId, seat }: ClientEvents["joinRoom"],
       callback: (result: ServerEvents["joinRoom"]) => void
     ) => {
-      const result = lobby.joinRoom(roomId, socket.id);
+      const result = lobby.joinRoom(socket.id, roomId, seat);
       if (result.success) {
         socket.join(roomId);
       }

@@ -5,7 +5,7 @@ import Timer from "./Timer";
 interface RoomProps {
   room: RoomState;
   currentPlayer: Player | null;
-  handleJoinRoom: (roomId: string) => void;
+  handleJoinRoom: (roomId: string, seat: number) => void;
   handleLeaveRoom: () => void;
   handleStartGame: () => void;
 }
@@ -31,7 +31,8 @@ const Room = ({
 
   const handleSeatClick = (position: number) => {
     if (!room.started && !isPlayerInRoom && !positions[position]) {
-      handleJoinRoom(room.id);
+      console.log("Joining room", room.id, "at position", position);
+      handleJoinRoom(room.id, position);
     }
   };
 
