@@ -16,6 +16,7 @@ export interface RoomState {
   started: boolean;
   hostId: string; // ID of the player who created the room
   name: string;
+  startTime?: number;
 }
 
 export interface PlayerControls {

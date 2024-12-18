@@ -6,6 +6,7 @@ import { emitter } from ".";
 export class Room {
   private readonly players: Player[] = [];
   private gameSession?: GameSession;
+  private startTime?: number;
 
   constructor(
     public readonly id: string,
@@ -53,6 +54,7 @@ export class Room {
     }
 
     try {
+      this.startTime = Date.now();
       this.gameSession = new GameSession({
         id: this.id,
         players: [...this.players],
@@ -60,6 +62,7 @@ export class Room {
         started: true,
         hostId: this.hostId,
         name: this.name,
+        startTime: this.startTime,
       });
       this.gameSession.start();
       this.broadcastRoomUpdate();
@@ -79,6 +82,7 @@ export class Room {
   public cleanup(): void {
     this.gameSession?.stop();
     this.gameSession = undefined;
+    this.startTime = undefined;
     this.players.forEach(this.resetPlayerState);
     this.broadcastRoomUpdate();
   }
@@ -90,6 +94,7 @@ export class Room {
     maxPlayers: this.maxPlayers,
     started: this.isStarted(),
     hostId: this.hostId,
+    startTime: this.startTime,
   });
 
   public shouldClose = () =>

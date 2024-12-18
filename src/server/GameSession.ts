@@ -1,7 +1,7 @@
 import { GameStatus, RoomState, PlayerControls, GameSettings } from "./types";
 import { BattleScene } from "@/game/scenes/BattleScene";
 import { GameState } from "@/game/types";
-import { FRAME_TIME, MAX_WINS } from "@/game/constants";
+import { FRAME_TIME, GAME_TIME, MAX_WINS } from "@/game/constants";
 import { logger } from "./logger";
 import { ActionHandler } from "@/server/ActionHandler";
 import { emitter } from ".";
@@ -13,6 +13,8 @@ export class GameSession {
     roundStartDelay: 3000,
     inactivityTimeout: 30000,
   };
+  private static readonly ROUND_TIME_MS =
+    (GAME_TIME[0] * 60 + GAME_TIME[1]) * 1000;
 
   private battleScene: BattleScene;
   private lastUpdateTime: number;
@@ -21,6 +23,7 @@ export class GameSession {
   private readonly gameState: GameState;
   private readonly inputHandlers: ActionHandler[] = [];
   private readonly settings: GameSettings;
+  private roundStartTime = Date.now();
 
   /**
    * Creates an instance of GameController.
@@ -31,12 +34,12 @@ export class GameSession {
     settings: Partial<GameSettings> = {}
   ) {
     this.settings = { ...GameSession.DEFAULT_SETTINGS, ...settings };
-    this.lastUpdateTime = Date.now();
+    this.lastUpdateTime = room.startTime || Date.now();
     this.gameState = {
       wins: new Array(this.room.players.length).fill(0),
       maxWins: this.settings.maxWins,
     };
-    this.inputHandlers = this.room.players.map(() => new ActionHandler());
+    this.inputHandlers = room.players.map(() => new ActionHandler());
     this.battleScene = this.createBattleScene();
   }
 
@@ -46,7 +49,7 @@ export class GameSession {
     }
 
     this.gameStatus = GameStatus.ACTIVE;
-    this.lastUpdateTime = Date.now();
+    this.roundStartTime = Date.now();
     this.startGameLoop();
     logger.info(`Game started for room ${this.room.id}`);
   }
@@ -57,6 +60,7 @@ export class GameSession {
     emitter.broadcastRoomState(this.room.id, {
       ...this.room,
       started: false,
+      startTime: undefined,
     });
     logger.info(`Game stopped for room ${this.room.id}`);
   }
@@ -153,9 +157,21 @@ export class GameSession {
   private startNextRound() {
     setTimeout(() => {
       this.battleScene = this.createBattleScene();
+      this.roundStartTime = Date.now();
       this.gameStatus = GameStatus.ACTIVE;
       emitter.notifyRoundStart(this.room.id);
     }, this.settings.roundStartDelay);
+  }
+
+  private getRoundTimeLeft(): [number, number] {
+    const elapsedMs = Date.now() - this.roundStartTime;
+    const remainingMs = Math.max(0, GameSession.ROUND_TIME_MS - elapsedMs);
+
+    const totalSeconds = Math.ceil(remainingMs / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+
+    return [minutes, seconds];
   }
 
   private broadcastGameState(): void {
@@ -163,10 +179,7 @@ export class GameSession {
       ...this.battleScene.serialize(),
       status: this.gameStatus,
       hud: {
-        time: {
-          previous: this.lastUpdateTime,
-          secondsPassed: this.settings.tickRate / 1000,
-        },
+        time: this.getRoundTimeLeft(),
         state: {
           wins: this.gameState.wins,
           maxWins: this.settings.maxWins,

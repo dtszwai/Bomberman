@@ -6,7 +6,7 @@ import { GameState } from "@/game/types";
 import { GameTime } from "@/game/engine/types";
 
 export interface BattleHudRenderData {
-  time: GameTime;
+  time: [number, number] | GameTime;
   state: GameState;
 }
 
@@ -21,7 +21,12 @@ export class BattleHudView extends BaseRenderer {
    *
    * @param time - The current game time.
    */
-  private updateClock(time: GameTime) {
+  private updateClock(time: GameTime | [number, number]) {
+    if (Array.isArray(time)) {
+      this.clock = time;
+      return;
+    }
+
     if (time.previous <= this.nextAnimationUpdate) return;
 
     const [minutes, seconds] = this.clock;
