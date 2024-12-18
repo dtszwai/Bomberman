@@ -40,11 +40,11 @@ export interface FlameCell {
 }
 
 export interface GameSnapshot {
+  hud: { time: [number, number]; state: GameState };
   stage: StageSnapshot;
   players: BombermanSnapshot[];
   blocks: BlocksSnapshot["blocks"];
   bombs: BombSnapshot[];
   explosions: ExplosionSnapshot[];
   powerups: PowerupsSnapshot;
-  state: GameState;
 }

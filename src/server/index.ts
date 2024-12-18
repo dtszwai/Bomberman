@@ -16,7 +16,7 @@ io.on("connection", (socket) => {
   logger.info(`Player connected: ${socket.id}`);
 
   lobby.addPlayer(socket.id);
-  emitter.broadcastPlayerState(socket.id);
+  emitter.broadcastPlayerState(socket.id, { id: socket.id });
   emitter.broadcastLobbyState(lobby.getLobbyState());
 
   // Room creation
@@ -39,10 +39,10 @@ io.on("connection", (socket) => {
   socket.on(
     Events.JOIN_ROOM,
     (
-      { roomId }: ClientEvents["joinRoom"],
+      { roomId, seat }: ClientEvents["joinRoom"],
       callback: (result: ServerEvents["joinRoom"]) => void
     ) => {
-      const result = lobby.joinRoom(roomId, socket.id);
+      const result = lobby.joinRoom(socket.id, roomId, seat);
       if (result.success) {
         socket.join(roomId);
       }

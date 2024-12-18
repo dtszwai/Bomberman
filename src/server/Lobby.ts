@@ -53,15 +53,14 @@ export class Lobby {
       roomId,
       config.name || `Room ${roomId.slice(0, 4)}`,
       config.maxPlayers || 4,
-      hostId
+      hostId,
+      () => this.handleRoomStateChange(roomId)
     );
 
-    room.onStateChange = () => {
-      this.handleRoomStateChange(roomId);
-    };
-
     this.rooms[roomId] = room;
-    const result = room.addPlayer(host);
+    const result = room.addPlayer(host, 0);
+
+    emitter.broadcastPlayerState(hostId, host);
 
     if (!result.success) {
       delete this.rooms[roomId];
@@ -71,8 +70,9 @@ export class Lobby {
   }
 
   public joinRoom(
+    playerId: string,
     roomId: string,
-    playerId: string
+    seat: number
   ): OperationResult<RoomState> {
     const room = this.rooms[roomId];
     const player = this.players[playerId];
@@ -85,7 +85,8 @@ export class Lobby {
       this.leaveRoom(playerId);
     }
 
-    const result = room.addPlayer(player);
+    const result = room.addPlayer(player, seat);
+    emitter.broadcastPlayerState(playerId, player);
     return { ...result, data: room.getState() };
   }
 
@@ -122,6 +123,7 @@ export class Lobby {
     const roomId = player.roomId;
     this.rooms[roomId]?.removePlayer(playerId);
     this.cleanupRoomIfNeeded(roomId);
+    emitter.broadcastPlayerState(playerId, player);
     return { success: true, data: { id: roomId } };
   }
 

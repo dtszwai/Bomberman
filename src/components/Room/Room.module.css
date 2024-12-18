@@ -1,0 +1,213 @@
+.room {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
+  transition: all 0.2s ease-in-out;
+}
+
+.roomInfo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem;
+}
+
+.roomName {
+  font-weight: 500;
+  color: #ffffff;
+}
+
+.tableContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.middleRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  gap: 0.5rem;
+  margin: 0.5rem 0;
+}
+
+.table {
+  width: 80px;
+  height: 80px;
+  background-color: #2a2f46;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  transition: all 0.3s ease;
+}
+
+.room[data-started="true"] {
+  background-color: rgba(5, 150, 105, 0.1);
+}
+
+.room[data-started="true"] .table {
+  background-color: #065f46;
+  box-shadow: 0 0 15px rgba(5, 150, 105, 0.3);
+}
+
+.room[data-started="true"] .emptySeat {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.room[data-started="true"] .emptySeat:hover {
+  border-color: #3a3f56;
+  background-color: transparent;
+  transform: none;
+}
+
+.playerTop,
+.playerBottom,
+.playerLeft,
+.playerRight {
+  width: 100px;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.playerTop:hover,
+.playerBottom:hover,
+.playerLeft:hover,
+.playerRight:hover {
+  transform: scale(1.05);
+}
+
+.seat {
+  background-color: #2a2f46;
+  border-radius: 6px;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 70px;
+  transition: all 0.2s ease;
+}
+
+.emptySeat {
+  border: 2px dashed #3a3f56;
+  background-color: transparent;
+  cursor: pointer;
+}
+
+.emptySeat:hover {
+  border-color: #4f46e5;
+  background-color: rgba(79, 70, 229, 0.1);
+}
+
+.emptyIcon {
+  color: #6b7280;
+  font-size: 1.5rem;
+}
+
+.playerAvatar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.playerName {
+  font-size: 0.9rem;
+  color: #ffffff;
+  text-align: center;
+  word-break: break-word;
+}
+
+.hostBadge {
+  background-color: #4c1d95;
+  color: #ffffff;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+}
+
+.gameStatus {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 4px;
+  overflow: hidden;
+  background-color: #059669;
+  font-size: 0.9rem;
+}
+
+.gameStarted {
+  color: #ffffff;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.9rem;
+}
+
+.currentRoom .table {
+  border: 2px solid #4f46e5;
+  background-color: rgba(79, 70, 229, 0.1);
+}
+
+.currentPlayer {
+  background-color: rgba(79, 70, 229, 0.1);
+  border: 2px solid #4f46e5;
+}
+
+.roomActions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  margin-top: 0.5rem;
+}
+
+.leaveButton,
+.startButton {
+  border: none;
+  border-radius: 4px;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background-color 0.2s;
+  color: #ffffff;
+}
+
+.leaveButton {
+  background-color: #dc2626;
+}
+
+.leaveButton:hover {
+  background-color: #b91c1c;
+}
+
+.startButton {
+  background-color: #059669;
+}
+
+.startButton:hover {
+  background-color: #047857;
+}
+
+@media (max-width: 640px) {
+  .table {
+    width: 60px;
+    height: 60px;
+  }
+
+  .playerTop,
+  .playerBottom,
+  .playerLeft,
+  .playerRight {
+    width: 80px;
+  }
+
+  .seat {
+    padding: 0.5rem;
+    min-height: 60px;
+  }
+}

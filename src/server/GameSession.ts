@@ -31,12 +31,12 @@ export class GameSession {
     settings: Partial<GameSettings> = {}
   ) {
     this.settings = { ...GameSession.DEFAULT_SETTINGS, ...settings };
-    this.lastUpdateTime = Date.now();
+    this.lastUpdateTime = room.startTime || Date.now();
     this.gameState = {
       wins: new Array(this.room.players.length).fill(0),
       maxWins: this.settings.maxWins,
     };
-    this.inputHandlers = this.room.players.map(() => new ActionHandler());
+    this.inputHandlers = room.players.map(() => new ActionHandler());
     this.battleScene = this.createBattleScene();
   }
 
@@ -46,7 +46,6 @@ export class GameSession {
     }
 
     this.gameStatus = GameStatus.ACTIVE;
-    this.lastUpdateTime = Date.now();
     this.startGameLoop();
     logger.info(`Game started for room ${this.room.id}`);
   }
@@ -57,6 +56,7 @@ export class GameSession {
     emitter.broadcastRoomState(this.room.id, {
       ...this.room,
       started: false,
+      startTime: undefined,
     });
     logger.info(`Game stopped for room ${this.room.id}`);
   }
@@ -162,16 +162,6 @@ export class GameSession {
     const gameState = {
       ...this.battleScene.serialize(),
       status: this.gameStatus,
-      hud: {
-        time: {
-          previous: this.lastUpdateTime,
-          secondsPassed: this.settings.tickRate / 1000,
-        },
-        state: {
-          wins: this.gameState.wins,
-          maxWins: this.settings.maxWins,
-        },
-      },
     };
     emitter.broadcastGameState(this.room.id, gameState);
   }

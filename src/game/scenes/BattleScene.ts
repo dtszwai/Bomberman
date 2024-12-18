@@ -2,7 +2,7 @@ import * as control from "../engine/inputHandler";
 import { GameTime } from "../engine/types";
 import { Stage, Bomberman } from "../entities";
 import { BlockSystem, BombSystem, PowerupSystem } from "../systems";
-import { BombermanStateType, Control } from "../constants";
+import { BombermanStateType, Control, GAME_TIME } from "../constants";
 import type { GameSnapshot, GameState } from "../types";
 
 /**
@@ -20,6 +20,10 @@ export class BattleScene {
   private bombSystem: BombSystem;
   /** Array of players participating in the battle */
   private players: Bomberman[] = [];
+  /** Remaining time in the game */
+  private remainingTime: [number, number] = [...GAME_TIME];
+  /** Accumulated time to track sub-second time */
+  private accumulatedTime: number = 0;
 
   /**
    * Creates an instance of BattleScene.
@@ -106,6 +110,23 @@ export class BattleScene {
    * Updates all game systems and players.
    */
   public update(time: GameTime) {
+    // Accumulate the time passed
+    this.accumulatedTime += time.secondsPassed;
+
+    // Only update the timer when we've accumulated a full second
+    if (this.accumulatedTime >= 1) {
+      const secondsToDecrease = Math.floor(this.accumulatedTime);
+      this.accumulatedTime -= secondsToDecrease;
+
+      const totalSeconds = this.remainingTime[0] * 60 + this.remainingTime[1];
+      const newTotalSeconds = Math.max(0, totalSeconds - secondsToDecrease);
+
+      this.remainingTime = [
+        Math.floor(newTotalSeconds / 60),
+        Math.floor(newTotalSeconds % 60),
+      ];
+    }
+
     this.blockSystem.update(time);
     this.bombSystem.update(time);
     this.powerupSystem.update(time);
@@ -126,7 +147,7 @@ export class BattleScene {
       bombs: this.bombSystem.serialize().bombs,
       explosions: this.bombSystem.serialize().explosions,
       powerups: this.powerupSystem.serialize(),
-      state: this.state,
+      hud: { time: this.remainingTime, state: this.state },
     };
   }
 }

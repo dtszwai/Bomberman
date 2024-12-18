@@ -1,0 +1,204 @@
+/* Main Layout */
+.lobby {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: #1a1f36;
+  color: #ffffff;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  border-bottom: 1px solid #3a3f56;
+  height: 70px;
+}
+
+.content {
+  display: flex;
+  flex: 1;
+  gap: 2rem;
+  padding: 2rem;
+  overflow: hidden;
+  height: calc(100vh - 70px);
+}
+
+/* Rooms Grid */
+.roomsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 2rem;
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 1rem;
+  align-content: start;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 280px;
+  background-color: #2a2f46;
+  border-radius: 8px;
+  padding: 1.5rem;
+  border: 1px solid #3a3f56;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar h2 {
+  margin-top: 0;
+}
+
+.playersList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  overflow-y: auto;
+  max-height: calc(100vh - 200px);
+  padding-right: 0.5rem;
+}
+
+.playerItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem;
+  border-radius: 4px;
+  background-color: #1a1f36;
+}
+
+.playerName {
+  font-size: 0.9rem;
+  color: #ffffff;
+  text-align: center;
+  word-break: break-word;
+}
+
+.playerStatus {
+  font-size: 0.8rem;
+  color: #9ca3af;
+}
+
+/* Status Badges */
+.hostBadge {
+  background-color: #4c1d95;
+  color: #ffffff;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+}
+
+.gameStarted {
+  background-color: #059669;
+  color: #ffffff;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+}
+
+/* Buttons */
+.headerButtons {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.createButton {
+  border: none;
+  border-radius: 4px;
+  padding: 1rem;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.2s;
+  color: #ffffff;
+  background-color: #4f46e5;
+}
+
+.createButton:hover {
+  background-color: #4338ca;
+}
+
+.localPlayButton {
+  background-color: #7c3aed;
+}
+
+.localPlayButton:hover {
+  background-color: #6d28d9;
+}
+
+/* Scrollbar Styles */
+/* Webkit (Chrome, Safari, Edge) */
+.roomsGrid::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.roomsGrid::-webkit-scrollbar-track {
+  background: rgba(26, 31, 54, 0.5);
+  border-radius: 4px;
+}
+
+.roomsGrid::-webkit-scrollbar-thumb {
+  background: #4f46e5;
+  border-radius: 4px;
+}
+
+.roomsGrid::-webkit-scrollbar-thumb:hover {
+  background: #4338ca;
+}
+
+.playersList::-webkit-scrollbar {
+  width: 6px;
+}
+
+.playersList::-webkit-scrollbar-track {
+  background: rgba(26, 31, 54, 0.5);
+  border-radius: 3px;
+}
+
+.playersList::-webkit-scrollbar-thumb {
+  background: #4f46e5;
+  border-radius: 3px;
+}
+
+.playersList::-webkit-scrollbar-thumb:hover {
+  background: #4338ca;
+}
+
+/* Firefox */
+.roomsGrid,
+.playersList {
+  scrollbar-width: thin;
+  scrollbar-color: #4f46e5 rgba(26, 31, 54, 0.5);
+}
+
+/* Media Queries */
+@media (max-width: 1024px) {
+  .content {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+  }
+
+  .playersList {
+    max-height: 200px;
+  }
+}
+
+@media (max-width: 640px) {
+  .header {
+    padding: 1rem;
+  }
+
+  .content {
+    padding: 1rem;
+  }
+
+  .roomsGrid {
+    gap: 1rem;
+  }
+}

@@ -1,23 +1,34 @@
-import { useEffect, useRef } from "react";
-import { BombermanGame } from "./BombermanGame";
+import { useEffect, useState } from "react";
+import Lobby from "./components/Lobby";
+import { useLobby } from "./hooks/useLobby";
+import { OnlineGameContainer } from "./components/GameContainer/OnlineGameContainer";
+import { LocalGameContainer } from "./components/GameContainer/LocalGameContainer";
 
-function App() {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const gameRef = useRef<BombermanGame | null>(null);
+type GameMode = "none" | "local" | "online";
+
+export default function App() {
+  const { state } = useLobby();
+  const [gameMode, setGameMode] = useState<GameMode>("none");
 
   useEffect(() => {
-    if (containerRef.current && !gameRef.current) {
-      gameRef.current = new BombermanGame(containerRef.current);
-      gameRef.current.start();
+    if (state.currentRoom?.started) {
+      setGameMode("online");
+    } else if (!state.currentRoom && gameMode === "online") {
+      setGameMode("none");
     }
+  }, [state.currentRoom, gameMode]);
 
-    return () => {
-      gameRef.current?.stop();
-      gameRef.current = null;
-    };
-  }, []);
+  const handleStartLocalGame = () => {
+    setGameMode("local");
+  };
 
-  return <div ref={containerRef} className="game-container" />;
+  if (gameMode === "local") {
+    return <LocalGameContainer />;
+  }
+
+  if (gameMode === "online") {
+    return <OnlineGameContainer />;
+  }
+
+  return <Lobby onStartLocalGame={handleStartLocalGame} />;
 }
-
-export default App;

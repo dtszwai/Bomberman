@@ -5,10 +5,11 @@ import { logger } from "@/server/logger";
 export class EventBroadcaster {
   constructor(private readonly io: Server) {}
 
-  public broadcastPlayerState(socketId: string): void {
-    this.io.to(socketId).emit(Events.PLAYER_STATE, {
-      id: socketId,
-    } as ServerEvents["playerState"]);
+  public broadcastPlayerState(
+    socketId: string,
+    player: ServerEvents["playerState"]
+  ): void {
+    this.io.to(socketId).emit(Events.PLAYER_STATE, player);
   }
 
   public broadcastLobbyState(state: ServerEvents["lobbyState"]): void {

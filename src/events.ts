@@ -37,7 +37,7 @@ export type EventType = (typeof Events)[keyof typeof Events];
 // Client-to-server requests
 export interface ClientEvents {
   [Events.CREATE_ROOM]: { maxPlayers?: number; name?: string };
-  [Events.JOIN_ROOM]: { roomId: string };
+  [Events.JOIN_ROOM]: { roomId: string; seat: number };
   [Events.PLAYER_CONTROLS]: PlayerControls;
 }
 
@@ -46,9 +46,7 @@ export interface ServerEvents {
   [Events.PLAYER_STATE]: Player;
   [Events.LOBBY_STATE]: LobbyState;
   [Events.ROOM_STATE]: RoomState;
-  [Events.GAME_STATE]: GameSnapshot & { status: GameStatus } & {
-    hud: { time: GameTime; state: GameState };
-  };
+  [Events.GAME_STATE]: GameSnapshot & { status: GameStatus };
   [Events.CREATE_ROOM]: OperationResult<RoomState>;
   [Events.JOIN_ROOM]: OperationResult<RoomState>;
   [Events.LEAVE_ROOM]: OperationResult;

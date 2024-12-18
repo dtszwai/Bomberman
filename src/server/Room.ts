@@ -6,12 +6,14 @@ import { emitter } from ".";
 export class Room {
   private readonly players: Player[] = [];
   private gameSession?: GameSession;
+  private startTime?: number;
 
   constructor(
     public readonly id: string,
     public readonly name: string,
     public readonly maxPlayers: number,
-    public hostId: string
+    public hostId: string,
+    private onStateChange?: () => void
   ) {}
 
   public addPlayer(player: Player): OperationResult<RoomState> {
@@ -52,6 +54,7 @@ export class Room {
     }
 
     try {
+      this.startTime = Date.now();
       this.gameSession = new GameSession({
         id: this.id,
         players: [...this.players],
@@ -59,6 +62,7 @@ export class Room {
         started: true,
         hostId: this.hostId,
         name: this.name,
+        startTime: this.startTime,
       });
       this.gameSession.start();
       this.broadcastRoomUpdate();
@@ -78,6 +82,7 @@ export class Room {
   public cleanup(): void {
     this.gameSession?.stop();
     this.gameSession = undefined;
+    this.startTime = undefined;
     this.players.forEach(this.resetPlayerState);
     this.broadcastRoomUpdate();
   }
@@ -89,6 +94,7 @@ export class Room {
     maxPlayers: this.maxPlayers,
     started: this.isStarted(),
     hostId: this.hostId,
+    startTime: this.startTime,
   });
 
   public shouldClose = () =>
@@ -126,7 +132,4 @@ export class Room {
     // Notify the lobby of state changes through the onStateChange callback
     this.onStateChange?.();
   }
-
-  // Callback to notify lobby of state changes
-  public onStateChange?: () => void;
 }
