@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "server": "vite-node --watch src/server/index.ts"
+    "server": "tsx --tsconfig tsconfig.server.json src/server/index.ts"
   },
   "dependencies": {
     "@types/node": "^22.10.2",
@@ -16,8 +16,7 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "socket.io": "^4.8.1",
-    "socket.io-client": "^4.8.1",
-    "vite-node": "^2.1.8"
+    "socket.io-client": "^4.8.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",
@@ -28,6 +27,7 @@
     "eslint-plugin-react-hooks": "^5.1.0",
     "eslint-plugin-react-refresh": "^0.4.16",
     "globals": "^15.13.0",
+    "tsx": "^4.19.2",
     "typescript": "~5.6.3",
     "typescript-eslint": "^8.18.0",
     "vite": "^6.0.3",
