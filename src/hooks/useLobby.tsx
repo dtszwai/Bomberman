@@ -8,6 +8,8 @@ interface LobbyState {
   players: Record<string, Player>;
   currentPlayer: Player | null;
   currentRoom: RoomState | null;
+  isConnected: boolean;
+  reconnectAttempts: number;
 }
 
 const initialState: LobbyState = {
@@ -15,6 +17,8 @@ const initialState: LobbyState = {
   players: {},
   currentPlayer: null,
   currentRoom: null,
+  isConnected: socket.connected,
+  reconnectAttempts: 0,
 };
 
 export function useLobby() {
@@ -25,6 +29,20 @@ export function useLobby() {
   }, []);
 
   useEffect(() => {
+    const onConnect = () =>
+      updateState({ isConnected: true, reconnectAttempts: 0 });
+
+    const onDisconnect = () => updateState({ isConnected: false });
+
+    const onReconnectAttempt = (attempt: number) =>
+      updateState({ reconnectAttempts: attempt });
+
+    socket.on("connect", onConnect);
+
+    socket.on("disconnect", onDisconnect);
+
+    socket.io.on("reconnect_attempt", onReconnectAttempt);
+
     socket.on(Events.PLAYER_STATE, (player: ServerEvents["playerState"]) => {
       updateState({ currentPlayer: player });
     });
@@ -38,6 +56,9 @@ export function useLobby() {
     });
 
     return () => {
+      socket.off("connect", onConnect);
+      socket.off("disconnect", onDisconnect);
+      socket.io.off("reconnect_attempt", onReconnectAttempt);
       socket.off(Events.PLAYER_STATE);
       socket.off(Events.ROOM_STATE);
       socket.off(Events.LOBBY_STATE);
@@ -47,6 +68,10 @@ export function useLobby() {
   const createRoom = async (
     dto: ClientEvents["createRoom"]
   ): Promise<RoomState> => {
+    if (!state.isConnected) {
+      throw new Error("Cannot create room while disconnected from server");
+    }
+
     return new Promise((resolve, reject) => {
       socket.emit(
         Events.CREATE_ROOM,
@@ -66,6 +91,10 @@ export function useLobby() {
   const joinRoom = async (
     dto: ClientEvents["joinRoom"]
   ): Promise<RoomState> => {
+    if (!state.isConnected) {
+      throw new Error("Cannot join room while disconnected from server");
+    }
+
     return new Promise((resolve, reject) => {
       socket.emit(Events.JOIN_ROOM, dto, (result: ServerEvents["joinRoom"]) => {
         if (result.success) {
@@ -78,8 +107,12 @@ export function useLobby() {
     });
   };
 
-  const leaveRoom = async () =>
-    new Promise<void>((resolve, reject) => {
+  const leaveRoom = async () => {
+    if (!state.isConnected) {
+      throw new Error("Cannot leave room while disconnected from server");
+    }
+
+    return new Promise<void>((resolve, reject) => {
       socket.emit(
         Events.LEAVE_ROOM,
         null,
@@ -93,9 +126,14 @@ export function useLobby() {
         }
       );
     });
+  };
 
-  const startGame = async () =>
-    new Promise<void>((resolve, reject) => {
+  const startGame = async () => {
+    if (!state.isConnected) {
+      throw new Error("Cannot start game while disconnected from server");
+    }
+
+    return new Promise<void>((resolve, reject) => {
       socket.emit(
         Events.START_GAME,
         null,
@@ -108,6 +146,7 @@ export function useLobby() {
         }
       );
     });
+  };
 
   return { state, createRoom, joinRoom, leaveRoom, startGame };
 }

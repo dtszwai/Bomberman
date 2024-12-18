@@ -3,6 +3,7 @@ import { useLobby } from "../../hooks/useLobby";
 import styles from "./Lobby.module.css";
 import Room from "../Room";
 import Toast from "../Toast";
+import ConnectionStatus from "../ConnectionStatus";
 
 interface ToastMessage {
   message: string;
@@ -15,7 +16,8 @@ interface LobbyProps {
 
 const Lobby = ({ onStartLocalGame }: LobbyProps) => {
   const { state, joinRoom, createRoom, leaveRoom, startGame } = useLobby();
-  const { rooms, players, currentPlayer } = state;
+  const { rooms, players, currentPlayer, isConnected, reconnectAttempts } =
+    state;
   const [toast, setToast] = useState<ToastMessage | null>(null);
 
   const showToast = (
@@ -69,6 +71,10 @@ const Lobby = ({ onStartLocalGame }: LobbyProps) => {
 
   return (
     <div className={styles.lobby}>
+      <ConnectionStatus
+        isConnected={isConnected}
+        reconnectAttempts={reconnectAttempts}
+      />
       {toast && (
         <Toast
           message={toast.message}
