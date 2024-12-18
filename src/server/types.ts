@@ -18,7 +18,10 @@ export interface RoomState {
   name: string;
 }
 
-export type PlayerAction = "UP" | "DOWN" | "LEFT" | "RIGHT" | "PLACE_BOMB";
+export interface PlayerControls {
+  heldKeys: string[];
+  pressedKeys: string[];
+}
 
 export interface OperationResult<T = unknown> {
   success: boolean;

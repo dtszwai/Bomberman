@@ -76,7 +76,7 @@ io.on("connection", (socket) => {
     }
   );
 
-  socket.on(Events.PLAYER_ACTION, (input: ClientEvents["playerAction"]) => {
+  socket.on(Events.PLAYER_CONTROLS, (input: ClientEvents["playerAction"]) => {
     const state = lobby.getLobbyState();
     const player = state.players[socket.id];
 

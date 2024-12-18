@@ -1,6 +1,7 @@
 import { Server } from "socket.io";
 import { GameSession } from "./GameSession";
-import { Player, OperationResult, PlayerAction, RoomState } from "./types";
+import { Player, OperationResult, RoomState, PlayerControls } from "./types";
+import { Events } from "@/events";
 
 export class Room {
   private readonly players: Player[] = [];
@@ -67,9 +68,9 @@ export class Room {
     return { success: true };
   }
 
-  public handlePlayerInput(playerId: string, input: PlayerAction) {
+  public handlePlayerInput(playerId: string, controls: PlayerControls) {
     if (this.players.some((p) => p.id === playerId)) {
-      this.gameSession?.handlePlayerInput(playerId, input);
+      this.gameSession?.handlePlayerInput(playerId, controls);
     }
   }
 
@@ -92,6 +93,11 @@ export class Room {
     this.players.length === 0 || (this.isStarted() && this.players.length < 2);
 
   public isStarted = () => !!this.gameSession;
+
+  public handleGameEnd = () => {
+    this.gameSession = undefined;
+    this.io.emit(Events.ROOM_STATE, this.getState());
+  };
 
   private canAddPlayer = (player: Player) =>
     !this.isStarted() &&

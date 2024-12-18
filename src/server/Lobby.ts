@@ -3,7 +3,7 @@ import {
   LobbyState as ILobby,
   OperationResult,
   Player,
-  PlayerAction,
+  PlayerControls,
   RoomState,
 } from "./types";
 import { Room } from "./Room";
@@ -91,9 +91,9 @@ export class Lobby {
   public handlePlayerInput(
     roomId: string,
     playerId: string,
-    input: PlayerAction
+    controls: PlayerControls
   ) {
-    this.rooms[roomId]?.handlePlayerInput(playerId, input);
+    this.rooms[roomId]?.handlePlayerInput(playerId, controls);
   }
 
   public initiateGame(initiatorId: string): OperationResult {

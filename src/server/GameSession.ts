@@ -1,10 +1,11 @@
 import { Server } from "socket.io";
-import { GameStatus, RoomState, PlayerAction } from "./types";
+import { GameStatus, RoomState, PlayerControls } from "./types";
 import { BattleScene } from "@/game/scenes/BattleScene";
 import { GameState } from "@/game/types";
 import { FRAME_TIME, MAX_WINS } from "@/game/constants";
 import { Events, ServerEvents } from "@/events";
 import { logger } from "./logger";
+import { ActionHandler } from "@/game/engine/ActionHandler";
 
 export class GameSession {
   private readonly settings = {
@@ -19,6 +20,7 @@ export class GameSession {
   private gameLoop: NodeJS.Timeout | null = null;
   private gameStatus = GameStatus.INITIALIZING;
   private gameState: GameState;
+  private inputHandlers: ActionHandler[] = [];
 
   /**
    * Creates an instance of GameController.
@@ -31,7 +33,16 @@ export class GameSession {
       wins: new Array(this.room.players.length).fill(0),
       maxWins: this.settings.maxWins,
     };
-    this.battleScene = new BattleScene(this.gameState, this.onRoundEnd);
+
+    this.room.players.forEach((_) => {
+      this.inputHandlers.push(new ActionHandler());
+    });
+
+    this.battleScene = new BattleScene(
+      this.gameState,
+      this.onRoundEnd,
+      this.inputHandlers
+    );
   }
 
   /**
@@ -77,13 +88,10 @@ export class GameSession {
     if (this.gameStatus !== GameStatus.ACTIVE) return;
 
     const currentTime = Date.now();
-    const deltaTime = currentTime - this.lastUpdateTime;
+    const delta = (currentTime - this.lastUpdateTime) / 1000;
     this.lastUpdateTime = currentTime;
 
-    this.battleScene.update({
-      previous: currentTime,
-      secondsPassed: deltaTime / 1000,
-    });
+    this.battleScene.update({ previous: currentTime, secondsPassed: delta });
     this.broadcastGameState();
   }
 
@@ -106,15 +114,23 @@ export class GameSession {
       this.stop();
     } else {
       setTimeout(() => {
-        this.battleScene = new BattleScene(this.gameState, this.onRoundEnd);
+        this.battleScene = new BattleScene(
+          this.gameState,
+          this.onRoundEnd,
+          this.inputHandlers
+        );
         this.gameStatus = GameStatus.ACTIVE;
         this.io.to(this.room.id).emit(Events.ROUND_START);
       }, this.settings.roundStartDelay);
     }
   };
 
-  public handlePlayerInput(_playerId: string, _action: PlayerAction) {
-    // TODO: Implement player input handling
+  public handlePlayerInput(playerId: string, controls: PlayerControls) {
+    if (this.gameStatus !== GameStatus.ACTIVE) return;
+    const playerIndex = this.room.players.findIndex((p) => p.id === playerId);
+    if (playerIndex < 0) return;
+    console.log(this.inputHandlers[0]);
+    this.inputHandlers[playerIndex].update(controls);
   }
 
   public handlePlayerDisconnect(_playerId: string) {
