@@ -1,11 +1,10 @@
-import { Server } from "socket.io";
 import { GameStatus, RoomState, PlayerControls, GameSettings } from "./types";
 import { BattleScene } from "@/game/scenes/BattleScene";
 import { GameState } from "@/game/types";
 import { FRAME_TIME, MAX_WINS } from "@/game/constants";
-import { Events, ServerEvents } from "@/events";
 import { logger } from "./logger";
 import { ActionHandler } from "@/server/ActionHandler";
+import { emitter } from ".";
 
 export class GameSession {
   private static readonly DEFAULT_SETTINGS: GameSettings = {
@@ -25,12 +24,9 @@ export class GameSession {
 
   /**
    * Creates an instance of GameController.
-   *
-   * @param io - The Socket.io server instance.
    * @param room - The room for which this controller manages the game.
    */
   constructor(
-    private readonly io: Server,
     private readonly room: RoomState,
     settings: Partial<GameSettings> = {}
   ) {
@@ -58,12 +54,11 @@ export class GameSession {
   public stop() {
     this.stopGameLoop();
     this.gameStatus = GameStatus.GAME_ENDED;
-    logger.info(`Game stopped for room ${this.room.id}`);
-
-    this.io.to(this.room.id).emit(Events.ROOM_STATE, {
+    emitter.broadcastRoomState(this.room.id, {
       ...this.room,
       started: false,
-    } as ServerEvents["roomState"]);
+    });
+    logger.info(`Game stopped for room ${this.room.id}`);
   }
 
   public pause() {
@@ -71,7 +66,7 @@ export class GameSession {
 
     this.gameStatus = GameStatus.PAUSED;
     this.stopGameLoop();
-    this.io.to(this.room.id).emit(Events.GAME_PAUSED);
+    emitter.notifyGamePaused(this.room.id);
   }
 
   public resume() {
@@ -79,7 +74,7 @@ export class GameSession {
     this.gameStatus = GameStatus.ACTIVE;
     this.lastUpdateTime = Date.now();
     this.startGameLoop();
-    this.io.to(this.room.id).emit(Events.GAME_RESUMED);
+    emitter.notifyGameResumed(this.room.id);
   }
 
   public handlePlayerInput(playerId: string, controls: PlayerControls) {
@@ -151,9 +146,7 @@ export class GameSession {
       winnerId: this.room.players[winnerId].id,
       score: this.gameState.wins,
     };
-    this.io
-      .to(this.room.id)
-      .emit(Events.GAME_ENDED, result as ServerEvents["gameEnded"]);
+    emitter.notifyGameEnded(this.room.id, result);
     this.stop();
   }
 
@@ -161,7 +154,7 @@ export class GameSession {
     setTimeout(() => {
       this.battleScene = this.createBattleScene();
       this.gameStatus = GameStatus.ACTIVE;
-      this.io.to(this.room.id).emit(Events.ROUND_START);
+      emitter.notifyRoundStart(this.room.id);
     }, this.settings.roundStartDelay);
   }
 
@@ -180,8 +173,6 @@ export class GameSession {
         },
       },
     };
-    this.io
-      .to(this.room.id)
-      .emit(Events.GAME_STATE, gameState as ServerEvents["gameState"]);
+    emitter.broadcastGameState(this.room.id, gameState);
   }
 }

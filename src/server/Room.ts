@@ -1,15 +1,13 @@
-import { Server } from "socket.io";
 import { GameSession } from "./GameSession";
 import { Player, OperationResult, RoomState, PlayerControls } from "./types";
-import { Events } from "@/events";
 import { logger } from "./logger";
+import { emitter } from ".";
 
 export class Room {
   private readonly players: Player[] = [];
   private gameSession?: GameSession;
 
   constructor(
-    private readonly io: Server,
     public readonly id: string,
     public readonly name: string,
     public readonly maxPlayers: number,
@@ -54,7 +52,7 @@ export class Room {
     }
 
     try {
-      this.gameSession = new GameSession(this.io, {
+      this.gameSession = new GameSession({
         id: this.id,
         players: [...this.players],
         maxPlayers: this.maxPlayers,
@@ -124,7 +122,7 @@ export class Room {
 
   private broadcastRoomUpdate(): void {
     const roomState = this.getState();
-    this.io.to(this.id).emit(Events.ROOM_STATE, roomState);
+    emitter.broadcastRoomState(this.id, roomState);
     // Notify the lobby of state changes through the onStateChange callback
     this.onStateChange?.();
   }

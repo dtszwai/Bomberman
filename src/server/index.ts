@@ -4,25 +4,20 @@ import { Lobby } from "./Lobby";
 import { registerViteHmrServerRestart } from "./vite-hmr-restart";
 import { ClientEvents, Events, ServerEvents } from "@/events";
 import { logger } from "./logger";
+import { EventBroadcaster } from "./broadcast";
 
 // CORS allows the client to connect to the server from a different origin
 const httpServer = createServer();
 const io = new Server(httpServer, { cors: { origin: "*" } });
-const lobby = new Lobby(io);
+export const emitter = new EventBroadcaster(io);
+const lobby = new Lobby();
 
 io.on("connection", (socket) => {
   logger.info(`Player connected: ${socket.id}`);
 
   lobby.addPlayer(socket.id);
-  // Send the player ID back to the client immediately after connection
-  socket.emit(Events.PLAYER_STATE, {
-    id: socket.id,
-  } as ServerEvents["playerState"]);
-  // Send current room list to newly connected client
-  socket.emit(
-    Events.LOBBY_STATE,
-    lobby.getLobbyState() as ServerEvents["lobbyState"]
-  );
+  emitter.broadcastPlayerState(socket.id);
+  emitter.broadcastLobbyState(lobby.getLobbyState());
 
   // Room creation
   socket.on(

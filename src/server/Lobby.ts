@@ -1,4 +1,3 @@
-import { Server } from "socket.io";
 import {
   LobbyState as ILobby,
   OperationResult,
@@ -7,13 +6,13 @@ import {
   RoomState,
 } from "./types";
 import { Room } from "./Room";
-import { Events } from "@/events";
+import { emitter } from ".";
 
 export class Lobby {
   private players: Record<string, Player> = {};
   private rooms: Record<string, Room> = {};
 
-  public constructor(private readonly io: Server) {}
+  public constructor() {}
 
   public addPlayer(playerId: string) {
     this.players[playerId] = { id: playerId };
@@ -51,7 +50,6 @@ export class Lobby {
 
     const roomId = this.generateRoomId();
     const room = new Room(
-      this.io,
       roomId,
       config.name || `Room ${roomId.slice(0, 4)}`,
       config.maxPlayers || 4,
@@ -141,13 +139,12 @@ export class Lobby {
     if (room?.shouldClose()) {
       room.cleanup();
       delete this.rooms[roomId];
-      this.io.socketsLeave(roomId);
       this.broadcastLobbyUpdate();
     }
   }
 
   private broadcastLobbyUpdate() {
-    this.io.emit(Events.LOBBY_STATE, this.getLobbyState());
+    emitter.broadcastLobbyState(this.getLobbyState());
   }
 
   private handleRoomStateChange(roomId: string) {
