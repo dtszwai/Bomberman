@@ -10,7 +10,11 @@ const CORS_ORIGIN = process.env.CORS_ORIGIN || "*";
 const HOST = process.env.HOST || "0.0.0.0";
 const PORT = Number(process.env.PORT) || 3000;
 
-const httpServer = createServer();
+const httpServer = createServer((_, res) => {
+  res.writeHead(200, { "Content-Type": "text/plain" });
+  res.end("Socket.IO server is running");
+});
+
 const io = new Server(httpServer, {
   cors: { origin: CORS_ORIGIN, methods: ["GET", "POST"] },
 });
@@ -94,7 +98,8 @@ io.on("connection", (socket) => {
 
 httpServer
   .listen(PORT, HOST, () => {
-    logger.info(`Server started on port ${PORT}`);
+    logger.info(`Server started and listening on http://${HOST}:${PORT}`);
+    process.send?.("ready");
   })
   .on("error", (error) => {
     logger.error(`Failed to start server: ${error.message}`);
