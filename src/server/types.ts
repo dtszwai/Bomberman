@@ -36,3 +36,10 @@ export enum GameStatus {
   ROUND_ENDED,
   GAME_ENDED,
 }
+
+export interface GameSettings {
+  tickRate: number;
+  maxWins: number;
+  roundStartDelay: number;
+  inactivityTimeout: number;
+}

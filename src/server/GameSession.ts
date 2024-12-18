@@ -1,14 +1,14 @@
 import { Server } from "socket.io";
-import { GameStatus, RoomState, PlayerControls } from "./types";
+import { GameStatus, RoomState, PlayerControls, GameSettings } from "./types";
 import { BattleScene } from "@/game/scenes/BattleScene";
 import { GameState } from "@/game/types";
 import { FRAME_TIME, MAX_WINS } from "@/game/constants";
 import { Events, ServerEvents } from "@/events";
 import { logger } from "./logger";
-import { ActionHandler } from "@/game/engine/ActionHandler";
+import { ActionHandler } from "@/server/ActionHandler";
 
 export class GameSession {
-  private readonly settings = {
+  private static readonly DEFAULT_SETTINGS: GameSettings = {
     tickRate: FRAME_TIME,
     maxWins: MAX_WINS,
     roundStartDelay: 3000,
@@ -16,11 +16,12 @@ export class GameSession {
   };
 
   private battleScene: BattleScene;
-  private lastUpdateTime = Date.now();
-  private gameLoop: NodeJS.Timeout | null = null;
+  private lastUpdateTime: number;
+  private gameLoop?: NodeJS.Timeout;
   private gameStatus = GameStatus.INITIALIZING;
-  private gameState: GameState;
-  private inputHandlers: ActionHandler[] = [];
+  private readonly gameState: GameState;
+  private readonly inputHandlers: ActionHandler[] = [];
+  private readonly settings: GameSettings;
 
   /**
    * Creates an instance of GameController.
@@ -28,60 +29,88 @@ export class GameSession {
    * @param io - The Socket.io server instance.
    * @param room - The room for which this controller manages the game.
    */
-  constructor(private io: Server, private room: RoomState) {
+  constructor(
+    private readonly io: Server,
+    private readonly room: RoomState,
+    settings: Partial<GameSettings> = {}
+  ) {
+    this.settings = { ...GameSession.DEFAULT_SETTINGS, ...settings };
+    this.lastUpdateTime = Date.now();
     this.gameState = {
       wins: new Array(this.room.players.length).fill(0),
       maxWins: this.settings.maxWins,
     };
-
-    this.room.players.forEach((_) => {
-      this.inputHandlers.push(new ActionHandler());
-    });
-
-    this.battleScene = new BattleScene(
-      this.gameState,
-      this.onRoundEnd,
-      this.inputHandlers
-    );
+    this.inputHandlers = this.room.players.map(() => new ActionHandler());
+    this.battleScene = this.createBattleScene();
   }
 
-  /**
-   * Starts the game loop.
-   */
   public start() {
+    if (this.gameStatus !== GameStatus.INITIALIZING) {
+      logger.warn(`Attempted to start game in ${this.gameStatus} state`);
+    }
+
     this.gameStatus = GameStatus.ACTIVE;
     this.lastUpdateTime = Date.now();
-    this.gameLoop = setInterval(() => this.update(), this.settings.tickRate);
+    this.startGameLoop();
     logger.info(`Game started for room ${this.room.id}`);
   }
 
-  /**
-   * Stops the game loop and performs necessary cleanup.
-   */
   public stop() {
-    if (this.gameLoop) {
-      clearInterval(this.gameLoop);
-      this.gameLoop = null;
-    }
-
+    this.stopGameLoop();
     this.gameStatus = GameStatus.GAME_ENDED;
     logger.info(`Game stopped for room ${this.room.id}`);
+
+    this.io.to(this.room.id).emit(Events.ROOM_STATE, {
+      ...this.room,
+      started: false,
+    } as ServerEvents["roomState"]);
   }
 
   public pause() {
+    if (this.gameStatus !== GameStatus.ACTIVE) return;
+
     this.gameStatus = GameStatus.PAUSED;
-    if (this.gameLoop) {
-      clearInterval(this.gameLoop);
-      this.gameLoop = null;
-    }
+    this.stopGameLoop();
     this.io.to(this.room.id).emit(Events.GAME_PAUSED);
   }
 
   public resume() {
+    if (this.gameStatus !== GameStatus.PAUSED) return;
     this.gameStatus = GameStatus.ACTIVE;
     this.lastUpdateTime = Date.now();
-    this.gameLoop = setInterval(() => this.update(), this.settings.tickRate);
+    this.startGameLoop();
     this.io.to(this.room.id).emit(Events.GAME_RESUMED);
+  }
+
+  public handlePlayerInput(playerId: string, controls: PlayerControls) {
+    if (this.gameStatus !== GameStatus.ACTIVE) return;
+
+    const playerIndex = this.room.players.findIndex((p) => p.id === playerId);
+    if (playerIndex >= 0) {
+      this.inputHandlers[playerIndex].update(controls);
+    }
+  }
+
+  public handlePlayerDisconnect(_playerId: string) {
+    const remainingPlayers = this.room.players.length - 1;
+
+    // TODO: Improve this logic
+    if (remainingPlayers < 2) {
+      this.stop();
+    } else {
+      this.pause();
+    }
+  }
+
+  private startGameLoop() {
+    this.gameLoop = setInterval(() => this.update(), this.settings.tickRate);
+  }
+
+  private stopGameLoop() {
+    if (this.gameLoop) {
+      clearInterval(this.gameLoop);
+      this.gameLoop = undefined;
+    }
   }
 
   private update() {
@@ -95,7 +124,12 @@ export class GameSession {
     this.broadcastGameState();
   }
 
-  private onRoundEnd = (winnerId: number): void => {
+  private createBattleScene = (): BattleScene =>
+    new BattleScene(this.gameState, this.handleRoundEnd, this.inputHandlers);
+
+  private handleRoundEnd = (winnerId: number) => {
+    if (this.gameStatus === GameStatus.GAME_ENDED) return;
+
     this.gameStatus = GameStatus.ROUND_ENDED;
 
     if (winnerId >= 0) {
@@ -105,46 +139,34 @@ export class GameSession {
     const isGameEnd = this.gameState.wins[winnerId] >= this.settings.maxWins;
 
     if (isGameEnd) {
-      this.gameStatus = GameStatus.GAME_ENDED;
-      const result: ServerEvents["gameEnded"] = {
-        winnerId: this.room.players[winnerId].id,
-        score: this.gameState.wins,
-      };
-      this.io.to(this.room.id).emit(Events.GAME_ENDED, result);
-      this.stop();
+      this.handleGameEnd(winnerId);
     } else {
-      setTimeout(() => {
-        this.battleScene = new BattleScene(
-          this.gameState,
-          this.onRoundEnd,
-          this.inputHandlers
-        );
-        this.gameStatus = GameStatus.ACTIVE;
-        this.io.to(this.room.id).emit(Events.ROUND_START);
-      }, this.settings.roundStartDelay);
+      this.startNextRound();
     }
   };
 
-  public handlePlayerInput(playerId: string, controls: PlayerControls) {
-    if (this.gameStatus !== GameStatus.ACTIVE) return;
-    const playerIndex = this.room.players.findIndex((p) => p.id === playerId);
-    if (playerIndex < 0) return;
-    console.log(this.inputHandlers[0]);
-    this.inputHandlers[playerIndex].update(controls);
+  private handleGameEnd(winnerId: number) {
+    this.gameStatus = GameStatus.GAME_ENDED;
+    const result = {
+      winnerId: this.room.players[winnerId].id,
+      score: this.gameState.wins,
+    };
+    this.io
+      .to(this.room.id)
+      .emit(Events.GAME_ENDED, result as ServerEvents["gameEnded"]);
+    this.stop();
   }
 
-  public handlePlayerDisconnect(_playerId: string) {
-    const remainingPlayers = this.room.players.length - 1;
-
-    if (remainingPlayers < 2) {
-      this.stop();
-    } else {
-      this.pause();
-    }
+  private startNextRound() {
+    setTimeout(() => {
+      this.battleScene = this.createBattleScene();
+      this.gameStatus = GameStatus.ACTIVE;
+      this.io.to(this.room.id).emit(Events.ROUND_START);
+    }, this.settings.roundStartDelay);
   }
 
   private broadcastGameState(): void {
-    const gameState: ServerEvents["gameState"] = {
+    const gameState = {
       ...this.battleScene.serialize(),
       status: this.gameStatus,
       hud: {
@@ -158,6 +180,8 @@ export class GameSession {
         },
       },
     };
-    this.io.to(this.room.id).emit(Events.GAME_STATE, gameState);
+    this.io
+      .to(this.room.id)
+      .emit(Events.GAME_STATE, gameState as ServerEvents["gameState"]);
   }
 }

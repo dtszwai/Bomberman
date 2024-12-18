@@ -23,10 +23,12 @@ export class Lobby {
   public removePlayer(playerId: string): void {
     const player = this.players[playerId];
     const roomId = player?.roomId;
+
     if (roomId) {
       this.rooms[roomId]?.removePlayer(playerId);
       this.cleanupRoomIfNeeded(roomId);
     }
+
     delete this.players[playerId];
     this.broadcastLobbyUpdate();
   }
@@ -37,7 +39,7 @@ export class Lobby {
       name?: string;
       maxPlayers?: number;
     } = {}
-  ) {
+  ): OperationResult<RoomState> {
     const host = this.players[hostId];
 
     if (!host) {
@@ -56,12 +58,14 @@ export class Lobby {
       hostId
     );
 
+    room.onStateChange = () => {
+      this.handleRoomStateChange(roomId);
+    };
+
     this.rooms[roomId] = room;
     const result = room.addPlayer(host);
 
-    if (result.success) {
-      this.broadcastLobbyUpdate();
-    } else {
+    if (!result.success) {
       delete this.rooms[roomId];
     }
 
@@ -77,14 +81,13 @@ export class Lobby {
 
     if (!room) return { success: false, message: "Room not found" };
     if (!player) return { success: false, message: "Player not found." };
-    if (player.roomId) return { success: false, message: "Already in room." };
 
-    const result = room.addPlayer(player);
-    if (result.success) {
-      this.broadcastLobbyUpdate();
-      this.broadcastRoomUpdate(roomId);
+    if (player.roomId && player.roomId !== roomId) {
+      // Leave the current room first if already in one
+      this.leaveRoom(playerId);
     }
 
+    const result = room.addPlayer(player);
     return { ...result, data: room.getState() };
   }
 
@@ -104,15 +107,9 @@ export class Lobby {
     if (!player.roomId) {
       return { success: false, message: "Not in a room." };
     }
+
     const room = this.rooms[player.roomId];
-
-    const result = room.startGame(initiatorId);
-    if (result.success) {
-      this.broadcastLobbyUpdate();
-      this.broadcastRoomUpdate(room.id);
-    }
-
-    return result;
+    return room.startGame(initiatorId);
   }
 
   public leaveRoom(playerId: string): OperationResult<{ id: string }> {
@@ -127,9 +124,16 @@ export class Lobby {
     const roomId = player.roomId;
     this.rooms[roomId]?.removePlayer(playerId);
     this.cleanupRoomIfNeeded(roomId);
-    this.broadcastLobbyUpdate();
-    this.broadcastRoomUpdate(roomId);
     return { success: true, data: { id: roomId } };
+  }
+
+  public getLobbyState(): ILobby {
+    return {
+      players: this.players,
+      rooms: Object.fromEntries(
+        Object.entries(this.rooms).map(([id, room]) => [id, room.getState()])
+      ),
+    };
   }
 
   private cleanupRoomIfNeeded(roomId: string) {
@@ -137,26 +141,21 @@ export class Lobby {
     if (room?.shouldClose()) {
       room.cleanup();
       delete this.rooms[roomId];
-      this.broadcastLobbyUpdate();
       this.io.socketsLeave(roomId);
+      this.broadcastLobbyUpdate();
     }
   }
 
-  /**
-   * Emits the entire lobby state to all connected clients.
-   * This includes all rooms and all players (with their room affiliations).
-   */
   private broadcastLobbyUpdate() {
     this.io.emit(Events.LOBBY_STATE, this.getLobbyState());
   }
 
-  private broadcastRoomUpdate(roomId: string) {
-    this.io.to(roomId).emit(Events.ROOM_STATE, this.rooms[roomId]?.getState());
+  private handleRoomStateChange(roomId: string) {
+    if (this.rooms[roomId]) {
+      this.broadcastLobbyUpdate();
+    }
   }
 
-  /**
-   * Generates a unique room ID.
-   */
   private generateRoomId(): string {
     const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     let roomId: string;
@@ -167,18 +166,5 @@ export class Lobby {
         .join("");
     } while (this.rooms[roomId]);
     return roomId;
-  }
-
-  /**
-   * Returns a full snapshot of the lobby: all rooms and all players.
-   * Rooms include their players' IDs and indexes.
-   */
-  public getLobbyState(): ILobby {
-    return {
-      players: this.players,
-      rooms: Object.fromEntries(
-        Object.entries(this.rooms).map(([id, room]) => [id, room.getState()])
-      ),
-    };
   }
 }

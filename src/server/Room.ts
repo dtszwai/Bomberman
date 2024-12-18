@@ -2,6 +2,7 @@ import { Server } from "socket.io";
 import { GameSession } from "./GameSession";
 import { Player, OperationResult, RoomState, PlayerControls } from "./types";
 import { Events } from "@/events";
+import { logger } from "./logger";
 
 export class Room {
   private readonly players: Player[] = [];
@@ -16,17 +17,15 @@ export class Room {
   ) {}
 
   public addPlayer(player: Player): OperationResult<RoomState> {
-    if (!this.canAddPlayer(player)) {
-      return {
-        success: false,
-        message: this.getPlayerAdditionErrorMessage(player),
-      };
+    const validationError = this.validatePlayerAddition(player);
+    if (validationError) {
+      return { success: false, message: validationError };
     }
 
     player.roomId = this.id;
     player.index = this.players.length;
     this.players.push(player);
-
+    this.broadcastRoomUpdate();
     return { success: true, data: { ...this.getState() } };
   }
 
@@ -41,31 +40,35 @@ export class Room {
 
     // If the host leaves, assign a new host
     if (playerId === this.hostId && this.players.length > 0) {
-      this.hostId = this.players[0].id;
+      this.reassignHost();
     }
 
+    this.broadcastRoomUpdate();
     // Cleanup is handled by the Lobby
   }
 
   public startGame(initiatorId: string): OperationResult {
-    if (!this.canStartGame(initiatorId)) {
-      return {
-        success: false,
-        message: this.getGameStartErrorMessage(initiatorId),
-      };
+    const validationError = this.validateGameStart(initiatorId);
+    if (validationError) {
+      return { success: false, message: validationError };
     }
 
-    this.gameSession = new GameSession(this.io, {
-      id: this.id,
-      players: [...this.players],
-      maxPlayers: this.maxPlayers,
-      started: true,
-      hostId: this.hostId,
-      name: this.name,
-    });
-
-    this.gameSession.start();
-    return { success: true };
+    try {
+      this.gameSession = new GameSession(this.io, {
+        id: this.id,
+        players: [...this.players],
+        maxPlayers: this.maxPlayers,
+        started: true,
+        hostId: this.hostId,
+        name: this.name,
+      });
+      this.gameSession.start();
+      this.broadcastRoomUpdate();
+      return { success: true };
+    } catch (error) {
+      logger.error(`Failed to start game for room ${this.id}`, error as Error);
+      return { success: false, message: "Failed to start game" };
+    }
   }
 
   public handlePlayerInput(playerId: string, controls: PlayerControls) {
@@ -78,6 +81,7 @@ export class Room {
     this.gameSession?.stop();
     this.gameSession = undefined;
     this.players.forEach(this.resetPlayerState);
+    this.broadcastRoomUpdate();
   }
 
   public getState = (): RoomState => ({
@@ -85,7 +89,7 @@ export class Room {
     name: this.name,
     players: [...this.players],
     maxPlayers: this.maxPlayers,
-    started: !!this.gameSession,
+    started: this.isStarted(),
     hostId: this.hostId,
   });
 
@@ -94,37 +98,37 @@ export class Room {
 
   public isStarted = () => !!this.gameSession;
 
-  public handleGameEnd = () => {
-    this.gameSession = undefined;
-    this.io.emit(Events.ROOM_STATE, this.getState());
-  };
+  private validatePlayerAddition(player: Player): string | null {
+    if (this.isStarted()) return "Game is already in progress";
+    if (this.players.length >= this.maxPlayers) return "Room is full";
+    if (player.roomId) return "Player is already in another room";
+    return null;
+  }
 
-  private canAddPlayer = (player: Player) =>
-    !this.isStarted() &&
-    this.players.length < this.maxPlayers &&
-    !player.roomId;
-
-  private canStartGame = (initiatorId: string) =>
-    initiatorId === this.hostId &&
-    !this.isStarted() &&
-    this.players.length >= 2;
+  private validateGameStart(initiatorId: string): string | null {
+    if (initiatorId !== this.hostId) return "Only the host can start the game";
+    if (this.isStarted()) return "Game is already in progress";
+    if (this.players.length < 2) return "Need at least 2 players to start";
+    return null;
+  }
 
   private resetPlayerState(player: Player) {
     player.roomId = undefined;
     player.index = undefined;
   }
 
-  private getPlayerAdditionErrorMessage(player: Player) {
-    if (this.isStarted()) return "Game is already in progress";
-    if (this.players.length >= this.maxPlayers) return "Room is full";
-    if (player.roomId) return "Player is already in another room";
-    return "Cannot add player to room";
+  private reassignHost(): void {
+    this.hostId = this.players[0].id;
+    logger.info(`New host assigned in room ${this.id}: ${this.hostId}`);
   }
 
-  private getGameStartErrorMessage(initiatorId: string) {
-    if (initiatorId !== this.hostId) return "Only the host can start the game";
-    if (this.isStarted()) return "Game is already in progress";
-    if (this.players.length < 2) return "Need at least 2 players to start";
-    return "Cannot start game";
+  private broadcastRoomUpdate(): void {
+    const roomState = this.getState();
+    this.io.to(this.id).emit(Events.ROOM_STATE, roomState);
+    // Notify the lobby of state changes through the onStateChange callback
+    this.onStateChange?.();
   }
+
+  // Callback to notify lobby of state changes
+  public onStateChange?: () => void;
 }
