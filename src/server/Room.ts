@@ -1,5 +1,10 @@
 import { GameSession } from "./GameSession";
-import { Player, OperationResult, RoomState, PlayerControls } from "./types";
+import type {
+  Player,
+  OperationResult,
+  RoomState,
+  PlayerControls,
+} from "./types";
 import { logger } from "./logger";
 import { emitter } from ".";
 
@@ -16,7 +21,8 @@ export class Room {
     private onStateChange?: () => void
   ) {}
 
-  public addPlayer(player: Player): OperationResult<RoomState> {
+  public addPlayer(player: Player, _seat: number): OperationResult<RoomState> {
+    // TODO: Implement seat assignment
     const validationError = this.validatePlayerAddition(player);
     if (validationError) {
       return { success: false, message: validationError };

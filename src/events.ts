@@ -1,6 +1,5 @@
-import { GameTime } from "./game/engine/types";
-import { GameSnapshot, GameState } from "./game/types";
-import {
+import type { GameSnapshot } from "./game/types";
+import type {
   RoomState,
   LobbyState,
   OperationResult,
