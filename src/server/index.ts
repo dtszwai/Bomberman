@@ -6,9 +6,15 @@ import { ClientEvents, Events, ServerEvents } from "@/events";
 import { logger } from "./logger";
 import { EventBroadcaster } from "./broadcast";
 
-// CORS allows the client to connect to the server from a different origin
+const CORS_ORIGIN = process.env.CORS_ORIGIN || "*";
+const HOST = process.env.HOST || "0.0.0.0";
+const PORT = Number(process.env.PORT) || 3000;
+
 const httpServer = createServer();
-const io = new Server(httpServer, { cors: { origin: "*" } });
+const io = new Server(httpServer, {
+  cors: { origin: CORS_ORIGIN, methods: ["GET", "POST"] },
+});
+
 export const emitter = new EventBroadcaster(io);
 const lobby = new Lobby();
 
@@ -86,9 +92,23 @@ io.on("connection", (socket) => {
   });
 });
 
-const PORT = Number(process.env.PORT) || 3000;
-httpServer.listen(PORT, () => {
-  logger.info(`Server started on port ${PORT}`);
+httpServer
+  .listen(PORT, HOST, () => {
+    logger.info(`Server started on port ${PORT}`);
+  })
+  .on("error", (error) => {
+    logger.error(`Failed to start server: ${error.message}`);
+    process.exit(1);
+  });
+
+process.on("SIGTERM", () => {
+  logger.info("SIGTERM received. Shutting down gracefully...");
+  httpServer.close(() => {
+    logger.info("Server closed");
+    process.exit(0);
+  });
 });
 
-registerViteHmrServerRestart(io, httpServer);
+if (process.env.DEBUG === "true") {
+  registerViteHmrServerRestart(io, httpServer);
+}
