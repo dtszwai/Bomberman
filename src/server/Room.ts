@@ -11,7 +11,8 @@ export class Room {
     public readonly id: string,
     public readonly name: string,
     public readonly maxPlayers: number,
-    public hostId: string
+    public hostId: string,
+    private onStateChange?: () => void
   ) {}
 
   public addPlayer(player: Player): OperationResult<RoomState> {
@@ -126,7 +127,4 @@ export class Room {
     // Notify the lobby of state changes through the onStateChange callback
     this.onStateChange?.();
   }
-
-  // Callback to notify lobby of state changes
-  public onStateChange?: () => void;
 }

@@ -9,14 +9,14 @@ import { EventBroadcaster } from "./broadcast";
 // CORS allows the client to connect to the server from a different origin
 const httpServer = createServer();
 const io = new Server(httpServer, { cors: { origin: "*" } });
-export const emitter = new EventBroadcaster(io);
+export const emitter = new EventBroadcaster(io); 
 const lobby = new Lobby();
 
 io.on("connection", (socket) => {
   logger.info(`Player connected: ${socket.id}`);
 
   lobby.addPlayer(socket.id);
-  emitter.broadcastPlayerState(socket.id);
+  emitter.broadcastPlayerState(socket.id, { id: socket.id });
   emitter.broadcastLobbyState(lobby.getLobbyState());
 
   // Room creation
