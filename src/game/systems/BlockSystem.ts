@@ -1,5 +1,8 @@
 import { GameTime, Tile } from "../engine/types";
-import { DestructionAnimationBlock } from "../entities/DestructionAnimationBlock";
+import {
+  BlockSnapshot,
+  DestructionAnimationBlock,
+} from "../entities/DestructionAnimationBlock";
 import {
   CollisionTile,
   MapTile,
@@ -18,6 +21,14 @@ interface BlockEntry {
   entity?: DestructionAnimationBlock;
   /** The type of power-up contained in this block, if any. */
   powerup?: PowerupType;
+}
+
+export interface BlocksSnapshot {
+  blocks: {
+    cell: Tile;
+    powerup?: PowerupType;
+    entity?: BlockSnapshot;
+  }[];
 }
 
 /**
@@ -157,7 +168,7 @@ export class BlockSystem {
   /**
    * Serializes the current state of all active Block entities.
    */
-  public serialize() {
+  public serialize(): BlocksSnapshot {
     return {
       blocks: this.blocks.map((block) => ({
         cell: block.cell,

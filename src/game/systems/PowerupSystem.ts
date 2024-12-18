@@ -11,6 +11,12 @@ interface Powerup {
   type: PowerupType;
 }
 
+export interface PowerupsSnapshot {
+  powerups: Powerup[];
+  animationFrameIndex: number;
+  nextAnimationUpdate: number;
+}
+
 const FRAME_DELAY = 8 * FRAME_TIME;
 
 /**
@@ -108,7 +114,7 @@ export class PowerupSystem {
    *
    * @returns The serialized power-up state.
    */
-  serialize() {
+  public serialize(): PowerupsSnapshot {
     return {
       powerups: this.powerups.map((powerup) => ({
         cell: powerup.cell,

@@ -1,10 +1,7 @@
-import { Control } from "@/game/constants/controls";
-import { controls } from "@/game/config/controls";
+import { Control } from "../constants/controls";
+import { controls } from "../config/controls";
 const heldKeys = new Set();
 const pressedKeys = new Set();
-
-const gamePads = new Map();
-const pressedButtons = new Set();
 
 const mappedKeys = controls
   .map(({ keyboard }) => Object.values(keyboard))
@@ -25,22 +22,6 @@ function handleKeyUp(event: KeyboardEvent) {
   pressedKeys.delete(event.code);
 }
 
-function handleGamepadConnected(event: GamepadEvent) {
-  const {
-    gamepad: { index, axes, buttons },
-  } = event;
-
-  gamePads.set(index, { axes, buttons });
-}
-
-function handleGamepadDisconnected(event: GamepadEvent) {
-  const {
-    gamepad: { index },
-  } = event;
-
-  gamePads.delete(index);
-}
-
 // Control event handlers
 
 export function registerKeyEvents() {
@@ -48,19 +29,9 @@ export function registerKeyEvents() {
   window.addEventListener("keyup", handleKeyUp);
 }
 
-export function registerGamepadEvents() {
-  window.addEventListener("gamepadconnected", handleGamepadConnected);
-  window.addEventListener("gamepaddisconnected", handleGamepadDisconnected);
-}
-
 export function unregisterKeyEvents() {
   window.removeEventListener("keydown", handleKeyDown);
   window.removeEventListener("keyup", handleKeyUp);
-}
-
-export function unregisterGamepadEvents() {
-  window.removeEventListener("gamepadconnected", handleGamepadConnected);
-  window.removeEventListener("gamepaddisconnected", handleGamepadDisconnected);
 }
 
 // Control helpers
@@ -70,20 +41,6 @@ export const isKeyDown = (code: string) => heldKeys.has(code);
 export function isKeyPressed(code: string) {
   if (heldKeys.has(code) && !pressedKeys.has(code)) {
     pressedKeys.add(code);
-    return true;
-  }
-
-  return false;
-}
-
-export const isButtonDown = (padId: number, button: number) =>
-  gamePads.get(padId)?.buttons[button].pressed ?? false;
-
-export function isButtonPressed(padId: number, button: number) {
-  const key = `${padId}-${button}`;
-
-  if (isButtonDown(padId, button) && !pressedButtons.has(key)) {
-    pressedButtons.add(key);
     return true;
   }
 
@@ -106,3 +63,11 @@ export const isDown = (id: number) => isControlDown(id, Control.DOWN);
 
 export const isIdle = (id: number) =>
   !(isLeft(id) || isRight(id) || isUp(id) || isDown(id));
+
+export interface InputHandler {
+  isLeft: () => boolean;
+  isRight: () => boolean;
+  isUp: () => boolean;
+  isDown: () => boolean;
+  isAction: () => boolean;
+}

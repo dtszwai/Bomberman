@@ -5,6 +5,13 @@ import {
   FUSE_TIMER,
 } from "../constants/bombs";
 
+export interface BombSnapshot {
+  cell: Tile;
+  animationFrameIndex: number;
+  nextAnimationUpdate: number;
+  fuseExpiration: number;
+}
+
 /**
  * Class representing a bomb in the game.
  * Manages bomb animation and fuse timer.

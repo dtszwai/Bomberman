@@ -6,6 +6,11 @@ import {
 } from "../constants/levelData";
 import type { Tile } from "../engine/types";
 
+export interface StageSnapshot {
+  tileMap: MapTile[][];
+  collisionMap: CollisionTile[][];
+}
+
 /**
  * Class representing the game stage.
  * Manages the tile map, collision map, and rendering of the stage.
@@ -69,7 +74,7 @@ export class Stage {
    *
    * @returns The serialized stage state.
    */
-  public serialize() {
+  public serialize(): StageSnapshot {
     return {
       tileMap: this.tileMap,
       collisionMap: this.collisionMap,

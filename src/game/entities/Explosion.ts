@@ -5,6 +5,13 @@ import {
 import { GameTime, Tile } from "../engine/types";
 import { FlameCell } from "../types";
 
+export interface ExplosionSnapshot {
+  cell: Tile;
+  animationFrameIndex: number;
+  nextAnimationUpdate: number;
+  flameCells: FlameCell[];
+}
+
 /**
  * Class representing a bomb explosion in the game.
  * Manages the explosion animation and lifecycle.

@@ -1,8 +1,9 @@
+import * as control from "../engine/inputHandler";
 import { GameTime } from "../engine/types";
-import { Bomberman, Stage } from "../entities";
+import { Stage, Bomberman } from "../entities";
 import { BlockSystem, BombSystem, PowerupSystem } from "../systems";
-import { BombermanStateType } from "../constants/bomberman";
-import type { GameState } from "../types";
+import { BombermanStateType, Control } from "../constants";
+import type { GameSnapshot, GameState } from "../types";
 
 /**
  * Class representing the battle scene in the game.
@@ -25,7 +26,11 @@ export class BattleScene {
    * @param state - The current state of the game, including player scores.
    * @param onEnd - Callback invoked when the battle ends, receiving the winner's ID.
    */
-  constructor(state: GameState, private onEnd: (winnerId: number) => void) {
+  constructor(
+    private state: GameState,
+    private onEnd: (winnerId: number) => void,
+    private inputHandlers?: control.InputHandler[]
+  ) {
     this.stage = new Stage();
     this.powerupSystem = new PowerupSystem(this.players);
     this.blockSystem = new BlockSystem(
@@ -41,6 +46,16 @@ export class BattleScene {
     state.wins.forEach((_, id) => this.addPlayer(id));
   }
 
+  private createLocalInputHandler(playerId: number) {
+    return {
+      isLeft: () => control.isLeft(playerId),
+      isRight: () => control.isRight(playerId),
+      isUp: () => control.isUp(playerId),
+      isDown: () => control.isDown(playerId),
+      isAction: () => control.isControlPressed(playerId, Control.ACTION),
+    };
+  }
+
   /**
    * Adds a new player to the battle.
    *
@@ -48,12 +63,17 @@ export class BattleScene {
    * @param time - The current game time.
    */
   private addPlayer(id: number) {
+    const inputHandler = this.inputHandlers
+      ? this.inputHandlers[id]
+      : this.createLocalInputHandler(id);
+
     this.players.push(
       new Bomberman(
         id,
         this.stage.getCollisionTileAt,
         this.bombSystem.addBomb,
-        this.removePlayer
+        this.removePlayer,
+        inputHandler
       )
     );
   }
@@ -98,14 +118,15 @@ export class BattleScene {
   /**
    * Serializes the current state of the battle scene.
    */
-  public serialize() {
+  public serialize(): GameSnapshot {
     return {
       stage: this.stage.serialize(),
       players: this.players.map((player) => player.serialize()),
       blocks: this.blockSystem.serialize().blocks,
       bombs: this.bombSystem.serialize().bombs,
-      explosions: this.bombSystem.serialize().bombExplosions,
+      explosions: this.bombSystem.serialize().explosions,
       powerups: this.powerupSystem.serialize(),
+      state: this.state,
     };
   }
 }

@@ -7,9 +7,7 @@ import {
 import { GameState } from "@/game/types";
 import { BattleScene } from "@/game/scenes/BattleScene";
 import {
-  registerGamepadEvents,
   registerKeyEvents,
-  unregisterGamepadEvents,
   unregisterKeyEvents,
 } from "@/game/engine/inputHandler";
 import { GameTime } from "@/game/engine/types";
@@ -111,7 +109,6 @@ export class BombermanGame {
    */
   public start() {
     registerKeyEvents();
-    registerGamepadEvents();
     this.animationFrameId ??= window.requestAnimationFrame(this.frame);
   }
 
@@ -120,7 +117,6 @@ export class BombermanGame {
    */
   public stop() {
     unregisterKeyEvents();
-    unregisterGamepadEvents();
     removeCanvas(this.container);
     // Cancel the animation frame if it exists
     if (this.animationFrameId !== null) {

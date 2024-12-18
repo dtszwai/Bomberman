@@ -1,4 +1,3 @@
-import * as control from "../engine/inputHandler";
 import { GameTime, Position, Rect, Tile, Velocity } from "../engine/types";
 import {
   FRAME_TIME,
@@ -13,14 +12,30 @@ import {
   CounterDirectionsLookup,
   Direction,
   MovementLookup,
-  Control,
+  AnimationFrame,
 } from "../constants";
 import { collisionOffsets } from "../utils/collisions";
+import { InputHandler } from "../engine/inputHandler";
 
 interface State {
   type: BombermanStateType;
   init: (time: GameTime) => void;
   update: (time: GameTime) => void;
+}
+
+export interface BombermanSnapshot {
+  id: number;
+  position: Position;
+  currentState: BombermanStateType;
+  velocity: Velocity;
+  direction: Direction;
+  bombAmount: number;
+  bombStrength: number;
+  availableBombs: number;
+  animationFrameIndex: number;
+  nextAnimationUpdate: number;
+  speedMultiplier: number;
+  animation: AnimationFrame[];
 }
 
 export class Bomberman {
@@ -73,7 +88,8 @@ export class Bomberman {
       time: GameTime,
       onExploded: () => void
     ) => void,
-    private onBombermanDeath: (id: number) => void
+    private onBombermanDeath: (id: number) => void,
+    private inputHandler: InputHandler
   ) {
     const { row, column } = BombermanPlayerData[id];
     this.position = {
@@ -132,7 +148,7 @@ export class Bomberman {
 
   private handleGeneralState = (time: GameTime) => {
     const [direction, velocity] = this.getMovement();
-    if (control.isControlPressed(this.id, Control.ACTION)) {
+    if (this.inputHandler.isAction()) {
       this.handleBombPlacement(time);
     }
     this.animation = animations.moveAnimations[direction];
@@ -198,13 +214,13 @@ export class Bomberman {
    * @returns A tuple containing the direction and corresponding velocity.
    */
   private getMovement(): [Direction, Velocity] {
-    if (control.isLeft(this.id)) {
+    if (this.inputHandler.isLeft()) {
       return this.checkMovement(Direction.LEFT);
-    } else if (control.isRight(this.id)) {
+    } else if (this.inputHandler.isRight()) {
       return this.checkMovement(Direction.RIGHT);
-    } else if (control.isUp(this.id)) {
+    } else if (this.inputHandler.isUp()) {
       return this.checkMovement(Direction.UP);
-    } else if (control.isDown(this.id)) {
+    } else if (this.inputHandler.isDown()) {
       return this.checkMovement(Direction.DOWN);
     } else return [this.direction, { x: 0, y: 0 }];
   }
@@ -399,7 +415,7 @@ export class Bomberman {
    *
    * @returns The serialized Bomberman state.
    */
-  public serialize = () => ({
+  public serialize = (): BombermanSnapshot => ({
     id: this.id,
     position: this.position,
     currentState: this.currentState.type,

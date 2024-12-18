@@ -1,6 +1,11 @@
 import { GameTime, Tile } from "../engine/types";
 import { BLOCK_FRAME_DELAY, MapTile } from "../constants";
 
+export interface BlockSnapshot {
+  cell: Tile;
+  animationFrameIndex: MapTile;
+}
+
 const TOTAL_FRAMES = 8;
 
 /**
@@ -50,7 +55,7 @@ export class DestructionAnimationBlock {
   /**
    * Serializes the destructible block's current state.
    */
-  public serialize() {
+  public serialize(): BlockSnapshot {
     return {
       cell: this.cell,
       animationFrameIndex: this.animationFrameIndex,
