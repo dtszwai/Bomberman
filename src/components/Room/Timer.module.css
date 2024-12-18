@@ -1,0 +1,9 @@
+.timer {
+  background-color: #4c1d95;
+  color: #ffffff;
+  padding: 0.25rem 0.5rem;
+  font-family: "Courier New", monospace;
+  letter-spacing: 0.5px;
+  font-weight: 500;
+  margin-left: 1px;
+}
