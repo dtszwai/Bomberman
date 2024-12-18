@@ -1,6 +1,5 @@
 import { Server } from "socket.io";
 import { Events, ServerEvents } from "@/events";
-import { RoomState, LobbyState } from "@/server/types";
 import { logger } from "@/server/logger";
 
 export class EventBroadcaster {

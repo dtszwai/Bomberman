@@ -1,5 +1,12 @@
 import { Tile } from "./engine/types";
 import { CollisionTile, MapTile } from "./constants/levelData";
+import {
+  BombermanSnapshot,
+  BombSnapshot,
+  ExplosionSnapshot,
+  StageSnapshot,
+} from "./entities";
+import { BlocksSnapshot, PowerupsSnapshot } from "./systems";
 
 /**
  * Interface representing the state of the game.
@@ -30,4 +37,14 @@ export interface FlameCell {
   isVertical: boolean;
   /** Indicates if the flame is the last in its direction */
   isLast: boolean;
+}
+
+export interface GameSnapshot {
+  stage: StageSnapshot;
+  players: BombermanSnapshot[];
+  blocks: BlocksSnapshot["blocks"];
+  bombs: BombSnapshot[];
+  explosions: ExplosionSnapshot[];
+  powerups: PowerupsSnapshot;
+  state: GameState;
 }

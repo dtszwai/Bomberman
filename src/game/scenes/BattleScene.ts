@@ -1,33 +1,9 @@
 import * as control from "../engine/inputHandler";
 import { GameTime } from "../engine/types";
-import {
-  BombSnapshot,
-  ExplosionSnapshot,
-  Stage,
-  StageSnapshot,
-} from "../entities";
-import { BombermanSnapshot, Bomberman } from "../entities/Bomberman";
-import {
-  BlocksSnapshot,
-  BlockSystem,
-  BombSystem,
-  PowerupsSnapshot,
-  PowerupSystem,
-} from "../systems";
-import { BombermanStateType } from "../constants/bomberman";
-import type { GameState } from "../types";
-import { ActionHandler } from "../../server/ActionHandler";
-import { Control } from "../constants";
-
-export interface GameSnapshot {
-  stage: StageSnapshot;
-  players: BombermanSnapshot[];
-  blocks: BlocksSnapshot["blocks"];
-  bombs: BombSnapshot[];
-  explosions: ExplosionSnapshot[];
-  powerups: PowerupsSnapshot;
-  state: GameState;
-}
+import { Stage, Bomberman } from "../entities";
+import { BlockSystem, BombSystem, PowerupSystem } from "../systems";
+import { BombermanStateType, Control } from "../constants";
+import type { GameSnapshot, GameState } from "../types";
 
 /**
  * Class representing the battle scene in the game.
@@ -53,7 +29,7 @@ export class BattleScene {
   constructor(
     private state: GameState,
     private onEnd: (winnerId: number) => void,
-    private inputHandlers?: ActionHandler[]
+    private inputHandlers?: control.InputHandler[]
   ) {
     this.stage = new Stage();
     this.powerupSystem = new PowerupSystem(this.players);

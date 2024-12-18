@@ -1,5 +1,5 @@
-import { Control } from "@/game/constants/controls";
-import { controls } from "@/game/config/controls";
+import { Control } from "../constants/controls";
+import { controls } from "../config/controls";
 const heldKeys = new Set();
 const pressedKeys = new Set();
 
@@ -63,3 +63,11 @@ export const isDown = (id: number) => isControlDown(id, Control.DOWN);
 
 export const isIdle = (id: number) =>
   !(isLeft(id) || isRight(id) || isUp(id) || isDown(id));
+
+export interface InputHandler {
+  isLeft: () => boolean;
+  isRight: () => boolean;
+  isUp: () => boolean;
+  isDown: () => boolean;
+  isAction: () => boolean;
+}

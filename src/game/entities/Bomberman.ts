@@ -15,14 +15,7 @@ import {
   AnimationFrame,
 } from "../constants";
 import { collisionOffsets } from "../utils/collisions";
-
-interface InputHandler {
-  isLeft: () => boolean;
-  isRight: () => boolean;
-  isUp: () => boolean;
-  isDown: () => boolean;
-  isAction: () => boolean;
-}
+import { InputHandler } from "../engine/inputHandler";
 
 interface State {
   type: BombermanStateType;

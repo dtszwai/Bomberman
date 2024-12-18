@@ -1,13 +1,12 @@
 import { GameTime } from "./game/engine/types";
-import { GameSnapshot } from "./game/scenes/BattleScene";
-import { GameState } from "./game/types";
+import { GameSnapshot, GameState } from "./game/types";
 import {
   RoomState,
   LobbyState,
-  PlayerAction,
   OperationResult,
   GameStatus,
   Player,
+  PlayerControls,
 } from "./server/types";
 
 export const Events = {
@@ -29,7 +28,7 @@ export const Events = {
   ROUND_START: "roundStart",
 
   // Player Events
-  PLAYER_ACTION: "playerAction",
+  PLAYER_CONTROLS: "playerAction",
 } as const;
 
 // Type for type-safety when using events
@@ -39,7 +38,7 @@ export type EventType = (typeof Events)[keyof typeof Events];
 export interface ClientEvents {
   [Events.CREATE_ROOM]: { maxPlayers?: number; name?: string };
   [Events.JOIN_ROOM]: { roomId: string };
-  [Events.PLAYER_ACTION]: PlayerAction;
+  [Events.PLAYER_CONTROLS]: PlayerControls;
 }
 
 // Server-to-client responses and broadcasts
