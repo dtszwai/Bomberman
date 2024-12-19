@@ -16,8 +16,7 @@ interface LobbyProps {
 
 const Lobby = ({ onStartLocalGame }: LobbyProps) => {
   const { state, joinRoom, createRoom, leaveRoom, startGame } = useLobby();
-  const { rooms, players, currentPlayer, isConnected, reconnectAttempts } =
-    state;
+  const { rooms, players, currentPlayer } = state;
   const [toast, setToast] = useState<ToastMessage | null>(null);
 
   const showToast = (
@@ -71,10 +70,7 @@ const Lobby = ({ onStartLocalGame }: LobbyProps) => {
 
   return (
     <div className={styles.lobby}>
-      <ConnectionStatus
-        isConnected={isConnected}
-        reconnectAttempts={reconnectAttempts}
-      />
+      <ConnectionStatus {...state} />
       {toast && (
         <Toast
           message={toast.message}

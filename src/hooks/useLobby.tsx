@@ -10,6 +10,7 @@ interface LobbyState {
   currentRoom: RoomState | null;
   isConnected: boolean;
   reconnectAttempts: number;
+  initialConnecting: boolean;
 }
 
 const initialState: LobbyState = {
@@ -19,6 +20,7 @@ const initialState: LobbyState = {
   currentRoom: null,
   isConnected: socket.connected,
   reconnectAttempts: 0,
+  initialConnecting: true,
 };
 
 export function useLobby() {
@@ -29,18 +31,27 @@ export function useLobby() {
   }, []);
 
   useEffect(() => {
-    const onConnect = () =>
-      updateState({ isConnected: true, reconnectAttempts: 0 });
+    const initialConnectionTimeout = setTimeout(() => {
+      if (state.initialConnecting) {
+        updateState({ initialConnecting: false });
+      }
+    }, 2000); // Allow 2 seconds for initial connection
 
-    const onDisconnect = () => updateState({ isConnected: false });
+    const onConnect = () =>
+      updateState({
+        isConnected: true,
+        reconnectAttempts: 0,
+        initialConnecting: false,
+      });
+
+    const onDisconnect = () =>
+      updateState({ isConnected: false, initialConnecting: false });
 
     const onReconnectAttempt = (attempt: number) =>
-      updateState({ reconnectAttempts: attempt });
+      updateState({ reconnectAttempts: attempt, initialConnecting: false });
 
     socket.on("connect", onConnect);
-
     socket.on("disconnect", onDisconnect);
-
     socket.io.on("reconnect_attempt", onReconnectAttempt);
 
     socket.on(Events.PLAYER_STATE, (player: ServerEvents["playerState"]) => {
@@ -56,6 +67,7 @@ export function useLobby() {
     });
 
     return () => {
+      clearTimeout(initialConnectionTimeout);
       socket.off("connect", onConnect);
       socket.off("disconnect", onDisconnect);
       socket.io.off("reconnect_attempt", onReconnectAttempt);
@@ -63,7 +75,7 @@ export function useLobby() {
       socket.off(Events.ROOM_STATE);
       socket.off(Events.LOBBY_STATE);
     };
-  }, [updateState]);
+  }, [state.initialConnecting, updateState]);
 
   const createRoom = async (
     dto: ClientEvents["createRoom"]

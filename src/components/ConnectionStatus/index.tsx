@@ -1,36 +1,56 @@
-import React from "react";
+import { useEffect, useState } from "react";
+import styles from "./ConnectionStatus.module.css";
 
 interface ConnectionStatusProps {
   isConnected: boolean;
   reconnectAttempts: number;
+  initialConnecting: boolean;
   maxReconnectAttempts?: number;
 }
 
-const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
+const ConnectionStatus = ({
   isConnected,
   reconnectAttempts,
+  initialConnecting,
   maxReconnectAttempts = 5,
-}) => {
-  if (isConnected && reconnectAttempts === 0) {
+}: ConnectionStatusProps) => {
+  const [showStatus, setShowStatus] = useState(false);
+
+  useEffect(() => {
+    let displayTimeout: NodeJS.Timeout;
+
+    if (initialConnecting) {
+      displayTimeout = setTimeout(() => {
+        setShowStatus(true);
+      }, 500);
+    } else {
+      setShowStatus(true);
+    }
+
+    return () => {
+      clearTimeout(displayTimeout);
+    };
+  }, [initialConnecting]);
+
+  if (
+    (isConnected && reconnectAttempts === 0) ||
+    (initialConnecting && !showStatus)
+  ) {
     return null;
   }
 
-  const style: React.CSSProperties = {
-    position: "fixed",
-    bottom: "1rem",
-    right: "1rem",
-    backgroundColor: "#ef4444",
-    color: "white",
-    padding: "1rem",
-    borderRadius: "0.375rem",
-    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
-    zIndex: 50,
-    maxWidth: "24rem",
-    animation: "slideIn 0.2s ease-out",
-  };
+  const statusClassName = `${styles.status} ${
+    initialConnecting
+      ? styles.connecting
+      : isConnected
+      ? styles.connected
+      : styles.disconnected
+  } ${showStatus ? styles.visible : ""}`;
 
   let message = "";
-  if (!isConnected && reconnectAttempts < maxReconnectAttempts) {
+  if (initialConnecting && showStatus) {
+    message = "Connecting to game server...";
+  } else if (!isConnected && reconnectAttempts < maxReconnectAttempts) {
     message = "Lost connection to game server. Attempting to reconnect...";
   } else if (!isConnected && reconnectAttempts >= maxReconnectAttempts) {
     message = "Unable to connect to game server. Please refresh the page.";
@@ -38,25 +58,11 @@ const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
     message = "Reconnected to server successfully!";
   }
 
-  return (
-    <div style={style} role="alert">
-      <style>
-        {`
-          @keyframes slideIn {
-            from {
-              transform: translateY(100%);
-              opacity: 0;
-            }
-            to {
-              transform: translateY(0);
-              opacity: 1;
-            }
-          }
-        `}
-      </style>
+  return message ? (
+    <div className={statusClassName} role="alert">
       {message}
     </div>
-  );
+  ) : null;
 };
 
 export default ConnectionStatus;
