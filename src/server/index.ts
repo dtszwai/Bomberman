@@ -1,7 +1,6 @@
 import { createServer } from "http";
 import { Server } from "socket.io";
 import { Lobby } from "./Lobby";
-import { registerViteHmrServerRestart } from "./vite-hmr-restart";
 import { ClientEvents, Events, ServerEvents } from "@/events";
 import { logger } from "./logger";
 import { EventBroadcaster } from "./broadcast";
@@ -42,6 +41,13 @@ io.on("connection", (socket) => {
         logger.info(`Player ${socket.id} created room ${result.data!.id}`);
       }
       callback(result);
+    }
+  );
+
+  socket.on(
+    Events.LOBBY_STATE,
+    (_, callback: (state: ServerEvents["lobbyState"]) => void) => {
+      callback(lobby.getLobbyState());
     }
   );
 
@@ -113,7 +119,3 @@ process.on("SIGTERM", () => {
     process.exit(0);
   });
 });
-
-if (process.env.DEBUG === "true") {
-  registerViteHmrServerRestart(io, httpServer);
-}
