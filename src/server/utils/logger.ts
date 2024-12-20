@@ -92,11 +92,9 @@ class Logger {
 
 const logger = new Logger({
   level:
-    (process.env.DEBUG || "false").toLowerCase() === "true"
-      ? LogLevel.DEBUG
-      : LogLevel.INFO,
+    process.env.NODE_ENV === "development" ? LogLevel.DEBUG : LogLevel.INFO,
   enableTimestamp: true,
   enableColors: true,
 });
 
-export { Logger, LogLevel, logger };
+export { LogLevel, logger };
