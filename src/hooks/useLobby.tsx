@@ -1,22 +1,20 @@
 import { useCallback, useEffect, useState } from "react";
 import { socket } from "../apis/socket";
-import { Player, RoomState } from "@/server/types";
 import { ClientEvents, Events, ServerEvents } from "@/events";
+import { UserState, AnyRoomState, LobbyState } from "@/server/types";
 
-interface LobbyState {
-  rooms: Record<string, RoomState>;
-  players: Record<string, Player>;
-  currentPlayer: Player | null;
-  currentRoom: RoomState | null;
+interface State extends LobbyState {
+  currentUser: UserState | null;
+  currentRoom: AnyRoomState | null;
   isConnected: boolean;
   reconnectAttempts: number;
   initialConnecting: boolean;
 }
 
-const initialState: LobbyState = {
+const initialState: State = {
   rooms: {},
-  players: {},
-  currentPlayer: null,
+  users: {},
+  currentUser: null,
   currentRoom: null,
   isConnected: socket.connected,
   reconnectAttempts: 0,
@@ -26,7 +24,7 @@ const initialState: LobbyState = {
 export function useLobby() {
   const [state, setState] = useState(initialState);
 
-  const updateState = useCallback((updates: Partial<LobbyState>) => {
+  const updateState = useCallback((updates: Partial<State>) => {
     setState((prevState) => ({ ...prevState, ...updates }));
   }, []);
 
@@ -54,8 +52,8 @@ export function useLobby() {
     socket.on("disconnect", onDisconnect);
     socket.io.on("reconnect_attempt", onReconnectAttempt);
 
-    socket.on(Events.PLAYER_STATE, (player: ServerEvents["playerState"]) => {
-      updateState({ currentPlayer: player });
+    socket.on(Events.WHOAMI, (user: ServerEvents["whoami"]) => {
+      updateState({ currentUser: user });
     });
 
     socket.on(Events.ROOM_STATE, (room: ServerEvents["roomState"]) => {
@@ -63,7 +61,7 @@ export function useLobby() {
     });
 
     socket.on(Events.LOBBY_STATE, (state: ServerEvents["lobbyState"]) => {
-      updateState({ rooms: state.rooms, players: state.players });
+      updateState({ rooms: state.rooms, users: state.users });
     });
 
     return () => {
@@ -71,15 +69,15 @@ export function useLobby() {
       socket.off("connect", onConnect);
       socket.off("disconnect", onDisconnect);
       socket.io.off("reconnect_attempt", onReconnectAttempt);
-      socket.off(Events.PLAYER_STATE);
+      socket.off(Events.WHOAMI);
       socket.off(Events.ROOM_STATE);
       socket.off(Events.LOBBY_STATE);
     };
   }, [state.initialConnecting, updateState]);
 
   const createRoom = async (
-    dto: ClientEvents["createRoom"]
-  ): Promise<RoomState> => {
+    dto?: ClientEvents["createRoom"]
+  ): Promise<AnyRoomState> => {
     if (!state.isConnected) {
       throw new Error("Cannot create room while disconnected from server");
     }
@@ -102,7 +100,7 @@ export function useLobby() {
 
   const joinRoom = async (
     dto: ClientEvents["joinRoom"]
-  ): Promise<RoomState> => {
+  ): Promise<AnyRoomState> => {
     if (!state.isConnected) {
       throw new Error("Cannot join room while disconnected from server");
     }
@@ -160,5 +158,26 @@ export function useLobby() {
     });
   };
 
-  return { state, createRoom, joinRoom, leaveRoom, startGame };
+  const toggleReady = async () => {
+    if (!state.isConnected) {
+      throw new Error("Cannot toggle ready while disconnected from server");
+    }
+
+    return new Promise<void>((resolve, reject) => {
+      socket.emit(
+        Events.TOGGLE_READY,
+        null,
+        (result: ServerEvents["toggleReady"]) => {
+          if (result.success) {
+            resolve();
+          } else {
+            console.log("Failed to toggle ready status");
+            reject(new Error(result.message));
+          }
+        }
+      );
+    });
+  };
+
+  return { state, createRoom, joinRoom, leaveRoom, startGame, toggleReady };
 }

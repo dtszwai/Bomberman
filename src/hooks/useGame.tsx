@@ -4,7 +4,7 @@ import { socket } from "@/apis/socket";
 import { controls } from "@/game/config/controls";
 
 export function useGame() {
-  const [snapshot, setSnapshot] = useState<ServerEvents["gameState"] | null>(
+  const [snapshot, setSnapshot] = useState<ServerEvents["gameSnapshot"] | null>(
     null
   );
   const [heldKeys] = useState(new Set<string>());
@@ -15,7 +15,7 @@ export function useGame() {
   const previousHeldKeys = useRef<string[]>([]);
   const previousPressedKeys = useRef<string[]>([]);
 
-  const handleGameState = useCallback((state: ServerEvents["gameState"]) => {
+  const handleGameState = useCallback((state: ServerEvents["gameSnapshot"]) => {
     setSnapshot(state);
   }, []);
 
@@ -43,7 +43,7 @@ export function useGame() {
         !areArraysEqual(currentHeldKeys, previousHeldKeys.current) ||
         !areArraysEqual(currentPressedKeys, previousPressedKeys.current)
       ) {
-        socket.emit(Events.PLAYER_CONTROLS, {
+        socket.emit(Events.USER_CONTROLS, {
           heldKeys: currentHeldKeys,
           pressedKeys: currentPressedKeys,
         });
@@ -67,7 +67,7 @@ export function useGame() {
       const currentHeldKeys = Array.from(heldKeys);
       const currentPressedKeys = Array.from(pressedKeys);
 
-      socket.emit(Events.PLAYER_CONTROLS, {
+      socket.emit(Events.USER_CONTROLS, {
         heldKeys: currentHeldKeys,
         pressedKeys: currentPressedKeys,
       });
@@ -86,12 +86,12 @@ export function useGame() {
   useEffect(() => {
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("keyup", handleKeyUp);
-    socket.on(Events.GAME_STATE, handleGameState);
+    socket.on(Events.GAME_SNAPSHOT, handleGameState);
 
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);
-      socket.off(Events.GAME_STATE, handleGameState);
+      socket.off(Events.GAME_SNAPSHOT, handleGameState);
     };
   }, [handleKeyDown, handleKeyUp, handleGameState]);
 
