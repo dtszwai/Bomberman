@@ -1,46 +1,80 @@
-export interface LobbyState {
-  rooms: Record<string, RoomState>;
-  players: Record<string, Player>;
+import { GameState } from "@/game/types";
+import { User } from "./models/User";
+
+export enum GameStatus {
+  WAITING = "WAITING",
+  ACTIVE = "ACTIVE",
+  PAUSED = "PAUSED",
+  ROUND_ENDED = "ROUND_ENDED",
 }
 
-export interface Player {
-  id: string;
-  roomId?: string;
-  index?: number; // Index of the player in the room
+export interface Position {
+  roomId: string;
+  seatIndex: number;
 }
 
-export interface RoomState {
+export interface UserState {
   id: string;
-  players: Player[];
-  maxPlayers: number;
-  started: boolean;
-  hostId: string; // ID of the player who created the room
   name: string;
+  position?: Position;
+  joinedAt: number;
+  lastActivityAt: number;
+}
+export type Seat = {
+  index: Readonly<number>;
+} & (
+  | {
+      user: User;
+      ready: boolean;
+    }
+  | {
+      user: null;
+      ready: false;
+    }
+);
+
+export interface BaseRoomState {
+  id: string;
+  name: string;
+  seats: Seat[];
+  hostId: string;
+  settings: RoomSettings;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface RoomState extends BaseRoomState {
+  type: "room";
+}
+
+export interface RoomSettings {
+  maxUsers: number;
+  isPrivate: boolean;
+  roomCode: string | null;
+  allowSpectators: boolean;
+}
+
+export interface GameRoomState extends BaseRoomState {
+  type: "game";
+  gameStatus: GameStatus;
+  gameState: GameState;
   startTime?: number;
 }
 
-export interface PlayerControls {
+export type AnyRoomState = RoomState | GameRoomState;
+
+export interface LobbyState {
+  rooms: Record<string, AnyRoomState>;
+  users: Record<string, UserState>;
+}
+
+export interface UserControls {
   heldKeys: string[];
   pressedKeys: string[];
 }
 
-export interface OperationResult<T = unknown> {
+export interface OperationResult<T = void> {
   success: boolean;
   message?: string;
   data?: T;
-}
-
-export enum GameStatus {
-  INITIALIZING,
-  ACTIVE,
-  PAUSED,
-  ROUND_ENDED,
-  GAME_ENDED,
-}
-
-export interface GameSettings {
-  tickRate: number;
-  maxWins: number;
-  roundStartDelay: number;
-  inactivityTimeout: number;
 }

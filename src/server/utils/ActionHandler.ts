@@ -1,9 +1,10 @@
-import { PlayerControls } from "./types";
+import { UserControls } from "../types";
 
 export class ActionHandler {
   private heldKeys: string[];
   private pressedKeys: string[];
-  private handledPressedKeys: Set<string>; // Track which pressed keys we've already handled
+  /** Track which pressed keys we've already handled */
+  private handledPressedKeys: Set<string>;
 
   constructor() {
     this.heldKeys = [];
@@ -11,7 +12,7 @@ export class ActionHandler {
     this.handledPressedKeys = new Set();
   }
 
-  public update(controls: PlayerControls) {
+  public update(controls: UserControls) {
     // If a key is no longer in pressedKeys, remove it from handled keys
     this.handledPressedKeys.forEach((key) => {
       if (!controls.pressedKeys.includes(key)) {
@@ -23,24 +24,12 @@ export class ActionHandler {
     this.pressedKeys = controls.pressedKeys;
   }
 
-  public isLeft(): boolean {
-    return this.heldKeys.includes("ArrowLeft");
-  }
+  public isUp = () => this.heldKeys.includes("ArrowUp");
+  public isDown = () => this.heldKeys.includes("ArrowDown");
+  public isLeft = () => this.heldKeys.includes("ArrowLeft");
+  public isRight = () => this.heldKeys.includes("ArrowRight");
 
-  public isRight(): boolean {
-    return this.heldKeys.includes("ArrowRight");
-  }
-
-  public isUp(): boolean {
-    return this.heldKeys.includes("ArrowUp");
-  }
-
-  public isDown(): boolean {
-    return this.heldKeys.includes("ArrowDown");
-  }
-
-  // Modified to only return true once per press
-  public isAction(): boolean {
+  public isAction = () => {
     if (
       this.pressedKeys.includes("Space") &&
       !this.handledPressedKeys.has("Space")
@@ -49,5 +38,5 @@ export class ActionHandler {
       return true;
     }
     return false;
-  }
+  };
 }
