@@ -3,8 +3,7 @@
   <p>A modern multiplayer Bomberman game you can play with friends</p>
   <figure>
     <img src="./screenshots/in-game.png" alt="Gameplay Screenshot" width="600"/>
-    <figcaption><i>Battle with up to 4 friends in fast-paced explosive action</i>
-  </figcaption>
+    <p><i>Battle with up to 4 friends in fast-paced explosive action</i></p>
   </figure>
 
   <p align="center">
