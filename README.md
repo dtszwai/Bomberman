@@ -1,21 +1,60 @@
-# Bomberman
+<div align="center">
+  <h1>🎮 Bomberman Online</h1>
+  <p>A modern multiplayer Bomberman game you can play with friends</p>
+  <figure>
+    <img src="./screenshots/in-game.png" alt="Gameplay Screenshot" width="600"/>
+    <figcaption><i>Battle with up to 4 friends in fast-paced explosive action</i>
+  </figcaption>
+  </figure>
 
-![In-Game Action](./screenshots/in-game.png)
+  <p align="center">
+    <a href="https://dtszwai.github.io/Bomberman/">Play Now</a>
+  </p>
+</div>
 
-**Bomberman** is a classic tile-based game developed using TypeScript. Inspired by the iconic Bomberman series and [shezzor's Dev Corner](https://www.youtube.com/@shezzor), this game offers engaging gameplay with destructible blocks, strategic power-ups, and dynamic interactions within a vibrant game environment. Whether you're playing solo or competing with friends, Bomberman provides endless fun and strategic depth.
+## ✨ What's Cool About This
 
-## How to Play
+- 💥 **Battle with Friends**: Create a room and invite up to 4 players for intense matches
+- 🎯 **Smooth Controls**: Responsive movement and precise bomb placement
+- 🏆 **Power-ups**: Collect items to increase your speed, bomb strength, and more
+  <!-- - 💬 **Chat System**: Talk with other players in the lobby or during matches -->
+  <!-- - 🔄 **Auto Reconnect**: Never lose a game due to connection hiccups -->
 
-- **Player 1 (White):**
+<div align="center">
+ <img src="./screenshots/lobby.png" alt="Lobby Screenshot" width="600"/>
+ <p><i>Create or join game rooms in the lobby</i></p>
+</div>
 
-  - **Movement:** Arrow Up, Down, Left, Right
-  - **Action:** Spacebar (Place Bomb)
+## 🎮 How to Play
 
-- **Player 2 (Black):**
-  - **Movement:** W (Up), A (Left), S (Down), D (Right)
-  - **Action:** F (Place Bomb)
+1. **Create or Join a Room**
 
-## Todo
+   - Click "Create Room" to start your own game
+   - Or join an existing room from the lobby
+   - Ready up and wait for other players to join
+   - Start the game when two or more players are ready
 
-- Add Online Battle: Implement online multiplayer functionality to allow players to compete over the internet.
-- Pressure Blocks: Add falling Pressure Blocks near the end of a match to reduce playable space and eliminate players if crushed.
+2. **Controls**
+
+   - Arrow Keys: Move your character
+   - Space: Place a bomb
+
+3. **Power-ups**
+   - 🔥 Fire: Increases explosion range
+   - 💣 Bomb: Adds an extra bomb
+   - 👟 Speed: Makes you move faster
+
+## 🚀 Quick Start
+
+1. Visit [Bomberman Online](https://dtszwai.github.io/Bomberman/)
+2. Create a room or join an existing one
+3. Wait for friends to join
+4. Start the game and have fun!
+
+## 🛠️ Upcoming Features
+
+- [ ] Custom room settings
+- [ ] More power-up types
+- [ ] Additional maps
+- [ ] Tournament mode
+- [ ] Profile customization
