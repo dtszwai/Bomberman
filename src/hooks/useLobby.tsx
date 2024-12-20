@@ -35,45 +35,76 @@ export function useLobby() {
       }
     }, 2000); // Allow 2 seconds for initial connection
 
-    const onConnect = () =>
+    return () => clearTimeout(initialConnectionTimeout);
+  }, [state.initialConnecting, updateState]);
+
+  const onConnect = useCallback(
+    () =>
       updateState({
         isConnected: true,
         reconnectAttempts: 0,
         initialConnecting: false,
-      });
+      }),
+    [updateState]
+  );
 
-    const onDisconnect = () =>
-      updateState({ isConnected: false, initialConnecting: false });
+  const onDisconnect = useCallback(
+    () => updateState({ isConnected: false, initialConnecting: false }),
+    [updateState]
+  );
 
-    const onReconnectAttempt = (attempt: number) =>
-      updateState({ reconnectAttempts: attempt, initialConnecting: false });
+  const onReconnectAttempt = useCallback(
+    (attempt: number) =>
+      updateState({ reconnectAttempts: attempt, initialConnecting: false }),
+    [updateState]
+  );
 
+  const handleWhoami = useCallback(
+    (user: ServerEvents["whoami"]) => {
+      updateState({ currentUser: user });
+    },
+    [updateState]
+  );
+
+  const handleRoomState = useCallback(
+    (room: ServerEvents["roomState"]) => {
+      updateState({ currentRoom: room });
+    },
+    [updateState]
+  );
+
+  const handleLobbyState = useCallback(
+    (state: ServerEvents["lobbyState"]) => {
+      updateState({ rooms: state.rooms, users: state.users });
+    },
+    [updateState]
+  );
+
+  useEffect(() => {
     socket.on("connect", onConnect);
     socket.on("disconnect", onDisconnect);
     socket.io.on("reconnect_attempt", onReconnectAttempt);
 
-    socket.on(Events.WHOAMI, (user: ServerEvents["whoami"]) => {
-      updateState({ currentUser: user });
-    });
-
-    socket.on(Events.ROOM_STATE, (room: ServerEvents["roomState"]) => {
-      updateState({ currentRoom: room });
-    });
-
-    socket.on(Events.LOBBY_STATE, (state: ServerEvents["lobbyState"]) => {
-      updateState({ rooms: state.rooms, users: state.users });
-    });
+    socket.on(Events.WHOAMI, handleWhoami);
+    socket.on(Events.ROOM_STATE, handleRoomState);
+    socket.on(Events.LOBBY_STATE, handleLobbyState);
 
     return () => {
-      clearTimeout(initialConnectionTimeout);
       socket.off("connect", onConnect);
       socket.off("disconnect", onDisconnect);
       socket.io.off("reconnect_attempt", onReconnectAttempt);
-      socket.off(Events.WHOAMI);
-      socket.off(Events.ROOM_STATE);
-      socket.off(Events.LOBBY_STATE);
+      socket.off(Events.WHOAMI, handleWhoami);
+      socket.off(Events.ROOM_STATE, handleRoomState);
+      socket.off(Events.LOBBY_STATE, handleLobbyState);
     };
-  }, [state.initialConnecting, updateState]);
+  }, [
+    onConnect,
+    onDisconnect,
+    onReconnectAttempt,
+    handleWhoami,
+    handleRoomState,
+    handleLobbyState,
+  ]);
 
   const createRoom = async (
     dto?: ClientEvents["createRoom"]
@@ -171,7 +202,6 @@ export function useLobby() {
           if (result.success) {
             resolve();
           } else {
-            console.log("Failed to toggle ready status");
             reject(new Error(result.message));
           }
         }

@@ -122,6 +122,7 @@ class GameServer {
       this.rooms.set(room.id, room);
       emitter.lobby();
       emitter.whoami(user);
+      emitter.room(room);
       logger.info(`${user} created room ${room.id}`);
     }
     callback({ ...result, data: result.data?.getState() });
@@ -264,12 +265,20 @@ class GameServer {
   private handleDisconnect(user: User) {
     if (user.position) {
       const room = this.rooms.get(user.position.roomId);
-      room?.removeUser(user);
-      if (room?.getUserCount() === 0) {
+      if (!room) {
+        logger.warn(
+          `${user} was in room ${user.position.roomId} but the room was not found`
+        );
+        return;
+      }
+      room.removeUser(user);
+      if (room.getUserCount() === 0) {
         this.rooms.delete(room.id);
       }
+      emitter.room(room);
     }
     this.users.delete(user.id);
+    emitter.lobby();
     logger.info(`User disconnected: ${user.name}[${user.id}]`);
   }
 
