@@ -107,7 +107,7 @@ export class GameRoom extends Room {
   // Game-specific properties
   private battleScene?: BattleScene;
   private gameLoop?: NodeJS.Timeout;
-  private gameStatus;
+  public gameStatus: GameStatus;
   private gameState: GameState;
   private inputHandlers: ActionHandler[];
   private readonly gameSettings: GameSettings;
