@@ -42,6 +42,9 @@ export class BattleHudView extends BaseRenderer {
 
     // Draws the player scores on the HUD.
     this.state.wins.forEach((winCount, index) => {
+      // if winCount is -1, the seat is empty, so we don't draw the score
+      if (winCount < 0) return;
+
       const xPosition = index * 32 + 104;
       drawText(this.context, winCount.toString(), xPosition, 8);
     });

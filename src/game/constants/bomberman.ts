@@ -28,8 +28,8 @@ enum BombermanColor {
 export const BombermanPlayerData = [
   { color: BombermanColor.WHITE, column: 1, row: 2 },
   { color: BombermanColor.BLACK, column: 11, row: 14 },
-  { color: BombermanColor.BLUE, column: 11, row: 2 },
   { color: BombermanColor.RED, column: 1, row: 14 },
+  { color: BombermanColor.BLUE, column: 11, row: 2 },
   { color: BombermanColor.GREEN, column: 6, row: 8 },
 ];
 

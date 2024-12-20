@@ -47,7 +47,13 @@ export class BattleScene {
       this.blockSystem.addBlock
     );
 
-    state.wins.forEach((_, id) => this.addPlayer(id));
+    state.wins.forEach((playerWin, id) => {
+      // Add players with positive wins to the battle
+      // -1 indicates an empty seat
+      if (playerWin >= 0) {
+        this.addPlayer(id);
+      }
+    });
   }
 
   private createLocalInputHandler(playerId: number) {

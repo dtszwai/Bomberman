@@ -41,7 +41,7 @@ export class GameRoom extends Room {
     this.gameStatus = GameStatus.WAITING;
     this.gameSettings = { ...GameRoom.DEFAULT_GAME_SETTINGS };
     this.gameState = {
-      wins: new Array(this.seats.length).fill(0),
+      wins: new Array(this.seats.length),
       maxWins: this.gameSettings.maxWins,
     };
     this.inputHandlers = this.seats.map(() => new ActionHandler());
@@ -54,6 +54,9 @@ export class GameRoom extends Room {
     }
 
     try {
+      // Initialize wins array for occupied seats before starting the game
+      this.gameState.wins = this.seats.map((seat) => (seat.user ? 0 : -1));
+
       this.gameStatus = GameStatus.ACTIVE;
       this.battleScene = this.createBattleScene();
       this.startGameLoop();
