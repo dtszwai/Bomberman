@@ -14,10 +14,13 @@ export default function App() {
   const room = state.currentRoom;
 
   useEffect(() => {
-    if (room?.type === "game" && room.gameStatus !== GameStatus.WAITING) {
-      setGameMode("online");
-    } else if (!room && gameMode === "online") {
-      setGameMode("none");
+    if (!room) return;
+    if (room.type === "game") {
+      if (room.gameStatus === GameStatus.WAITING) {
+        setGameMode("none");
+      } else {
+        setGameMode("online");
+      }
     }
   }, [gameMode, room]);
 

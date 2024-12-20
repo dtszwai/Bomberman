@@ -20,11 +20,88 @@ interface GameSettings {
   roundStartDelay: number;
 }
 
+enum GameStateChangePermission {
+  HOST_ONLY,
+  ANY_PLAYER,
+  SYSTEM,
+}
+
+interface GameStateTransition {
+  fromStates: GameStatus[];
+  permission: GameStateChangePermission;
+  validationRules?: ((room: GameRoom, initiator?: User) => string | null)[];
+}
+
 export class GameRoom extends Room {
   private static readonly DEFAULT_GAME_SETTINGS: GameSettings = {
     tickRate: FRAME_TIME,
     maxWins: MAX_WINS,
     roundStartDelay: 3000,
+  };
+
+  private static readonly STATE_TRANSITIONS: Record<
+    GameStatus,
+    GameStateTransition
+  > = {
+    [GameStatus.ACTIVE]: {
+      fromStates: [GameStatus.WAITING, GameStatus.PAUSED],
+      permission: GameStateChangePermission.HOST_ONLY,
+      validationRules: [
+        (room) =>
+          room.getUserCount() < 2 ? "Need at least 2 users to start" : null,
+        (room) => (!room.isAllReady() ? "Not all users are ready" : null),
+        (room, initiator) => {
+          if (room.gameStatus === GameStatus.WAITING) {
+            if (initiator?.id !== room.hostId) {
+              return "Only the host can start the game";
+            }
+            if (room.getUserCount() < 2) {
+              return "Need at least 2 users to start";
+            }
+            if (!room.isAllReady()) {
+              return "Not all users are ready";
+            }
+          }
+          if (
+            room.gameStatus === GameStatus.PAUSED &&
+            initiator?.id !== room.hostId
+          ) {
+            return "Only the host can resume the game";
+          }
+          return null;
+        },
+      ],
+    },
+    [GameStatus.PAUSED]: {
+      fromStates: [GameStatus.ACTIVE],
+      permission: GameStateChangePermission.HOST_ONLY,
+      validationRules: [
+        (room, initiator) =>
+          initiator?.id !== room.hostId
+            ? "Only the host can pause the game"
+            : null,
+      ],
+    },
+    [GameStatus.WAITING]: {
+      fromStates: [
+        GameStatus.ACTIVE,
+        GameStatus.PAUSED,
+        GameStatus.ROUND_ENDED,
+      ],
+      permission: GameStateChangePermission.SYSTEM,
+      validationRules: [
+        (_, initiator) =>
+          initiator ? "Only system can set game to waiting state" : null,
+      ],
+    },
+    [GameStatus.ROUND_ENDED]: {
+      fromStates: [GameStatus.ACTIVE],
+      permission: GameStateChangePermission.SYSTEM,
+      validationRules: [
+        (_, initiator) =>
+          initiator ? "Round end can only be triggered by the system" : null,
+      ],
+    },
   };
 
   // Game-specific properties
@@ -48,7 +125,10 @@ export class GameRoom extends Room {
   }
 
   public startGame(initiator: User): OperationResult {
-    const validationError = this.validateGameStart(initiator);
+    const validationError = this.validateGameStateChange(
+      GameStatus.ACTIVE,
+      initiator
+    );
     if (validationError) {
       return { success: false, message: validationError };
     }
@@ -60,6 +140,7 @@ export class GameRoom extends Room {
       this.gameStatus = GameStatus.ACTIVE;
       this.battleScene = this.createBattleScene();
       this.startGameLoop();
+      this.startTime = Date.now();
 
       this.updateActivity();
       logger.info(`Game started for room ${this.id}`);
@@ -75,8 +156,11 @@ export class GameRoom extends Room {
     }
   }
 
-  public stopGame(initiator: User): OperationResult {
-    const validationError = this.validateGameStateChange(initiator);
+  public stopGame(initiator?: User): OperationResult {
+    const validationError = this.validateGameStateChange(
+      GameStatus.WAITING,
+      initiator
+    );
     if (validationError) {
       return { success: false, message: validationError };
     }
@@ -102,13 +186,13 @@ export class GameRoom extends Room {
     }
   }
 
-  public pauseGame(initiaotr: User): OperationResult {
-    const validationError = this.validateGameStateChange(initiaotr);
+  public pauseGame(initiator: User): OperationResult {
+    const validationError = this.validateGameStateChange(
+      GameStatus.PAUSED,
+      initiator
+    );
     if (validationError) {
       return { success: false, message: validationError };
-    }
-    if (this.gameStatus !== GameStatus.ACTIVE) {
-      return { success: false, message: "Game must be active to pause" };
     }
 
     try {
@@ -129,12 +213,12 @@ export class GameRoom extends Room {
   }
 
   public resumeGame(initiator: User): OperationResult {
-    const validationError = this.validateGameStateChange(initiator);
+    const validationError = this.validateGameStateChange(
+      GameStatus.ACTIVE,
+      initiator
+    );
     if (validationError) {
       return { success: false, message: validationError };
-    }
-    if (this.gameStatus !== GameStatus.PAUSED) {
-      return { success: false, message: "Game must be paused to resume" };
     }
 
     try {
@@ -193,7 +277,7 @@ export class GameRoom extends Room {
     // Stop the game if there are not enough users
     if (this.gameStatus === GameStatus.ACTIVE) {
       if (this.getUserCount() < 2) {
-        this.stopGame(user);
+        this.stopGame();
       }
     }
     return result;
@@ -278,19 +362,49 @@ export class GameRoom extends Room {
       gameState: this.gameState,
     });
 
-  private validateGameStart(initiator: User): string | null {
-    if (initiator.id !== this.hostId) return "Only the host can start the game";
-    if (this.gameStatus !== GameStatus.WAITING)
-      return "Game is already in progress";
-    if (this.getUserCount() < 2) return "Need at least 2 users to start";
-    if (!this.isAllReady()) return "Not all users are ready";
-    return null;
-  }
+  private validateGameStateChange(
+    targetState: GameStatus,
+    initiator?: User
+  ): string | null {
+    const transition = GameRoom.STATE_TRANSITIONS[targetState];
 
-  private validateGameStateChange(initiator: User): string | null {
-    if (!this.findUserSeat(initiator)) {
-      return "User not in this room";
+    // Validate state transition
+    if (!transition.fromStates.includes(this.gameStatus)) {
+      return `Cannot transition from ${this.gameStatus} to ${targetState}`;
     }
+
+    // Handle system-initiated changes
+    if (
+      transition.permission === GameStateChangePermission.SYSTEM &&
+      initiator
+    ) {
+      return "This state change can only be initiated by the system";
+    }
+
+    // Handle disconnected users
+    if (
+      !initiator &&
+      transition.permission !== GameStateChangePermission.SYSTEM
+    ) {
+      return "Initiator is required for this state change";
+    }
+
+    // Validate permissions
+    if (
+      transition.permission === GameStateChangePermission.HOST_ONLY &&
+      initiator?.id !== this.hostId
+    ) {
+      return "Only the host can perform this action";
+    }
+
+    // Run additional validation rules
+    if (transition.validationRules) {
+      for (const rule of transition.validationRules) {
+        const error = rule(this, initiator);
+        if (error) return error;
+      }
+    }
+
     return null;
   }
 

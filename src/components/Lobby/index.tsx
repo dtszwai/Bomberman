@@ -72,7 +72,6 @@ const Lobby = ({ onStartLocalGame }: LobbyProps) => {
 
   const handleReady = async () => {
     try {
-      console.log("Toggling ready status");
       await toggleReady();
     } catch (error) {
       showToast(
