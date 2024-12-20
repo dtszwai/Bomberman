@@ -51,7 +51,7 @@
   margin-top: 0;
 }
 
-.playersList {
+.usersList {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -60,7 +60,7 @@
   padding-right: 0.5rem;
 }
 
-.playerItem {
+.userItem {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -69,14 +69,22 @@
   background-color: #1a1f36;
 }
 
-.playerName {
+.userName {
   font-size: 0.9rem;
   color: #ffffff;
   text-align: center;
   word-break: break-word;
 }
 
-.playerStatus {
+.userName[data-currentuser="true"] {
+  border-left: 2px solid #2dd4bf;
+  padding-left: 0.75rem;
+  color: #2dd4bf;
+  font-weight: bold;
+  position: relative;
+}
+
+.userStatus {
   font-size: 0.8rem;
   color: #9ca3af;
 }
@@ -149,27 +157,27 @@
   background: #4338ca;
 }
 
-.playersList::-webkit-scrollbar {
+.usersList::-webkit-scrollbar {
   width: 6px;
 }
 
-.playersList::-webkit-scrollbar-track {
+.usersList::-webkit-scrollbar-track {
   background: rgba(26, 31, 54, 0.5);
   border-radius: 3px;
 }
 
-.playersList::-webkit-scrollbar-thumb {
+.usersList::-webkit-scrollbar-thumb {
   background: #4f46e5;
   border-radius: 3px;
 }
 
-.playersList::-webkit-scrollbar-thumb:hover {
+.usersList::-webkit-scrollbar-thumb:hover {
   background: #4338ca;
 }
 
 /* Firefox */
 .roomsGrid,
-.playersList {
+.usersList {
   scrollbar-width: thin;
   scrollbar-color: #4f46e5 rgba(26, 31, 54, 0.5);
 }
@@ -184,7 +192,7 @@
     width: 100%;
   }
 
-  .playersList {
+  .usersList {
     max-height: 200px;
   }
 }
