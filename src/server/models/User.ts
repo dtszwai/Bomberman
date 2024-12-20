@@ -1,19 +1,21 @@
 import { Position, UserState } from "../types";
 import { generateUserName } from "../utils/name";
 
-const USER_CONSTANTS = {
-  IDLE_TIMEOUT: 5 * 60 * 1000, // 5 minutes
+export const USER_CONSTANTS = {
+  IDLE_TIMEOUT: 10 * 60 * 1000, // 10 minutes
   MAX_NAME_LENGTH: 20,
   MIN_NAME_LENGTH: 3,
 } as const;
 
 export class User {
+  public readonly id: string;
   public position?: Position;
   public joinedAt: number;
   public lastActivityAt: number;
+  public online: boolean;
 
   public constructor(
-    public readonly id: string,
+    public socketId: string,
     public name: string = generateUserName()
   ) {
     if (
@@ -22,8 +24,10 @@ export class User {
     ) {
       throw new Error("Invalid user name length");
     }
+    this.id = crypto.randomUUID();
     this.joinedAt = Date.now();
     this.lastActivityAt = Date.now();
+    this.online = true;
   }
 
   /** Get user's current state */
@@ -34,6 +38,7 @@ export class User {
       position: this.position,
       joinedAt: this.joinedAt,
       lastActivityAt: this.lastActivityAt,
+      online: this.online,
     });
   }
 
@@ -42,9 +47,20 @@ export class User {
     return Date.now() - this.lastActivityAt > USER_CONSTANTS.IDLE_TIMEOUT;
   }
 
+  public updateSocketId(socketId: string) {
+    this.socketId = socketId;
+    this.online = true;
+    this.updateActivity();
+  }
+
   /** Update last activity timestamp */
   public updateActivity(): void {
     this.lastActivityAt = Date.now();
+  }
+
+  public setOffline(): void {
+    this.online = false;
+    this.updateActivity();
   }
 
   public setPosition(
@@ -56,7 +72,7 @@ export class User {
 
   /** Get formatted user info */
   public toString(): string {
-    return `User(${this.name})[${this.id}]${
+    return `${this.name}[${this.id}]${
       this.position ? ` in room ${this.position.roomId}` : ""
     }`;
   }

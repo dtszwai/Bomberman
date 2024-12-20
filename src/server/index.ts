@@ -5,6 +5,7 @@ import { logger } from "./utils/logger";
 import { EventBroadcaster } from "./utils/EventBroadcaster";
 import { User } from "./models/User";
 import { GameRoom } from "./models/GameRoom";
+import { GameStatus } from "./types";
 
 const Config = {
   CORS_ORIGIN: process.env.CORS_ORIGIN || "*",
@@ -34,16 +35,40 @@ class GameServer {
 
     this.setupSocketConnection();
     this.setupErrorHandling();
+    this.handleDisconnectedCleanup();
   }
 
   private setupSocketConnection() {
     this.io.on("connection", (socket) => {
-      const user = new User(socket.id);
-      this.users.set(user.id, user);
-      this.emitter.whoami(user);
-      this.emitter.lobby();
-      this.setupEventListeners(socket, user);
-      logger.info(`User connected: ${user.name}[${user.id}]`);
+      let user: User;
+      const auth = socket.handshake.auth;
+
+      try {
+        if (auth.userId && this.users.has(auth.userId)) {
+          // Retrieve existing user and update their socket ID
+          user = this.users.get(auth.userId)!;
+          user.updateSocketId(socket.id);
+          user.updateActivity();
+          logger.info(`User reconnected: ${user}`);
+        } else {
+          // Create new user with generated persistent ID
+          const userName = auth.userName || undefined;
+          user = new User(socket.id, userName);
+          this.users.set(user.id, user);
+          logger.info(`New user connected: ${user}`);
+        }
+
+        this.emitter.whoami(user);
+        this.emitter.lobby();
+        this.setupEventListeners(socket, user);
+      } catch (error) {
+        logger.error(`Error during user connection: ${error}`);
+        // Create new user as fallback
+        user = new User(socket.id);
+        this.users.set(user.id, user);
+        this.emitter.whoami(user);
+        this.setupEventListeners(socket, user);
+      }
     });
   }
 
@@ -240,7 +265,9 @@ class GameServer {
         [...this.rooms].map(([id, r]) => [id, r.getState()])
       ),
       users: Object.fromEntries(
-        [...this.users].map(([id, u]) => [id, u.getState()])
+        [...this.users]
+          .filter(([_, user]) => user.online)
+          .map(([id, u]) => [id, u.getState()])
       ),
     });
   }
@@ -263,6 +290,9 @@ class GameServer {
   }
 
   private handleDisconnect(user: User) {
+    user.setOffline();
+
+    // Handle room-related cleanup
     if (user.position) {
       const room = this.rooms.get(user.position.roomId);
       if (!room) {
@@ -277,9 +307,44 @@ class GameServer {
       }
       emitter.room(room);
     }
-    this.users.delete(user.id);
+    // Do not remove user from map to allow reconnection
+    // this.users.delete(user.id);
     emitter.lobby();
-    logger.info(`User disconnected: ${user.name}[${user.id}]`);
+    logger.info(`User disconnected: ${user}`);
+  }
+
+  private handleDisconnectedCleanup() {
+    const IDLE_CHECK_INTERVAL = 60 * 1000 * 15; // 15 minutes
+    const DISCONNECTION_THRESHOLD = 1000 * 60 * 30; // 30 minutes
+
+    setInterval(() => {
+      for (const [_, user] of this.users) {
+        if (user.online && user.isIdle()) {
+          user.setOffline();
+
+          const room = user.position && this.rooms.get(user.position.roomId);
+          if (!room) continue;
+          const isWaitingGame =
+            room instanceof GameRoom && room.gameStatus === GameStatus.WAITING;
+          const shouldRemoveUser = !(room instanceof GameRoom) || isWaitingGame;
+
+          if (shouldRemoveUser) {
+            room.removeUser(user);
+            if (room.getUserCount() === 0) {
+              this.rooms.delete(room.id);
+            }
+            emitter.room(room);
+          }
+        }
+
+        // Clean up long-disconnected users
+        const disconnectedTime = Date.now() - user.lastActivityAt;
+        if (!user.online && disconnectedTime > DISCONNECTION_THRESHOLD) {
+          this.users.delete(user.id);
+        }
+      }
+      emitter.lobby();
+    }, IDLE_CHECK_INTERVAL);
   }
 
   private setupErrorHandling() {

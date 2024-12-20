@@ -25,7 +25,7 @@ export class EventBroadcaster {
 
   public whoami(user: User) {
     this.io
-      .to(user.id)
+      .to(user.socketId)
       .emit(Events.WHOAMI, user.getState() as ServerEvents["whoami"]);
   }
 
@@ -35,7 +35,9 @@ export class EventBroadcaster {
         [...this.rooms].map(([id, r]) => [id, r.getState()])
       ),
       users: Object.fromEntries(
-        [...this.users].map(([id, u]) => [id, u.getState()])
+        [...this.users]
+          .filter(([_, user]) => user.online)
+          .map(([id, u]) => [id, u.getState()])
       ),
     };
     this.io.emit(Events.LOBBY_STATE, lobbyState);
