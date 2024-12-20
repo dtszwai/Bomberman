@@ -4,6 +4,7 @@ import styles from "./Lobby.module.css";
 import Room from "../Room";
 import Toast from "../Toast";
 import ConnectionStatus from "../ConnectionStatus";
+import { GameStatus, UserState } from "@/server/types";
 
 interface ToastMessage {
   message: string;
@@ -15,8 +16,9 @@ interface LobbyProps {
 }
 
 const Lobby = ({ onStartLocalGame }: LobbyProps) => {
-  const { state, joinRoom, createRoom, leaveRoom, startGame } = useLobby();
-  const { rooms, players, currentPlayer } = state;
+  const { state, joinRoom, createRoom, leaveRoom, startGame, toggleReady } =
+    useLobby();
+  const { rooms, users, currentUser } = state;
   const [toast, setToast] = useState<ToastMessage | null>(null);
 
   const showToast = (
@@ -28,7 +30,7 @@ const Lobby = ({ onStartLocalGame }: LobbyProps) => {
 
   const handleJoinRoom = async (roomId: string, seat: number) => {
     try {
-      await joinRoom({ roomId, seat });
+      await joinRoom({ roomId, seatIndex: seat });
       showToast("Successfully joined the room", "success");
     } catch (error) {
       showToast(error instanceof Error ? error.message : "Failed to join room");
@@ -37,7 +39,7 @@ const Lobby = ({ onStartLocalGame }: LobbyProps) => {
 
   const handleCreateRoom = async () => {
     try {
-      await createRoom({ name: `Room ${Object.keys(rooms).length + 1}` });
+      await createRoom();
       showToast("Room created successfully", "success");
     } catch (error) {
       showToast(
@@ -66,6 +68,26 @@ const Lobby = ({ onStartLocalGame }: LobbyProps) => {
         error instanceof Error ? error.message : "Failed to start game"
       );
     }
+  };
+
+  const handleReady = async () => {
+    try {
+      console.log("Toggling ready status");
+      await toggleReady();
+    } catch (error) {
+      showToast(
+        error instanceof Error ? error.message : "Failed to toggle ready status"
+      );
+    }
+  };
+
+  const getUserStatus = (user: UserState) => {
+    if (!user.position) return "In Lobby";
+    const room = rooms[user.position.roomId];
+    if (room.type === "game" && room.gameStatus !== GameStatus.WAITING) {
+      return "In Game";
+    }
+    return "In Room";
   };
 
   return (
@@ -98,26 +120,26 @@ const Lobby = ({ onStartLocalGame }: LobbyProps) => {
             <Room
               key={room.id}
               room={room}
-              currentPlayer={currentPlayer}
+              currentUser={currentUser}
               handleJoinRoom={handleJoinRoom}
               handleLeaveRoom={handleLeaveRoom}
               handleStartGame={handleStartGame}
+              handleReady={handleReady}
             />
           ))}
         </div>
         <div className={styles.sidebar}>
-          <h2>Players Online: {Object.keys(players).length}</h2>
-          <div className={styles.playersList}>
-            {Object.values(players).map((player) => (
-              <div key={player.id} className={styles.playerItem}>
-                <span className={styles.playerName}>{player.id}</span>
-                <span className={styles.playerStatus}>
-                  {!player.roomId
-                    ? "In Lobby"
-                    : player.roomId && rooms[player.roomId]?.started
-                    ? "In Game"
-                    : "In Room"}
+          <h2>Users Online: {Object.keys(users).length}</h2>
+          <div className={styles.usersList}>
+            {Object.values(users).map((user) => (
+              <div key={user.id} className={styles.userItem}>
+                <span
+                  className={styles.userName}
+                  data-currentuser={currentUser?.id === user.id}
+                >
+                  {user.name}
                 </span>
+                <span className={styles.userStatus}>{getUserStatus(user)}</span>
               </div>
             ))}
           </div>

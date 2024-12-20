@@ -1,69 +1,84 @@
-import { Player, RoomState } from "@/server/types";
 import styles from "./Room.module.css";
 import Timer from "./Timer";
+import { AnyRoomState, GameStatus, UserState } from "@/server/types";
 
 interface RoomProps {
-  room: RoomState;
-  currentPlayer: Player | null;
+  room: AnyRoomState;
+  currentUser: UserState | null;
   handleJoinRoom: (roomId: string, seat: number) => void;
   handleLeaveRoom: () => void;
   handleStartGame: () => void;
+  handleReady: () => void;
+}
+
+interface UserSeatProps {
+  user: UserState;
+  isHost: boolean;
+  isCurrentUser: boolean;
+  isReady: boolean;
 }
 
 const Room = ({
   room,
-  currentPlayer,
+  currentUser,
   handleJoinRoom,
   handleLeaveRoom,
   handleStartGame,
+  handleReady,
 }: RoomProps) => {
-  const isPlayerInRoom = currentPlayer?.roomId === room.id;
-  const isHost = room.hostId === currentPlayer?.id;
-  const canStartGame = isHost && room.players.length >= 2 && !room.started;
+  const isUserInRoom = currentUser?.position?.roomId === room.id;
+  const isHost = room.hostId === currentUser?.id;
+  const canStartGame =
+    isHost && room.seats.filter((seat) => seat.user).length > 1;
+  const gameStarted =
+    room.type === "game" && room.gameStatus !== GameStatus.WAITING;
+  const currentUserSeat = room.seats.find(
+    (seat) => seat.user?.id === currentUser?.id
+  );
+  const allUsersReady = room.seats.every(
+    (seat) => !seat.user || seat.ready || seat.user.id === room.hostId
+  );
 
-  // Organize players into positions
-  const positions = Array(4).fill(null);
-  room.players.forEach((player, index) => {
-    positions[index] = player;
-  });
-
+  // Organize users into positions
+  const positions = room.seats.map((seat) => seat.user);
   const [top, right, bottom, left] = positions;
 
   const handleSeatClick = (position: number) => {
-    if (!room.started && !isPlayerInRoom && !positions[position]) {
-      console.log("Joining room", room.id, "at position", position);
-      handleJoinRoom(room.id, position);
+    if (positions[position] || isUserInRoom || gameStarted) {
+      return;
     }
+    handleJoinRoom(room.id, position);
   };
 
   return (
     <div
-      className={`${styles.room} ${isPlayerInRoom ? styles.currentRoom : ""}`}
-      data-started={room.started}
+      className={`${styles.room} ${isUserInRoom ? styles.currentRoom : ""}`}
+      data-started={gameStarted}
     >
       <div className={styles.roomInfo}>
-        <span className={styles.roomName}>Room#{room.id}</span>
-        {room.started && (
+        <span className={styles.roomName}>{room.name}</span>
+        {gameStarted && (
           <div className={styles.gameStatus}>
             <span className={styles.gameStarted}>Game in Progress</span>
-            <Timer startTime={room.startTime || Date.now()} />
+            <Timer startTime={Date.now()} />
           </div>
         )}
       </div>
 
       <div className={styles.tableContainer}>
-        {/* Top player */}
+        {/* Top user */}
         <div
-          className={styles.playerTop}
+          className={styles.userTop}
           onClick={() => handleSeatClick(0)}
           role="button"
           tabIndex={0}
         >
           {top ? (
-            <PlayerSeat
-              player={top}
+            <UserSeat
+              user={top}
               isHost={room.hostId === top.id}
-              isCurrentPlayer={top.id === currentPlayer?.id}
+              isCurrentUser={top.id === currentUser?.id}
+              isReady={room.seats[0].ready}
             />
           ) : (
             <EmptySeat />
@@ -71,38 +86,40 @@ const Room = ({
         </div>
 
         <div className={styles.middleRow}>
-          {/* Left player */}
+          {/* Left user */}
           <div
-            className={styles.playerLeft}
+            className={styles.userLeft}
             onClick={() => handleSeatClick(3)}
             role="button"
             tabIndex={0}
           >
             {left ? (
-              <PlayerSeat
-                player={left}
+              <UserSeat
+                user={left}
                 isHost={room.hostId === left.id}
-                isCurrentPlayer={left.id === currentPlayer?.id}
+                isCurrentUser={left.id === currentUser?.id}
+                isReady={room.seats[3].ready}
               />
             ) : (
               <EmptySeat />
             )}
           </div>
 
-          <div className={styles.table}>{room.started ? "🎮" : "💣"}</div>
+          <div className={styles.table}>{gameStarted ? "🎮" : "💣"}</div>
 
-          {/* Right player */}
+          {/* Right user */}
           <div
-            className={styles.playerRight}
+            className={styles.userRight}
             onClick={() => handleSeatClick(1)}
             role="button"
             tabIndex={0}
           >
             {right ? (
-              <PlayerSeat
-                player={right}
+              <UserSeat
+                user={right}
                 isHost={room.hostId === right.id}
-                isCurrentPlayer={right.id === currentPlayer?.id}
+                isCurrentUser={right.id === currentUser?.id}
+                isReady={room.seats[1].ready}
               />
             ) : (
               <EmptySeat />
@@ -110,18 +127,19 @@ const Room = ({
           </div>
         </div>
 
-        {/* Bottom player */}
+        {/* Bottom user */}
         <div
-          className={styles.playerBottom}
+          className={styles.userBottom}
           onClick={() => handleSeatClick(2)}
           role="button"
           tabIndex={0}
         >
           {bottom ? (
-            <PlayerSeat
-              player={bottom}
+            <UserSeat
+              user={bottom}
               isHost={room.hostId === bottom.id}
-              isCurrentPlayer={bottom.id === currentPlayer?.id}
+              isCurrentUser={bottom.id === currentUser?.id}
+              isReady={room.seats[2].ready}
             />
           ) : (
             <EmptySeat />
@@ -129,13 +147,37 @@ const Room = ({
         </div>
       </div>
 
-      {isPlayerInRoom && (
+      {isUserInRoom && (
         <div className={styles.roomActions}>
           <button className={styles.leaveButton} onClick={handleLeaveRoom}>
             Leave Room
           </button>
+          {!isHost && !gameStarted && (
+            <button
+              className={styles.readyButton}
+              onClick={handleReady}
+              data-ready={currentUserSeat?.ready}
+              disabled={gameStarted}
+            >
+              {currentUserSeat?.ready ? (
+                <>
+                  <span className={styles.readyIcon}>✓</span>
+                  Ready
+                </>
+              ) : (
+                <>
+                  <span className={styles.readyIcon}>!</span>
+                  Click to Ready
+                </>
+              )}
+            </button>
+          )}
           {canStartGame && (
-            <button className={styles.startButton} onClick={handleStartGame}>
+            <button
+              className={styles.startButton}
+              onClick={handleStartGame}
+              disabled={!allUsersReady}
+            >
               Start Game
             </button>
           )}
@@ -145,18 +187,13 @@ const Room = ({
   );
 };
 
-interface PlayerSeatProps {
-  player: Player;
-  isHost: boolean;
-  isCurrentPlayer: boolean;
-}
-
-const PlayerSeat = ({ player, isHost, isCurrentPlayer }: PlayerSeatProps) => (
+const UserSeat = ({ user, isHost, isCurrentUser, isReady }: UserSeatProps) => (
   <div
-    className={`${styles.seat} ${isCurrentPlayer ? styles.currentPlayer : ""}`}
+    className={`${styles.seat} ${isCurrentUser ? styles.currentuser : ""}`}
+    data-ready={isReady}
   >
-    <div className={styles.playerAvatar}>
-      <span className={styles.playerName}>{player.id || "Player"}</span>
+    <div className={styles.userAvatar}>
+      <span className={styles.userName}>{user.name || "User"}</span>
       {isHost && <span className={styles.hostBadge}>Host</span>}
     </div>
   </div>
