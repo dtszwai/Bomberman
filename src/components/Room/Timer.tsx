@@ -14,7 +14,7 @@ const formatTime = (ms: number) => {
 };
 
 const Timer = ({ startTime }: { startTime: number }) => {
-  const [elapsed, setElapsed] = useState(0);
+  const [elapsed, setElapsed] = useState(Date.now() - startTime);
 
   useEffect(() => {
     const interval = setInterval(() => {

@@ -60,7 +60,7 @@ const Room = ({
         {gameStarted && (
           <div className={styles.gameStatus}>
             <span className={styles.gameStarted}>Game in Progress</span>
-            <Timer startTime={Date.now()} />
+            {room.startTime && <Timer startTime={room.startTime} />}
           </div>
         )}
       </div>

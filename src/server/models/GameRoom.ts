@@ -360,6 +360,7 @@ export class GameRoom extends Room {
       type: "game",
       gameStatus: this.gameStatus,
       gameState: this.gameState,
+      startTime: this.startTime,
     });
 
   private validateGameStateChange(
