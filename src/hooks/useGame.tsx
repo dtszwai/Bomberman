@@ -1,99 +1,98 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Events, ServerEvents } from "@/events";
-import { socket } from "@/apis/socket";
-import { controls } from "@/game/config/controls";
+import { Events, ServerPayloads } from "../events";
 
-export function useGame() {
-  const [snapshot, setSnapshot] = useState<ServerEvents["gameSnapshot"] | null>(
-    null
-  );
-  const [heldKeys] = useState(new Set<string>());
-  const [pressedKeys] = useState(new Set<string>());
-  // Track keys that have been used and shouldn't trigger again until released
-  const [usedKeys] = useState(new Set<string>());
+import { useSocket } from "./useSocket";
+import { ControlState, KeyTracker } from "@/utils/KeyTracker";
+import { GameSnapshot } from "@/game/types";
+import { GameStatus } from "@/server/types";
 
-  const previousHeldKeys = useRef<string[]>([]);
-  const previousPressedKeys = useRef<string[]>([]);
-
-  const handleGameState = useCallback((state: ServerEvents["gameSnapshot"]) => {
-    setSnapshot(state);
-  }, []);
-
-  const mappedKeys = controls
-    .map(({ keyboard }) => Object.values(keyboard))
-    .flat();
-
-  const handleKeyDown = useCallback(
-    (event: KeyboardEvent) => {
-      if (!mappedKeys.includes(event.code)) return;
-      event.preventDefault();
-
-      heldKeys.add(event.code);
-
-      // Only add to pressedKeys if the key hasn't been used yet
-      if (!usedKeys.has(event.code)) {
-        pressedKeys.add(event.code);
-        usedKeys.add(event.code); // Mark the key as used
-      }
-
-      const currentHeldKeys = Array.from(heldKeys);
-      const currentPressedKeys = Array.from(pressedKeys);
-
-      if (
-        !areArraysEqual(currentHeldKeys, previousHeldKeys.current) ||
-        !areArraysEqual(currentPressedKeys, previousPressedKeys.current)
-      ) {
-        socket.emit(Events.USER_CONTROLS, {
-          heldKeys: currentHeldKeys,
-          pressedKeys: currentPressedKeys,
-        });
-
-        previousHeldKeys.current = currentHeldKeys;
-        previousPressedKeys.current = currentPressedKeys;
-      }
-    },
-    [heldKeys, mappedKeys, pressedKeys, usedKeys]
-  );
-
-  const handleKeyUp = useCallback(
-    (event: KeyboardEvent) => {
-      if (!mappedKeys.includes(event.code)) return;
-      event.preventDefault();
-
-      heldKeys.delete(event.code);
-      pressedKeys.delete(event.code);
-      usedKeys.delete(event.code); // Reset the used state when key is released
-
-      const currentHeldKeys = Array.from(heldKeys);
-      const currentPressedKeys = Array.from(pressedKeys);
-
-      socket.emit(Events.USER_CONTROLS, {
-        heldKeys: currentHeldKeys,
-        pressedKeys: currentPressedKeys,
-      });
-
-      previousHeldKeys.current = currentHeldKeys;
-      previousPressedKeys.current = currentPressedKeys;
-    },
-    [heldKeys, mappedKeys, pressedKeys, usedKeys]
-  );
-
-  const areArraysEqual = (arr1: string[], arr2: string[]) => {
-    if (arr1.length !== arr2.length) return false;
-    return arr1.every((item, index) => item === arr2[index]);
-  };
+export const useGame = () => {
+  const { socket, emit } = useSocket();
+  const [snapshot, setSnapshot] = useState<GameSnapshot | null>(null);
+  const [status, setStatus] = useState<GameStatus>(GameStatus.WAITING);
+  const keyTracker = useRef(new KeyTracker());
+  const previousState = useRef<string>("");
 
   useEffect(() => {
+    if (!socket) return;
+
+    const handleGameSnapshot = (snapshot: ServerPayloads["game:snapshot"]) => {
+      setSnapshot(snapshot);
+      setStatus(snapshot.status);
+    };
+
+    const handleGamePaused = () => setStatus(GameStatus.PAUSED);
+    const handleGameResumed = () => setStatus(GameStatus.ACTIVE);
+    const handleGameEnded = () => {
+      setStatus(GameStatus.WAITING);
+      keyTracker.current.reset();
+    };
+
+    socket.on(Events.GAME_SNAPSHOT, handleGameSnapshot);
+    socket.on(Events.GAME_PAUSE, handleGamePaused);
+    socket.on(Events.GAME_RESUME, handleGameResumed);
+    socket.on(Events.GAME_END, handleGameEnded);
+
+    return () => {
+      socket.off(Events.GAME_SNAPSHOT);
+      socket.off(Events.GAME_PAUSE);
+      socket.off(Events.GAME_RESUME);
+      socket.off(Events.GAME_END);
+      keyTracker.current.reset();
+    };
+  }, [socket]);
+
+  // Handle keyboard controls only during active gameplay
+  useEffect(() => {
+    if (status === GameStatus.WAITING || !socket) return;
+
+    const sendControlUpdate = (state: ControlState) => {
+      const stateHash = JSON.stringify(state);
+      if (stateHash !== previousState.current) {
+        emit(Events.USER_CONTROLS, state);
+        previousState.current = stateHash;
+      }
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const state = keyTracker.current.handleKeyDown(event.code);
+      if (state) {
+        event.preventDefault();
+        sendControlUpdate(state);
+      }
+    };
+
+    const handleKeyUp = (event: KeyboardEvent) => {
+      const state = keyTracker.current.handleKeyUp(event.code);
+      if (state) {
+        event.preventDefault();
+        sendControlUpdate(state);
+      }
+    };
+
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("keyup", handleKeyUp);
-    socket.on(Events.GAME_SNAPSHOT, handleGameState);
 
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);
-      socket.off(Events.GAME_SNAPSHOT, handleGameState);
     };
-  }, [handleKeyDown, handleKeyUp, handleGameState]);
+  }, [status, socket, emit]);
 
-  return { snapshot };
-}
+  const startGame = useCallback(() => {
+    keyTracker.current.reset();
+    emit(Events.START_GAME, null);
+  }, [emit]);
+
+  const setReady = useCallback(() => {
+    emit(Events.ROOM_READY, null);
+  }, [emit]);
+
+  return {
+    snapshot,
+    status,
+    startGame,
+    setReady,
+    isActive: status !== GameStatus.WAITING,
+  };
+};
