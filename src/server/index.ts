@@ -1,14 +1,23 @@
 import { createServer } from "http";
 import { Server, Socket } from "socket.io";
-import { ClientEvents, Events, ServerEvents } from "@/events";
+import { ClientPayloads, Events, ServerPayloads } from "@/events";
 import { logger } from "./utils/logger";
 import { EventBroadcaster } from "./utils/EventBroadcaster";
-import { User } from "./models/User";
-import { GameRoom } from "./models/GameRoom";
-import { GameStatus } from "./types";
-import { LobbyMessage } from "./models/Message/LobbyMessage";
-import { RoomMessage } from "./models/Message/RoomMessage";
-import { PrivateMessage } from "./models/Message/PrivateMessage";
+import {
+  User,
+  Room,
+  GameRoom,
+  PrivateMessage,
+  LobbyMessage,
+  RoomMessage,
+} from "./models";
+import {
+  GameStatus,
+  GlobalMessagePayload,
+  MessageType,
+  PrivateMessagePayload,
+  RoomMessagePayload,
+} from "./types";
 
 const Config = {
   CORS_ORIGIN: process.env.CORS_ORIGIN || "*",
@@ -21,7 +30,7 @@ class GameServer {
   private readonly io: Server;
   private readonly emitter: EventBroadcaster;
   private readonly users: Map<string, User>;
-  private readonly rooms: Map<string, GameRoom>;
+  private readonly rooms: Map<string, Room>;
   private readonly messages: LobbyMessage[];
 
   constructor() {
@@ -82,69 +91,53 @@ class GameServer {
     socket.on(
       Events.CREATE_ROOM,
       (
-        settings: ClientEvents["createRoom"],
-        callback: (result: ServerEvents["createRoom"]) => void
+        settings: ClientPayloads["room:create"],
+        callback: (result: ServerPayloads["room:create"]) => void
       ) => this.handleCreateRoom(socket, user, settings, callback)
     );
 
     socket.on(
       Events.JOIN_ROOM,
       (
-        payload: ClientEvents["joinRoom"],
-        callback: (result: ServerEvents["joinRoom"]) => void
+        payload: ClientPayloads["room:join"],
+        callback: (result: ServerPayloads["room:join"]) => void
       ) => this.handleJoinRoom(socket, user, payload, callback)
     );
 
     socket.on(
       Events.LEAVE_ROOM,
-      (_, callback: (result: ServerEvents["leaveRoom"]) => void) =>
+      (_, callback: (result: ServerPayloads["room:leave"]) => void) =>
         this.handleLeaveRoom(socket, user, callback)
     );
 
     socket.on(
-      Events.TOGGLE_READY,
-      (_, callback: (result: ServerEvents["toggleReady"]) => void) =>
+      Events.ROOM_READY,
+      (_, callback: (result: ServerPayloads["game:ready"]) => void) =>
         this.handleToggleReady(user, callback)
     );
 
     socket.on(
       Events.START_GAME,
-      (_, callback: (result: ServerEvents["startGame"]) => void) =>
+      (_, callback: (result: ServerPayloads["game:start"]) => void) =>
         this.handleStartGame(user, callback)
     );
 
-    socket.on(Events.USER_CONTROLS, (input: ClientEvents["userControls"]) =>
+    socket.on(Events.USER_CONTROLS, (input: ClientPayloads["game:controls"]) =>
       this.handleUserInput(user, input)
     );
 
     socket.on(
-      Events.LOBBY_STATE,
-      (_, callback: (state: ServerEvents["lobbyState"]) => void) =>
+      Events.GLOBAL_STATE,
+      (_, callback: (state: ServerPayloads["global:state"]) => void) =>
         this.handleLobbyState(callback)
     );
 
     socket.on(
-      Events.LOBBY_MESSAGE,
+      Events.CREATE_MESSAGE,
       (
-        payload: ClientEvents["lobby:message"],
-        callback: (result: ServerEvents["createMessage"]) => void
-      ) => this.handleLobbyMessage(user, payload, callback)
-    );
-
-    socket.on(
-      Events.ROOM_MESSAGE,
-      (
-        payload: ClientEvents["room:message"],
-        callback: (result: ServerEvents["createMessage"]) => void
-      ) => this.handleRoomMessage(user, payload, callback)
-    );
-
-    socket.on(
-      Events.PRIVATE_MESSAGE,
-      (
-        payload: ClientEvents["user:message"],
-        callback: (result: ServerEvents["createMessage"]) => void
-      ) => this.handlePrivateMessage(user, payload, callback)
+        payload: ClientPayloads["message:create"],
+        callback: (result: ServerPayloads["message:create"]) => void
+      ) => this.handleMessage(user, payload, callback)
     );
 
     socket.on("disconnect", () => this.handleDisconnect(user));
@@ -153,8 +146,8 @@ class GameServer {
   private handleCreateRoom(
     socket: Socket,
     user: User,
-    settings: ClientEvents["createRoom"] = {},
-    callback: (result: ServerEvents["createRoom"]) => void
+    settings: ClientPayloads["room:create"] = {},
+    callback: (result: ServerPayloads["room:create"]) => void
   ) {
     if (user.position) {
       const oldRoom = this.rooms.get(user.position.roomId);
@@ -186,8 +179,8 @@ class GameServer {
   private handleJoinRoom(
     socket: Socket,
     user: User,
-    payload: ClientEvents["joinRoom"],
-    callback: (result: ServerEvents["joinRoom"]) => void
+    payload: ClientPayloads["room:join"],
+    callback: (result: ServerPayloads["room:join"]) => void
   ) {
     const room = this.rooms.get(payload.roomId);
     if (!room) {
@@ -225,7 +218,7 @@ class GameServer {
   private handleLeaveRoom(
     socket: Socket,
     user: User,
-    callback: (result: ServerEvents["leaveRoom"]) => void
+    callback: (result: ServerPayloads["room:leave"]) => void
   ) {
     if (!user.position) {
       callback({ success: false, message: "User not in a room" });
@@ -253,7 +246,7 @@ class GameServer {
 
   private handleStartGame(
     user: User,
-    callback: (result: ServerEvents["startGame"]) => void
+    callback: (result: ServerPayloads["game:start"]) => void
   ) {
     if (!user.position) {
       callback({ success: false, message: "User not in a room" });
@@ -278,7 +271,7 @@ class GameServer {
     }
   }
 
-  private handleUserInput(user: User, input: ClientEvents["userControls"]) {
+  private handleUserInput(user: User, input: ClientPayloads["game:controls"]) {
     if (!user.position) return;
 
     const room = this.rooms.get(user.position.roomId);
@@ -288,7 +281,7 @@ class GameServer {
   }
 
   private handleLobbyState(
-    callback: (state: ServerEvents["lobbyState"]) => void
+    callback: (state: ServerPayloads["global:state"]) => void
   ) {
     callback({
       rooms: Object.fromEntries(
@@ -304,7 +297,7 @@ class GameServer {
 
   private handleToggleReady(
     user: User,
-    callback: (result: ServerEvents["toggleReady"]) => void
+    callback: (result: ServerPayloads["game:ready"]) => void
   ) {
     if (!user.position) return;
 
@@ -321,8 +314,8 @@ class GameServer {
 
   private handleLobbyMessage(
     user: User,
-    payload: ClientEvents["lobby:message"],
-    callback: (result: ServerEvents["createMessage"]) => void
+    payload: GlobalMessagePayload,
+    callback: (result: ServerPayloads["message:create"]) => void
   ) {
     if (!payload.content) {
       callback({ success: false, message: "Message content is required" });
@@ -339,8 +332,8 @@ class GameServer {
 
   private handleRoomMessage(
     user: User,
-    payload: ClientEvents["room:message"],
-    callback: (result: ServerEvents["createMessage"]) => void
+    payload: RoomMessagePayload,
+    callback: (result: ServerPayloads["message:create"]) => void
   ) {
     if (!user.position?.roomId) {
       callback({ success: false, message: "User is not in a room" });
@@ -365,10 +358,30 @@ class GameServer {
     callback({ success: result.success, message: result.message });
   }
 
+  private handleMessage(
+    user: User,
+    payload: ClientPayloads["message:create"],
+    callback: (result: ServerPayloads["message:create"]) => void
+  ) {
+    switch (payload.type) {
+      case MessageType.GLOBAL:
+        this.handleLobbyMessage(user, payload, callback);
+        break;
+      case MessageType.ROOM:
+        this.handleRoomMessage(user, payload, callback);
+        break;
+      case MessageType.PRIVATE:
+        this.handlePrivateMessage(user, payload, callback);
+        break;
+      default:
+        callback({ success: false, message: "Invalid message type" });
+    }
+  }
+
   private handlePrivateMessage(
     user: User,
-    payload: ClientEvents["user:message"],
-    callback: (result: ServerEvents["createMessage"]) => void
+    payload: PrivateMessagePayload,
+    callback: (result: ServerPayloads["message:create"]) => void
   ) {
     if (!payload.content || !payload.to) {
       callback({

@@ -4,15 +4,15 @@ import {
   GameStatus,
   GameRoomState,
   RoomSettings,
-} from "../types";
+  RoomType,
+} from "../../types";
 import { BattleScene } from "@/game/scenes/BattleScene";
 import { GameState } from "@/game/types";
 import { FRAME_TIME, MAX_WINS } from "@/game/constants";
-import { logger } from "../utils/logger";
+import { logger } from "../../utils/logger";
 import { ActionHandler } from "@/server/utils/ActionHandler";
-import { Room } from "./Room";
-import { User } from "./User";
-import { emitter } from "..";
+import { Room, User } from "..";
+import { emitter } from "../..";
 
 interface GameSettings {
   tickRate: number;
@@ -103,6 +103,8 @@ export class GameRoom extends Room {
       ],
     },
   };
+
+  public readonly type = RoomType.GAME;
 
   // Game-specific properties
   private battleScene?: BattleScene;
@@ -356,8 +358,7 @@ export class GameRoom extends Room {
 
   public override getState = (): Readonly<GameRoomState> =>
     Object.freeze({
-      ...super.getState(),
-      type: "game",
+      ...this.getBaseState(),
       gameStatus: this.gameStatus,
       gameState: this.gameState,
       startTime: this.startTime,
