@@ -1,6 +1,5 @@
 import { ChatMessage, MessageType, OperationResult } from "@/server/types";
-import { User } from "../User";
-import { BaseMessage } from "./BaseMessage";
+import { User, BaseMessage } from "..";
 import { logger } from "@/server/utils/logger";
 
 export class PrivateMessage extends BaseMessage {

@@ -1,11 +1,14 @@
-import { LobbyChatMessage, MessageType, OperationResult } from "@/server/types";
-import { User } from "../User";
-import { BaseMessage } from "./BaseMessage";
+import {
+  GlobalChatMessage,
+  MessageType,
+  OperationResult,
+} from "@/server/types";
+import { User, BaseMessage } from "..";
 import { logger } from "@/server/utils/logger";
 
 export class LobbyMessage extends BaseMessage {
   constructor(from: User, content: string) {
-    super(from, content, MessageType.LOBBY);
+    super(from, content, MessageType.GLOBAL);
   }
 
   public static create(
@@ -29,13 +32,13 @@ export class LobbyMessage extends BaseMessage {
     }
   }
 
-  public toChatMessage(): LobbyChatMessage {
+  public toChatMessage(): GlobalChatMessage {
     return {
       id: this.id,
       content: this.content,
       from: this.from,
       timestamp: this.timestamp,
-      type: MessageType.LOBBY,
+      type: MessageType.GLOBAL,
     };
   }
 }

@@ -1,11 +1,13 @@
 import { Server } from "socket.io";
-import { Events, ServerEvents } from "@/events";
-import { User } from "../models/User";
-import { Room } from "../models/Room";
-import { BaseMessage } from "../models/Message/BaseMessage";
-import { LobbyMessage } from "../models/Message/LobbyMessage";
-import { RoomMessage } from "../models/Message/RoomMessage";
-import { PrivateMessage } from "../models/Message/PrivateMessage";
+import { Events, ServerPayloads } from "@/events";
+import {
+  User,
+  Room,
+  BaseMessage,
+  LobbyMessage,
+  RoomMessage,
+  PrivateMessage,
+} from "../models";
 
 export class EventBroadcaster {
   private static instance: EventBroadcaster;
@@ -28,11 +30,11 @@ export class EventBroadcaster {
   public whoami(user: User) {
     this.io
       .to(user.socketId)
-      .emit(Events.WHOAMI, user.getState() as ServerEvents["whoami"]);
+      .emit(Events.USER_STATE, user.getState() as ServerPayloads["user:state"]);
   }
 
   public lobby() {
-    const lobbyState: ServerEvents["lobbyState"] = {
+    const lobbyState: ServerPayloads["global:state"] = {
       rooms: Object.fromEntries(
         [...this.rooms].map(([id, r]) => [id, r.getState()])
       ),
@@ -42,63 +44,63 @@ export class EventBroadcaster {
           .map(([id, u]) => [id, u.getState()])
       ),
     };
-    this.io.emit(Events.LOBBY_STATE, lobbyState);
+    this.io.emit(Events.GLOBAL_STATE, lobbyState);
   }
 
   public room(room: Room) {
     this.io
       .to(room.id)
-      .emit(Events.ROOM_STATE, room.getState() as ServerEvents["roomState"]);
+      .emit(Events.ROOM_STATE, room.getState() as ServerPayloads["room:state"]);
   }
 
   public gameSnapshot(
     room: Room,
-    snapshot: ServerEvents["gameSnapshot"]
+    snapshot: ServerPayloads["game:snapshot"]
   ): void {
     this.io.to(room.id).emit(Events.GAME_SNAPSHOT, snapshot);
   }
 
   public pause(room: Room): void {
-    this.io.to(room.id).emit(Events.GAME_PAUSED);
+    this.io.to(room.id).emit(Events.GAME_PAUSE);
   }
 
   public resume(room: Room): void {
-    this.io.to(room.id).emit(Events.GAME_RESUMED);
+    this.io.to(room.id).emit(Events.GAME_RESUME);
   }
 
-  public end(room: Room, result: ServerEvents["gameEnded"]): void {
-    this.io.to(room.id).emit(Events.GAME_ENDED, result);
+  public end(room: Room, result: ServerPayloads["game:end"]): void {
+    this.io.to(room.id).emit(Events.GAME_END, result);
   }
 
   public start(room: Room): void {
-    this.io.to(room.id).emit(Events.ROUND_START);
+    this.io.to(room.id).emit(Events.round_end);
   }
 
   public chat(message: BaseMessage): void {
     if (message instanceof LobbyMessage) {
       this.io.emit(
-        Events.LOBBY_MESSAGE,
-        message.toChatMessage() as ServerEvents["lobby:message"]
+        Events.GLOBAL_MESSAGE,
+        message.toChatMessage() as ServerPayloads["global:message"]
       );
     } else if (message instanceof RoomMessage) {
       this.io
         .to(message.to.id)
         .emit(
           Events.ROOM_MESSAGE,
-          message.toChatMessage() as ServerEvents["room:message"]
+          message.toChatMessage() as ServerPayloads["room:message"]
         );
     } else if (message instanceof PrivateMessage) {
       this.io
         .to(message.to.socketId)
         .emit(
           Events.PRIVATE_MESSAGE,
-          message.toChatMessage() as ServerEvents["user:message"]
+          message.toChatMessage() as ServerPayloads["user:message"]
         );
       this.io
         .to(message.from.socketId)
         .emit(
           Events.PRIVATE_MESSAGE,
-          message.toChatMessage() as ServerEvents["user:message"]
+          message.toChatMessage() as ServerPayloads["user:message"]
         );
     } else {
       throw new Error("Unsupported message type");
@@ -107,7 +109,7 @@ export class EventBroadcaster {
 
   public chatHistory(user: User, messages: LobbyMessage[]): void {
     messages.forEach((message) => {
-      this.io.to(user.socketId).emit(Events.LOBBY_MESSAGE, message);
+      this.io.to(user.socketId).emit(Events.GLOBAL_MESSAGE, message);
     });
   }
 }

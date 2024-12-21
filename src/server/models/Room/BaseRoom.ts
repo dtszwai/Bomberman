@@ -1,9 +1,16 @@
-import { AnyRoomState, OperationResult, RoomSettings, Seat } from "../types";
-import { User } from "./User";
-import { logger } from "../utils/logger";
-import { emitter } from "..";
+import {
+  RoomState,
+  OperationResult,
+  RoomSettings,
+  Seat,
+  BaseRoomState,
+  RoomType,
+} from "../../types";
+import { User } from "..";
+import { logger } from "../../utils/logger";
+import { emitter } from "../..";
 
-export class Room {
+export abstract class Room {
   protected static counter = 0;
   protected static readonly ROOM_CONSTANTS = {
     MIN_USERS: 2,
@@ -20,6 +27,7 @@ export class Room {
   public readonly createdAt: number;
   public updatedAt: number;
   protected settings: RoomSettings;
+  public abstract readonly type: RoomType;
 
   constructor(host: User, roomName?: string) {
     this.validateConstructorParams(host, roomName);
@@ -62,35 +70,8 @@ export class Room {
     allowSpectators: false,
   });
 
-  /** Create a new room */
-  public static create(
-    host: User,
-    roomName?: string,
-    settings: Partial<RoomSettings> = {}
-  ): OperationResult<Room | void> {
-    try {
-      const room = new Room(host, roomName);
-      const settingsResult = room.updateSettings(settings);
-      if (!settingsResult.success) {
-        Room.counter--;
-        return settingsResult;
-      }
-      room.seats[0].user = host;
-      return { success: true, data: room };
-    } catch (error) {
-      logger.error("Failed to create room", error as Error);
-      host.setPosition(undefined);
-      return {
-        success: false,
-        message: `Failed to create room: ${
-          error instanceof Error ? error.message : "Unknown error"
-        }`,
-      };
-    }
-  }
-
   /** Add a user to the room */
-  public addUser(user: User, seatIndex: number): OperationResult<AnyRoomState> {
+  public addUser(user: User, seatIndex: number): OperationResult<RoomState> {
     const validationError = this.validateUserAddition(user, seatIndex);
     if (validationError) {
       return { success: false, message: validationError };
@@ -161,10 +142,10 @@ export class Room {
     return { success: true };
   }
 
-  public getState(): Readonly<AnyRoomState> {
-    return Object.freeze({
+  protected getBaseState = (): BaseRoomState =>
+    Object.freeze({
       id: this.id,
-      type: "room",
+      type: this.type,
       name: this.name,
       seats: [...this.seats],
       hostId: this.hostId,
@@ -172,7 +153,8 @@ export class Room {
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,
     });
-  }
+
+  public abstract getState(): RoomState;
 
   public isInactive(): boolean {
     return Date.now() - this.updatedAt > Room.ROOM_CONSTANTS.INACTIVITY_TIMEOUT;

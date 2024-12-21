@@ -1,7 +1,5 @@
 import { MessageType, OperationResult, RoomChatMessage } from "@/server/types";
-import { Room } from "../Room";
-import { User } from "../User";
-import { BaseMessage } from "./BaseMessage";
+import { User, Room, BaseMessage } from "../";
 import { logger } from "@/server/utils/logger";
 
 export class RoomMessage extends BaseMessage {
