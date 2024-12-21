@@ -6,6 +6,9 @@ import { EventBroadcaster } from "./utils/EventBroadcaster";
 import { User } from "./models/User";
 import { GameRoom } from "./models/GameRoom";
 import { GameStatus } from "./types";
+import { LobbyMessage } from "./models/Message/LobbyMessage";
+import { RoomMessage } from "./models/Message/RoomMessage";
+import { PrivateMessage } from "./models/Message/PrivateMessage";
 
 const Config = {
   CORS_ORIGIN: process.env.CORS_ORIGIN || "*",
@@ -19,6 +22,7 @@ class GameServer {
   private readonly emitter: EventBroadcaster;
   private readonly users: Map<string, User>;
   private readonly rooms: Map<string, GameRoom>;
+  private readonly messages: LobbyMessage[];
 
   constructor() {
     this.httpServer = createServer((_, res) => {
@@ -31,6 +35,7 @@ class GameServer {
 
     this.users = new Map<string, User>();
     this.rooms = new Map<string, GameRoom>();
+    this.messages = [];
     this.emitter = new EventBroadcaster(this.io, this.users, this.rooms);
 
     this.setupSocketConnection();
@@ -60,6 +65,7 @@ class GameServer {
 
         this.emitter.whoami(user);
         this.emitter.lobby();
+        this.emitter.chatHistory(user, this.messages);
         this.setupEventListeners(socket, user);
       } catch (error) {
         logger.error(`Error during user connection: ${error}`);
@@ -115,6 +121,30 @@ class GameServer {
       Events.LOBBY_STATE,
       (_, callback: (state: ServerEvents["lobbyState"]) => void) =>
         this.handleLobbyState(callback)
+    );
+
+    socket.on(
+      Events.LOBBY_MESSAGE,
+      (
+        payload: ClientEvents["lobby:message"],
+        callback: (result: ServerEvents["createMessage"]) => void
+      ) => this.handleLobbyMessage(user, payload, callback)
+    );
+
+    socket.on(
+      Events.ROOM_MESSAGE,
+      (
+        payload: ClientEvents["room:message"],
+        callback: (result: ServerEvents["createMessage"]) => void
+      ) => this.handleRoomMessage(user, payload, callback)
+    );
+
+    socket.on(
+      Events.PRIVATE_MESSAGE,
+      (
+        payload: ClientEvents["user:message"],
+        callback: (result: ServerEvents["createMessage"]) => void
+      ) => this.handlePrivateMessage(user, payload, callback)
     );
 
     socket.on("disconnect", () => this.handleDisconnect(user));
@@ -286,6 +316,87 @@ class GameServer {
       emitter.room(room);
       emitter.whoami(user);
       emitter.lobby();
+    }
+  }
+
+  private handleLobbyMessage(
+    user: User,
+    payload: ClientEvents["lobby:message"],
+    callback: (result: ServerEvents["createMessage"]) => void
+  ) {
+    if (!payload.content) {
+      callback({ success: false, message: "Message content is required" });
+      return;
+    }
+
+    const result = LobbyMessage.create(user, payload.content);
+    if (result.success && result.data) {
+      this.messages.push(result.data);
+      this.emitter.chat(result.data);
+      callback({ success: true, data: result.data.toChatMessage() });
+    } else {
+      callback({ success: false, message: result.message });
+    }
+  }
+
+  private handleRoomMessage(
+    user: User,
+    payload: ClientEvents["room:message"],
+    callback: (result: ServerEvents["createMessage"]) => void
+  ) {
+    if (!user.position?.roomId) {
+      callback({ success: false, message: "User is not in a room" });
+      return;
+    }
+
+    const room = this.rooms.get(user.position.roomId);
+    if (!room) {
+      callback({ success: false, message: "Room not found" });
+      return;
+    }
+
+    if (!payload.content) {
+      callback({ success: false, message: "Message content is required" });
+      return;
+    }
+
+    const result = RoomMessage.create(payload.content, user, room);
+    if (result.success && result.data) {
+      this.emitter.chat(result.data);
+      callback({ success: true, data: result.data.toChatMessage() });
+    } else {
+      callback({ success: false, message: result.message });
+    }
+  }
+
+  private handlePrivateMessage(
+    user: User,
+    payload: ClientEvents["user:message"],
+    callback: (result: ServerEvents["createMessage"]) => void
+  ) {
+    if (!payload.content || !payload.to) {
+      callback({
+        success: false,
+        message: "Message content and recipient ID are required",
+      });
+      return;
+    }
+
+    const recipient = this.users.get(payload.to);
+    if (!recipient || !recipient.online) {
+      callback({
+        success: false,
+        message: "Recipient not found or offline",
+      });
+      return;
+    }
+
+    const result = PrivateMessage.create(payload.content, user, recipient);
+    if (result.success && result.data) {
+      this.emitter.chat(result.data);
+      callback({ success: true, data: result.data.toChatMessage() });
+    } else {
+      callback({ success: false, message: result.message });
     }
   }
 
