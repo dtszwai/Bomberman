@@ -69,5 +69,5 @@ export interface ServerEvents {
   [Events.LOBBY_MESSAGE]: LobbyChatMessage;
   [Events.ROOM_MESSAGE]: RoomChatMessage;
   [Events.PRIVATE_MESSAGE]: PrivateChatMessage;
-  [Events.CREATE_MESSAGE]: OperationResult<ChatMessage>;
+  [Events.CREATE_MESSAGE]: OperationResult;
 }

@@ -333,10 +333,8 @@ class GameServer {
     if (result.success && result.data) {
       this.messages.push(result.data);
       this.emitter.chat(result.data);
-      callback({ success: true, data: result.data.toChatMessage() });
-    } else {
-      callback({ success: false, message: result.message });
     }
+    callback({ success: result.success, message: result.message });
   }
 
   private handleRoomMessage(
@@ -363,10 +361,8 @@ class GameServer {
     const result = RoomMessage.create(payload.content, user, room);
     if (result.success && result.data) {
       this.emitter.chat(result.data);
-      callback({ success: true, data: result.data.toChatMessage() });
-    } else {
-      callback({ success: false, message: result.message });
     }
+    callback({ success: result.success, message: result.message });
   }
 
   private handlePrivateMessage(
@@ -394,10 +390,8 @@ class GameServer {
     const result = PrivateMessage.create(payload.content, user, recipient);
     if (result.success && result.data) {
       this.emitter.chat(result.data);
-      callback({ success: true, data: result.data.toChatMessage() });
-    } else {
-      callback({ success: false, message: result.message });
     }
+    callback({ success: result.success, message: result.message });
   }
 
   private handleDisconnect(user: User) {

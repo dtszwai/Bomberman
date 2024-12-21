@@ -15,6 +15,7 @@ export interface Position {
 
 export interface UserState {
   id: string;
+  socketId: string;
   name: string;
   position?: Position;
   joinedAt: number;
