@@ -5,6 +5,7 @@ import Room from "../Room";
 import Toast from "../Toast";
 import ConnectionStatus from "../ConnectionStatus";
 import { GameStatus, UserState } from "@/server/types";
+import Chat from "../Chat";
 
 interface ToastMessage {
   message: string;
@@ -20,6 +21,9 @@ const Lobby = ({ onStartLocalGame }: LobbyProps) => {
     useLobby();
   const { rooms, users, currentUser } = state;
   const [toast, setToast] = useState<ToastMessage | null>(null);
+  const [selectedChatUser, setSelectedChatUser] = useState<UserState | null>(
+    null
+  );
 
   const showToast = (
     message: string,
@@ -89,6 +93,12 @@ const Lobby = ({ onStartLocalGame }: LobbyProps) => {
     return "In Room";
   };
 
+  const handleUserClick = (user: UserState) => {
+    if (user.id !== currentUser?.id) {
+      setSelectedChatUser(user);
+    }
+  };
+
   return (
     <div className={styles.lobby}>
       <ConnectionStatus {...state} />
@@ -114,24 +124,42 @@ const Lobby = ({ onStartLocalGame }: LobbyProps) => {
         </div>
       </div>
       <div className={styles.content}>
-        <div className={styles.roomsGrid}>
-          {Object.values(rooms).map((room) => (
-            <Room
-              key={room.id}
-              room={room}
+        <div className={styles.mainContent}>
+          <div className={styles.roomsGrid}>
+            {Object.values(rooms).map((room) => (
+              <Room
+                key={room.id}
+                room={room}
+                currentUser={currentUser}
+                handleJoinRoom={handleJoinRoom}
+                handleLeaveRoom={handleLeaveRoom}
+                handleStartGame={handleStartGame}
+                handleReady={handleReady}
+              />
+            ))}
+          </div>
+          <div className={styles.chatSection}>
+            <Chat
               currentUser={currentUser}
-              handleJoinRoom={handleJoinRoom}
-              handleLeaveRoom={handleLeaveRoom}
-              handleStartGame={handleStartGame}
-              handleReady={handleReady}
+              currentRoom={state.currentRoom}
+              users={users}
+              selectedUser={selectedChatUser}
+              onError={(message) => showToast(message, "error")}
             />
-          ))}
+          </div>
         </div>
         <div className={styles.sidebar}>
           <h2>Users Online: {Object.keys(users).length}</h2>
           <div className={styles.usersList}>
             {Object.values(users).map((user) => (
-              <div key={user.id} className={styles.userItem}>
+              <div
+                key={user.id}
+                className={styles.userItem}
+                onClick={() => handleUserClick(user)}
+                style={{
+                  cursor: user.id !== currentUser?.id ? "pointer" : "default",
+                }}
+              >
                 <span
                   className={styles.userName}
                   data-currentuser={currentUser?.id === user.id}

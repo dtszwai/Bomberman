@@ -1,7 +1,6 @@
 import type { GameSnapshot } from "./game/types";
 import {
   AnyRoomState,
-  ChatMessage,
   GameStatus,
   LobbyChatMessage,
   LobbyState,

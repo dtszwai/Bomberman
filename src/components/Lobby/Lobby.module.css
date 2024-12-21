@@ -17,23 +17,36 @@
 }
 
 .content {
-  display: flex;
-  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 280px;
   gap: 2rem;
   padding: 2rem;
-  overflow: hidden;
   height: calc(100vh - 70px);
+  overflow: hidden;
 }
 
-/* Rooms Grid */
+.mainContent {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  overflow: hidden;
+  min-width: 0; /* Prevents flex children from overflowing */
+}
+
 .roomsGrid {
+  flex: 1;
+  overflow-y: auto;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 2rem;
-  flex: 1;
-  overflow-y: auto;
   padding-right: 1rem;
   align-content: start;
+  min-height: 0; /* Allows proper scrolling in flex container */
+}
+
+.chatSection {
+  height: 300px;
+  min-height: 300px;
 }
 
 /* Sidebar */
@@ -67,6 +80,16 @@
   padding: 0.5rem;
   border-radius: 4px;
   background-color: #1a1f36;
+  transition: background-color 0.2s;
+}
+
+.userItem:not([data-currentuser="true"]):hover {
+  background-color: #2a2f46;
+  cursor: pointer;
+}
+
+.userItem[data-currentuser="true"] {
+  cursor: default;
 }
 
 .userName {
@@ -185,7 +208,17 @@
 /* Media Queries */
 @media (max-width: 1024px) {
   .content {
-    flex-direction: column;
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr auto;
+  }
+
+  .mainContent {
+    gap: 1rem;
+  }
+
+  .chatSection {
+    height: 250px;
+    min-height: 250px;
   }
 
   .sidebar {
@@ -208,5 +241,13 @@
 
   .roomsGrid {
     gap: 1rem;
+  }
+
+  .content {
+    padding: 1rem;
+  }
+
+  .mainContent {
+    gap: 0.5rem;
   }
 }

@@ -34,6 +34,7 @@ export class User {
   public getState(): UserState {
     return Object.freeze({
       id: this.id,
+      socketId: this.socketId,
       name: this.name,
       position: this.position,
       joinedAt: this.joinedAt,
