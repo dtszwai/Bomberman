@@ -2,17 +2,19 @@ import { Server } from "socket.io";
 import { Events, ServerEvents } from "@/events";
 import { User } from "../models/User";
 import { Room } from "../models/Room";
+import { BaseMessage } from "../models/Message/BaseMessage";
+import { LobbyMessage } from "../models/Message/LobbyMessage";
+import { RoomMessage } from "../models/Message/RoomMessage";
+import { PrivateMessage } from "../models/Message/PrivateMessage";
 
 export class EventBroadcaster {
   private static instance: EventBroadcaster;
-  private readonly io: Server;
-  private readonly users: Map<string, User>;
-  private readonly rooms: Map<string, Room>;
 
-  constructor(io: Server, users: Map<string, User>, rooms: Map<string, Room>) {
-    this.io = io;
-    this.users = users;
-    this.rooms = rooms;
+  constructor(
+    private readonly io: Server,
+    private readonly users: Map<string, User>,
+    private readonly rooms: Map<string, Room>
+  ) {
     EventBroadcaster.instance = this;
   }
 
@@ -70,5 +72,42 @@ export class EventBroadcaster {
 
   public start(room: Room): void {
     this.io.to(room.id).emit(Events.ROUND_START);
+  }
+
+  public chat(message: BaseMessage): void {
+    if (message instanceof LobbyMessage) {
+      this.io.emit(
+        Events.LOBBY_MESSAGE,
+        message.toChatMessage() as ServerEvents["lobby:message"]
+      );
+    } else if (message instanceof RoomMessage) {
+      this.io
+        .to(message.to.id)
+        .emit(
+          Events.ROOM_MESSAGE,
+          message.toChatMessage() as ServerEvents["room:message"]
+        );
+    } else if (message instanceof PrivateMessage) {
+      this.io
+        .to(message.to.socketId)
+        .emit(
+          Events.PRIVATE_MESSAGE,
+          message.toChatMessage() as ServerEvents["user:message"]
+        );
+      this.io
+        .to(message.from.socketId)
+        .emit(
+          Events.PRIVATE_MESSAGE,
+          message.toChatMessage() as ServerEvents["user:message"]
+        );
+    } else {
+      throw new Error("Unsupported message type");
+    }
+  }
+
+  public chatHistory(user: User, messages: LobbyMessage[]): void {
+    messages.forEach((message) => {
+      this.io.to(user.socketId).emit(Events.LOBBY_MESSAGE, message);
+    });
   }
 }

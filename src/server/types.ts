@@ -78,3 +78,40 @@ export interface OperationResult<T = void> {
   message?: string;
   data?: T;
 }
+
+export enum MessageType {
+  LOBBY,
+  ROOM,
+  PRIVATE,
+}
+
+export type ChatMessage =
+  | RoomChatMessage
+  | PrivateChatMessage
+  | LobbyChatMessage;
+
+interface BaseRoomChatMessage {
+  id: string;
+  content: string;
+  from: UserState;
+  timestamp: number;
+  type: MessageType;
+}
+
+export interface RoomChatMessage extends BaseRoomChatMessage {
+  to?: never;
+  room: AnyRoomState;
+  type: MessageType.ROOM;
+}
+
+export interface PrivateChatMessage extends BaseRoomChatMessage {
+  to: UserState;
+  room?: never;
+  type: MessageType.PRIVATE;
+}
+
+export interface LobbyChatMessage extends BaseRoomChatMessage {
+  to?: never;
+  room?: never;
+  type: MessageType.LOBBY;
+}
