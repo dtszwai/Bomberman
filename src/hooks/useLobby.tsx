@@ -13,6 +13,7 @@ export const useLobby = () => {
   useEffect(() => {
     if (!socket) return;
 
+    socket.emit(Events.GLOBAL_STATE, null, setLobbyState);
     socket.on(Events.GLOBAL_STATE, setLobbyState);
 
     return () => {
@@ -20,7 +21,7 @@ export const useLobby = () => {
     };
   }, [socket]);
 
-  const createRoom = (settings: Partial<RoomSettings>) =>
+  const createRoom = (settings: Partial<RoomSettings> = {}) =>
     emit(Events.CREATE_ROOM, settings);
 
   return { lobbyState, createRoom };

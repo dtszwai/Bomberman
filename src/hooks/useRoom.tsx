@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 
 import { useSocket } from "./useSocket";
 import { Events } from "@/events";
-import { RoomState, Position } from "@/server/types";
+import { RoomState } from "@/server/types";
 
 export const useRoom = () => {
   const { socket, emit } = useSocket();
@@ -18,7 +18,9 @@ export const useRoom = () => {
     };
   }, [socket]);
 
-  const joinRoom = (position: Position) => emit(Events.JOIN_ROOM, position);
+  const joinRoom = (roomId: string, seatIndex: number) =>
+    emit(Events.JOIN_ROOM, { roomId, seatIndex });
+
   const leaveRoom = () => emit(Events.LEAVE_ROOM, null);
 
   return { room, joinRoom, leaveRoom };
