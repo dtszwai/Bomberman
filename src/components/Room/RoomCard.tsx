@@ -180,7 +180,7 @@ export const RoomCard = ({ room, onRoomClick }: RoomCardProps) => {
                 </Button>
               ) : (
                 <Button
-                  className={`flex-1 h-8 text-xs transition-all duration-300 ${
+                  className={`flex-1 h-8 text-xs ${
                     isReady
                       ? "bg-gray-600 hover:bg-gray-700"
                       : "bg-green-600 hover:bg-green-700"
