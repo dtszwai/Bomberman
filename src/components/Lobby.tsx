@@ -63,7 +63,8 @@ export const GameLobby = () => {
       {selectedRoom && (
         <RoomModal
           user={user}
-          room={selectedRoom}
+          // trigger the re-render when the room state changes
+          room={lobbyState.rooms[selectedRoom.id]}
           onClose={() => setSelectedRoom(undefined)}
         />
       )}
