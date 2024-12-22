@@ -7,8 +7,6 @@ import { useRoom } from "@/hooks/useRoom";
 export const GameContainer = () => {
   const { room } = useRoom();
 
-  console.log(room);
-
   if (!room || room.gameStatus === GameStatus.WAITING) {
     return <GameLobby />;
   }
