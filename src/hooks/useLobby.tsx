@@ -4,7 +4,7 @@ import { Events } from "@/events";
 import { GlobalState, RoomSettings } from "@/server/types";
 
 export const useLobby = () => {
-  const { socket, emit } = useSocket();
+  const { socket, emit, me } = useSocket();
   const [lobbyState, setLobbyState] = useState<GlobalState>({
     rooms: {},
     users: {},
@@ -19,10 +19,10 @@ export const useLobby = () => {
     return () => {
       socket.off(Events.GLOBAL_STATE);
     };
-  }, [socket]);
+  }, [emit, socket]);
 
   const createRoom = (settings: Partial<RoomSettings> = {}) =>
     emit(Events.CREATE_ROOM, settings);
 
-  return { lobbyState, createRoom };
+  return { lobbyState, createRoom, me };
 };

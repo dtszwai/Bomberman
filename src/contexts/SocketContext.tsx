@@ -4,11 +4,13 @@ import {
   Events,
   ServerPayloads,
 } from "@/events";
+import { UserState } from "@/server/types";
 import { createContext, useEffect, useState } from "react";
 import { io, Socket } from "socket.io-client";
 
 interface SocketContextValue {
   socket: Socket | null;
+  me: UserState;
   connected: boolean;
   error: Error | null;
   emit: <E extends BidirectionalEvent>(
@@ -25,6 +27,7 @@ const SocketProvider = ({ children }: { children: React.ReactNode }) => {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [connected, setConnected] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+  const [me, setMe] = useState<UserState>({} as UserState);
 
   useEffect(() => {
     const newSocket = io(SOCKET_URL, {
@@ -36,18 +39,13 @@ const SocketProvider = ({ children }: { children: React.ReactNode }) => {
     });
 
     newSocket.on("connect", () => setConnected(true));
+    newSocket.on(Events.USER_STATE, (user: ServerPayloads["user:state"]) => {
+      localStorage.setItem("userId", user.id);
+      localStorage.setItem("userName", user.name);
+      setMe(user);
+    });
     newSocket.on("disconnect", () => setConnected(false));
     newSocket.on("connect_error", (err) => setError(err));
-
-    newSocket.on(
-      Events.USER_STATE,
-      (response: ServerPayloads["user:state"]) => {
-        if (response) {
-          localStorage.setItem("userId", response.id);
-          localStorage.setItem("userName", response.name);
-        }
-      }
-    );
 
     setSocket(newSocket);
 
@@ -73,7 +71,7 @@ const SocketProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <SocketContext value={{ socket, connected, error, emit }}>
+    <SocketContext value={{ socket, connected, error, emit, me }}>
       {children}
     </SocketContext>
   );

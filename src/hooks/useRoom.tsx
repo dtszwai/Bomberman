@@ -6,7 +6,7 @@ import { RoomState } from "@/server/types";
 
 export const useRoom = () => {
   const { socket, emit } = useSocket();
-  const [room, setRoom] = useState<RoomState | null>(null);
+  const [room, setRoom] = useState<RoomState>();
 
   useEffect(() => {
     if (!socket) return;
