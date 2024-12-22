@@ -5,17 +5,23 @@ import { MessageType, ChatMessage, UserState, RoomState } from "@/server/types";
 
 interface ChatSessionProps {
   currentUser: UserState;
-  currentRoom?: RoomState | null;
+  currentRoom?: RoomState;
+  selectedUser?: UserState | null;
+  onSelectUser?: (user?: UserState) => void;
 }
 
-export const ChatSession = ({ currentUser, currentRoom }: ChatSessionProps) => {
+export const ChatSession = ({
+  currentUser,
+  currentRoom,
+  selectedUser,
+  onSelectUser,
+}: ChatSessionProps) => {
   const { messages, sendLobbyMessage, sendRoomMessage, sendPrivateMessage } =
     useChat();
   const [newMessage, setNewMessage] = useState("");
   const [selectedMessageType, setSelectedMessageType] = useState<MessageType>(
-    MessageType.GLOBAL
+    selectedUser ? MessageType.PRIVATE : MessageType.GLOBAL
   );
-  const [selectedUser, setSelectedUser] = useState<UserState | null>();
   const chatEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -25,6 +31,17 @@ export const ChatSession = ({ currentUser, currentRoom }: ChatSessionProps) => {
   const [sendError, setSendError] = useState<string | null>(null);
   const [isSending, setIsSending] = useState(false);
   const initialScrollRef = useRef(false);
+
+  // Update message type when selectedUser changes
+  useEffect(() => {
+    if (selectedUser) {
+      setSelectedMessageType(MessageType.PRIVATE);
+    } else if (currentRoom) {
+      setSelectedMessageType(MessageType.ROOM);
+    } else {
+      setSelectedMessageType(MessageType.GLOBAL);
+    }
+  }, [selectedUser, currentRoom]);
 
   const getAllMessages = useCallback(() => {
     return [...messages.global, ...messages.room, ...messages.private].sort(
@@ -137,9 +154,16 @@ export const ChatSession = ({ currentUser, currentRoom }: ChatSessionProps) => {
   };
 
   const handleStartDM = (user: UserState) => {
-    setSelectedUser(user);
-    setSelectedMessageType(MessageType.PRIVATE);
+    onSelectUser?.(user);
     inputRef.current?.focus();
+  };
+
+  const handleMessageTypeChange = (type: MessageType) => {
+    setSelectedMessageType(type);
+    // Clear selected user if switching away from private messages
+    if (type !== MessageType.PRIVATE) {
+      onSelectUser?.(undefined);
+    }
   };
 
   const MessageTypeIcon = ({
@@ -161,7 +185,7 @@ export const ChatSession = ({ currentUser, currentRoom }: ChatSessionProps) => {
         return (
           <button
             className={baseClass}
-            onClick={() => setSelectedMessageType(MessageType.GLOBAL)}
+            onClick={() => handleMessageTypeChange(MessageType.GLOBAL)}
             title="Global chat"
           >
             <Hash size={16} />
@@ -171,8 +195,9 @@ export const ChatSession = ({ currentUser, currentRoom }: ChatSessionProps) => {
         return (
           <button
             className={baseClass}
-            onClick={() => setSelectedMessageType(MessageType.ROOM)}
+            onClick={() => handleMessageTypeChange(MessageType.ROOM)}
             title="Room chat"
+            disabled={!currentRoom}
           >
             <Users size={16} />
           </button>
@@ -182,9 +207,10 @@ export const ChatSession = ({ currentUser, currentRoom }: ChatSessionProps) => {
           <button
             className={baseClass}
             onClick={() =>
-              selectedUser && setSelectedMessageType(MessageType.PRIVATE)
+              selectedUser && handleMessageTypeChange(MessageType.PRIVATE)
             }
             title="Direct message"
+            disabled={!selectedUser}
           >
             <AtSign size={16} />
           </button>
@@ -198,6 +224,54 @@ export const ChatSession = ({ currentUser, currentRoom }: ChatSessionProps) => {
       hour: "2-digit",
       minute: "2-digit",
     });
+
+    const MessageInfo = () => {
+      const CommonIcon = () => {
+        const iconClass = `mx-1 ${getTypeColor(message.type)}`;
+        switch (message.type) {
+          case MessageType.PRIVATE:
+            return <AtSign size={12} className={iconClass} />;
+          case MessageType.ROOM:
+            return <Users size={12} className={iconClass} />;
+          case MessageType.GLOBAL:
+            return <Hash size={12} className={iconClass} />;
+        }
+      };
+
+      if (isOwnMessage) {
+        return (
+          <div className="flex items-center space-x-1 text-xs">
+            <CommonIcon />
+            {message.type === MessageType.PRIVATE && (
+              <span className={getTypeColor(message.type)}>
+                {message.to?.name}
+              </span>
+            )}
+            {message.type === MessageType.ROOM && (
+              <span className={getTypeColor(message.type)}>
+                {currentRoom?.name}
+              </span>
+            )}
+            <span className="text-gray-500">{formattedTime}</span>
+          </div>
+        );
+      }
+
+      return (
+        <div className="flex items-center space-x-1 text-xs">
+          <button
+            onClick={() => handleStartDM(message.from)}
+            className="text-sm font-medium text-gray-300 hover:underline"
+          >
+            {message.from.name}
+          </button>
+          <CommonIcon />
+          <span className={`${getTypeColor(message.type)}`}>
+            {formattedTime}
+          </span>
+        </div>
+      );
+    };
 
     return (
       <div
@@ -223,27 +297,10 @@ export const ChatSession = ({ currentUser, currentRoom }: ChatSessionProps) => {
             isOwnMessage ? "items-end" : "items-start"
           } max-w-[75%]`}
         >
-          <div className="flex items-center space-x-2 mb-1">
-            {!isOwnMessage && (
-              <button
-                onClick={() => handleStartDM(message.from)}
-                className="text-sm font-medium text-gray-300 hover:underline"
-              >
-                {message.from.name}
-              </button>
-            )}
-            <div
-              className={`flex items-center space-x-1 text-xs ${getTypeColor(
-                message.type
-              )}`}
-            >
-              {getTypeIcon(message.type)}
-              <span>{formattedTime}</span>
-            </div>
-          </div>
+          <MessageInfo />
           <div
             className={`
-            px-4 py-2 rounded-2xl text-sm leading-relaxed break-words
+            mt-1 px-4 py-2 rounded-2xl text-sm leading-relaxed break-words
             ${
               isOwnMessage
                 ? "bg-blue-500 text-white"
@@ -310,7 +367,8 @@ export const ChatSession = ({ currentUser, currentRoom }: ChatSessionProps) => {
               type={MessageType.GLOBAL}
               active={selectedMessageType === MessageType.GLOBAL}
             />
-            {currentRoom && (
+            {/* Show room button when either in a room or viewing room messages */}
+            {(currentRoom || selectedMessageType === MessageType.ROOM) && (
               <MessageTypeIcon
                 type={MessageType.ROOM}
                 active={selectedMessageType === MessageType.ROOM}
@@ -347,7 +405,7 @@ export const ChatSession = ({ currentUser, currentRoom }: ChatSessionProps) => {
                   {selectedMessageType === MessageType.GLOBAL &&
                     "Sending to everyone"}
                   {selectedMessageType === MessageType.ROOM &&
-                    "Sending to room"}
+                    `Sending to ${currentRoom?.name}`}
                   {selectedMessageType === MessageType.PRIVATE &&
                     selectedUser &&
                     `Sending to ${selectedUser.name}`}
