@@ -31,5 +31,5 @@ export const LocalGameContainer = ({
     };
   }, [height, width]);
 
-  return <div ref={containerRef} className="game-container" />;
+  return <div ref={containerRef} className="p-0 m-0 h-full flex" />;
 };
