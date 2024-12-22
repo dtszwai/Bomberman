@@ -140,6 +140,14 @@ class GameServer {
       ) => this.handleMessage(user, payload, callback)
     );
 
+    socket.on(
+      Events.USER_STATE,
+      (_, callback: (state: ServerPayloads["user:state"]) => void) => {
+        logger.info(`User state requested: ${user}`);
+        callback(user.getState());
+      }
+    );
+
     socket.on("disconnect", () => this.handleDisconnect(user));
   }
 

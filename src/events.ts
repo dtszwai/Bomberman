@@ -53,6 +53,7 @@ export interface ClientPayloads {
   [Events.ROOM_READY]: null;
   [Events.USER_CONTROLS]: UserControls;
   [Events.CREATE_MESSAGE]: ChatMessagePayload;
+  [Events.USER_STATE]: null;
 }
 
 // Server-to-Client Event Payloads
