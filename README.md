@@ -16,12 +16,17 @@
 - 💥 **Battle with Friends**: Create a room and invite up to 4 players for intense matches
 - 🎯 **Smooth Controls**: Responsive movement and precise bomb placement
 - 🏆 **Power-ups**: Collect items to increase your speed, bomb strength, and more
-  <!-- - 💬 **Chat System**: Talk with other players in the lobby or during matches -->
+- 💬 **Chat System**: Talk with other players in the lobby
   <!-- - 🔄 **Auto Reconnect**: Never lose a game due to connection hiccups -->
 
 <div align="center">
  <img src="./screenshots/lobby.png" alt="Lobby Screenshot" width="600"/>
  <p><i>Create or join game rooms in the lobby</i></p>
+</div>
+
+<div align="center">
+ <img src="./screenshots/in-room.png" alt="In Room Screenshot" width="600"/>
+<p><i>Ready up and wait for other players to join</i></p>
 </div>
 
 ## 🎮 How to Play
