@@ -1,4 +1,9 @@
-import { BidirectionalEvent, ClientEvents, ServerEvents } from "@/events";
+import {
+  BidirectionalEvent,
+  ClientPayloads,
+  Events,
+  ServerPayloads,
+} from "@/events";
 import { createContext, useEffect, useState } from "react";
 import { io, Socket } from "socket.io-client";
 
@@ -8,8 +13,8 @@ interface SocketContextValue {
   error: Error | null;
   emit: <E extends BidirectionalEvent>(
     event: E,
-    arg: ClientEvents[E] extends void ? undefined : ClientEvents[E]
-  ) => Promise<ServerEvents[E]>;
+    arg: ClientPayloads[E] extends void ? undefined : ClientPayloads[E]
+  ) => Promise<ServerPayloads[E]>;
 }
 
 const SocketContext = createContext<SocketContextValue | null>(null);
@@ -34,6 +39,16 @@ const SocketProvider = ({ children }: { children: React.ReactNode }) => {
     newSocket.on("disconnect", () => setConnected(false));
     newSocket.on("connect_error", (err) => setError(err));
 
+    newSocket.on(
+      Events.USER_STATE,
+      (response: ServerPayloads["user:state"]) => {
+        if (response) {
+          localStorage.setItem("userId", response.id);
+          localStorage.setItem("userName", response.name);
+        }
+      }
+    );
+
     setSocket(newSocket);
 
     return () => {
@@ -47,7 +62,7 @@ const SocketProvider = ({ children }: { children: React.ReactNode }) => {
     }
 
     return new Promise((resolve, reject) => {
-      socket.emit(event, arg, (response: ServerEvents[typeof event]) => {
+      socket.emit(event, arg, (response: ServerPayloads[typeof event]) => {
         if (response instanceof Error) {
           reject(response);
         } else {

@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Events, ServerPayloads } from "../events";
-
 import { useSocket } from "./useSocket";
 import { ControlState, KeyTracker } from "@/utils/KeyTracker";
 import { GameSnapshot } from "@/game/types";
