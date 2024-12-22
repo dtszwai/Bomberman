@@ -1,10 +1,9 @@
 import { useLobby } from "@/hooks/useLobby";
 import { useState } from "react";
-import { Header } from "../components/layout/Header";
-import { RoomGrid } from "../components/room/RoomGrid";
-import { PlayerDrawer } from "../components/Player";
-import { RoomModal } from "../components/room/RoomModal";
-import { ChatSession } from "../components/chat/ChatSession";
+import { Header } from "./layout/Header";
+import { RoomGrid, RoomModal } from "./Room";
+import { PlayerDrawer } from "./Player";
+import { ChatSession } from "./Chat/ChatSession";
 import { RoomSettings, RoomState, UserState } from "@/server/types";
 
 export const GameLobby = () => {

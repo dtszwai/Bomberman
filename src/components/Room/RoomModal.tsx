@@ -1,7 +1,7 @@
 import { useGame } from "@/hooks/useGame";
 import { useRoom } from "@/hooks/useRoom";
 import { GameStatus, RoomState, UserState } from "@/server/types";
-import { ChatSession } from "../chat/ChatSession";
+import { ChatSession } from "../Chat/ChatSession";
 import { motion } from "framer-motion";
 import {
   Dialog,
