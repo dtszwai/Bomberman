@@ -9,7 +9,6 @@ import { useSocket } from "@/hooks/useSocket";
 
 export const ConnectionStatus = () => {
   const { connected, connecting } = useSocket();
-
   if (connected && !connecting) return null;
 
   return (
