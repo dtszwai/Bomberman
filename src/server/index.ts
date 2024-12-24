@@ -12,7 +12,6 @@ import {
   RoomMessage,
 } from "./models";
 import {
-  GameStatus,
   GlobalMessagePayload,
   MessageType,
   PrivateMessagePayload,
@@ -49,7 +48,6 @@ class GameServer {
 
     this.setupSocketConnection();
     this.setupErrorHandling();
-    this.handleDisconnectedCleanup();
   }
 
   private setupSocketConnection() {
@@ -437,40 +435,6 @@ class GameServer {
     // this.users.delete(user.id);
     emitter.lobby();
     logger.info(`User disconnected: ${user}`);
-  }
-
-  private handleDisconnectedCleanup() {
-    const IDLE_CHECK_INTERVAL = 60 * 1000 * 15; // 15 minutes
-    const DISCONNECTION_THRESHOLD = 1000 * 60 * 30; // 30 minutes
-
-    setInterval(() => {
-      for (const [_, user] of this.users) {
-        if (user.online && user.isIdle()) {
-          user.setOffline();
-
-          const room = user.position && this.rooms.get(user.position.roomId);
-          if (!room) continue;
-          const isWaitingGame =
-            room instanceof GameRoom && room.gameStatus === GameStatus.WAITING;
-          const shouldRemoveUser = !(room instanceof GameRoom) || isWaitingGame;
-
-          if (shouldRemoveUser) {
-            room.removeUser(user);
-            if (room.getUserCount() === 0) {
-              this.rooms.delete(room.id);
-            }
-            emitter.room(room);
-          }
-        }
-
-        // Clean up long-disconnected users
-        const disconnectedTime = Date.now() - user.lastActivityAt;
-        if (!user.online && disconnectedTime > DISCONNECTION_THRESHOLD) {
-          this.users.delete(user.id);
-        }
-      }
-      emitter.lobby();
-    }, IDLE_CHECK_INTERVAL);
   }
 
   private setupErrorHandling() {

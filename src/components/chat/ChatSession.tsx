@@ -201,7 +201,6 @@ export const ChatSession = ({
       </div>
 
       <ChatInput
-        currentUser={currentUser}
         currentRoom={currentRoom}
         selectedUser={selectedUser}
         selectedMessageType={selectedMessageType}
