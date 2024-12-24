@@ -12,6 +12,7 @@ import { StatusBadge } from "./StatusBadge";
 import { CreateRoomButton } from "./CreateRoomButton";
 import { AnimatedLogo } from "./Logo";
 import { HeaderProps } from "./Header";
+import { useRef } from "react";
 
 export const MobileMenu = ({
   onlineCount,
@@ -20,6 +21,14 @@ export const MobileMenu = ({
   onOpenPlayerList,
 }: HeaderProps) => {
   const { connected, connecting } = useSocket();
+  const sheetCloseRef = useRef<HTMLButtonElement>(null);
+
+  const handleClose = (callback: () => void) => {
+    return () => {
+      callback();
+      sheetCloseRef.current?.click();
+    };
+  };
 
   return (
     <Sheet>
@@ -33,6 +42,7 @@ export const MobileMenu = ({
         side="right"
         className="w-80 bg-gradient-to-b from-gray-900 to-gray-950 border-gray-800 [&>button]:hidden"
       >
+        <SheetClose ref={sheetCloseRef} className="hidden" />
         <SheetTitle>
           <div className="flex justify-between items-center mb-6">
             <div className="flex items-center gap-3">
@@ -58,7 +68,7 @@ export const MobileMenu = ({
               isMobile={true}
               onlineCount={onlineCount}
               roomsCount={roomsCount}
-              onOpenPlayerList={onOpenPlayerList}
+              onOpenPlayerList={handleClose(onOpenPlayerList)}
             />
           </div>
           <div>
@@ -66,9 +76,12 @@ export const MobileMenu = ({
               Quick Actions
             </h3>
             <div className="space-y-3">
-              <CreateRoomButton isMobile={true} onCreateRoom={onCreateRoom} />
+              <CreateRoomButton
+                isMobile={true}
+                onCreateRoom={handleClose(onCreateRoom)}
+              />
               <button
-                onClick={onOpenPlayerList}
+                onClick={handleClose(onOpenPlayerList)}
                 disabled={!connected || connecting}
                 className="w-full p-3 rounded-lg bg-gray-800/50 border border-gray-700/50 
                   text-gray-300 hover:bg-gray-800 transition-colors duration-200 flex items-center"

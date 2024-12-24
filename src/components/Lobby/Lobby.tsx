@@ -39,10 +39,12 @@ export const Lobby = () => {
 
       <main className="flex-1 container mx-auto p-2 lg:p-4 overflow-hidden">
         <div className="relative h-full min-h-0">
-          {/* Mobile Chat Toggle Button */}
+          {/* Mobile Chat Toggle Button - Repositioned */}
           <button
             onClick={toggleChat}
-            className="fixed bottom-4 right-4 z-50 lg:hidden bg-blue-500 text-white p-3 rounded-full shadow-lg"
+            className={`fixed bottom-20 right-4 z-50 lg:hidden bg-blue-500 text-white p-3 rounded-full shadow-lg transition-all duration-300 ${
+              isChatVisible ? "translate-y-16" : "translate-y-0"
+            }`}
           >
             {isChatVisible ? <X size={24} /> : <MessageSquare size={24} />}
           </button>
@@ -85,7 +87,7 @@ export const Lobby = () => {
               </div>
             </div>
 
-            {/* Mobile Chat Overlay */}
+            {/* Mobile Chat Overlay with Modified Layout */}
             <div
               className={`absolute inset-0 bg-gray-900 transition-all duration-300 ${
                 isChatVisible
@@ -93,17 +95,21 @@ export const Lobby = () => {
                   : "opacity-0 translate-x-full pointer-events-none"
               }`}
             >
-              <div className="h-full">
-                <ChatSession
-                  currentUser={user}
-                  currentRoom={
-                    user.position?.roomId
-                      ? lobbyState.rooms[user.position.roomId]
-                      : undefined
-                  }
-                  selectedUser={selectedUser}
-                  onSelectUser={handleUserSelect}
-                />
+              <div className="h-full flex flex-col">
+                <div className="flex-1 overflow-hidden">
+                  <ChatSession
+                    currentUser={user}
+                    currentRoom={
+                      user.position?.roomId
+                        ? lobbyState.rooms[user.position.roomId]
+                        : undefined
+                    }
+                    selectedUser={selectedUser}
+                    onSelectUser={handleUserSelect}
+                  />
+                </div>
+                {/* Added padding at the bottom to prevent overlap */}
+                <div className="h-16 lg:hidden"></div>
               </div>
             </div>
           </div>

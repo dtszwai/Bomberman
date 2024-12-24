@@ -9,6 +9,7 @@ import {
 } from ".";
 import { RoomSettings } from "@/server/types";
 import { Users } from "lucide-react";
+import { ConnectionStatus } from "./ConnectionStatus";
 
 export interface HeaderProps {
   onlineCount: number;
@@ -76,6 +77,7 @@ export const Header = ({
                 >
                   Bomberman Arena
                 </h1>
+                <ConnectionStatus />
               </div>
 
               <div className="hidden md:flex items-center gap-3 mt-2">
