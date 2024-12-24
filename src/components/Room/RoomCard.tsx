@@ -95,12 +95,14 @@ export const RoomCard = ({ room, onRoomClick }: RoomCardProps) => {
         }`}
       onClick={() => onRoomClick?.(room.id)}
     >
-      <CardContent className="p-4">
+      <CardContent className="p-2 sm:p-4">
         {/* Room Header */}
-        <div className="flex justify-between items-start mb-4">
+        <div className="flex justify-between items-start mb-2 sm:mb-4">
           <div>
-            <h3 className="font-semibold text-lg text-gray-200">{room.name}</h3>
-            <div className="flex items-center gap-1 mt-0.5">
+            <h3 className="font-semibold text-base sm:text-lg text-gray-200">
+              {room.name}
+            </h3>
+            <div className="flex flex-wrap items-center gap-1 mt-0.5">
               <Badge className="bg-gray-700 text-xs">Classic</Badge>
               <Badge className="bg-blue-600/50 text-xs">
                 {room.settings.isPrivate ? "Private" : "Public"}
@@ -132,13 +134,10 @@ export const RoomCard = ({ room, onRoomClick }: RoomCardProps) => {
         </div>
 
         {/* Game Table */}
-        <div className="relative w-full aspect-square mb-4 bg-gray-800 rounded-lg max-h-40">
+        <div className="relative w-full aspect-square mb-2 sm:mb-4 bg-gray-800 rounded-lg max-h-32 sm:max-h-40">
           {/* Center Table */}
-          <div
-            className="absolute inset-1/4 bg-gray-700 rounded-lg border border-gray-600 
-                        flex items-center justify-center"
-          >
-            <Gamepad className="w-6 h-6 text-white" />
+          <div className="absolute inset-1/4 bg-gray-700 rounded-lg border border-gray-600 flex items-center justify-center">
+            <Gamepad className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
           </div>
 
           {/* Player Slots */}
@@ -166,17 +165,18 @@ export const RoomCard = ({ room, onRoomClick }: RoomCardProps) => {
                 <Button
                   className="bg-green-600 hover:bg-green-700 flex-1 h-8 text-xs"
                   disabled={
-                    room.seats.filter((seat) => seat.user).length < 2 || // Less than 2 players
+                    room.seats.filter((seat) => seat.user).length < 2 ||
                     room.seats
                       .filter(
                         (seat) => seat.user && seat.user.id !== room.hostId
-                      ) // Get all seated players except host
-                      .some((seat) => !seat.ready) // Check if any non-host player is not ready
+                      )
+                      .some((seat) => !seat.ready)
                   }
                   onClick={handleStartGame}
                 >
                   <PlayCircle className="w-3 h-3 mr-1" />
-                  Start Game
+                  <span className="hidden sm:inline">Start Game</span>
+                  <span className="sm:hidden">Start</span>
                 </Button>
               ) : (
                 <Button
