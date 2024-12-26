@@ -7,7 +7,7 @@ import { GameStatus } from "@/server/types";
 
 export const useGame = () => {
   const { socket, emit } = useSocket();
-  const [snapshot, setSnapshot] = useState<GameSnapshot | null>(null);
+  const [snapshot, setSnapshot] = useState<GameSnapshot>();
   const [status, setStatus] = useState<GameStatus>(GameStatus.WAITING);
   const keyTracker = useRef(new KeyTracker());
   const previousState = useRef<string>("");
@@ -22,6 +22,7 @@ export const useGame = () => {
 
     const handleGamePaused = () => setStatus(GameStatus.PAUSED);
     const handleGameResumed = () => setStatus(GameStatus.ACTIVE);
+    const handleRoundEnded = () => setStatus(GameStatus.ROUND_ENDED);
     const handleGameEnded = () => {
       setStatus(GameStatus.WAITING);
       keyTracker.current.reset();
@@ -31,12 +32,14 @@ export const useGame = () => {
     socket.on(Events.GAME_PAUSE, handleGamePaused);
     socket.on(Events.GAME_RESUME, handleGameResumed);
     socket.on(Events.GAME_END, handleGameEnded);
+    socket.on(Events.round_end, handleRoundEnded);
 
     return () => {
       socket.off(Events.GAME_SNAPSHOT);
       socket.off(Events.GAME_PAUSE);
       socket.off(Events.GAME_RESUME);
       socket.off(Events.GAME_END);
+      socket.off(Events.round_end);
       keyTracker.current.reset();
     };
   }, [socket]);
