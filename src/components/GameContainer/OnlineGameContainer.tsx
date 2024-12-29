@@ -3,7 +3,7 @@ import { SCREEN_HEIGHT, SCREEN_WIDTH } from "@/game/constants";
 import { useGame } from "@/hooks/useGame";
 import { OnlineGameController } from "@/controller/OnlineGameController";
 import { GameOverlay } from "./GameOverlay";
-import { GameStatus } from "@/server/types";
+import { GameStatus, GameStatusType } from "@/server/types";
 
 interface OnlineGameContainerProps {
   width?: number;
@@ -18,13 +18,15 @@ export const OnlineGameContainer = ({
   const controllerRef = useRef<OnlineGameController | null>(null);
   const { snapshot, status } = useGame();
   const [showOverlay, setShowOverlay] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
 
   // Initialize game controller
   useEffect(() => {
-    if (!containerRef.current || controllerRef.current) return;
+    const container = containerRef.current;
+    if (!container || controllerRef.current) return;
 
     controllerRef.current = new OnlineGameController({
-      container: containerRef.current,
+      container,
       width,
       height,
     });
@@ -33,7 +35,7 @@ export const OnlineGameContainer = ({
       controllerRef.current?.stop();
       controllerRef.current = null;
     };
-  }, [height, width]);
+  }, [width, height]);
 
   // Handle game snapshot updates
   useEffect(() => {
@@ -42,37 +44,39 @@ export const OnlineGameContainer = ({
     }
   }, [snapshot]);
 
-  // Handle round end transition
+  // Handle game state changes
   useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
-
-    if (status === GameStatus.ROUND_ENDED) {
+    if (status?.type === GameStatusType.ROUND_ENDED) {
       setShowOverlay(true);
-      timeoutId = setTimeout(() => {
-        setShowOverlay(false);
-      }, 3000);
-    } else {
-      setShowOverlay(status === GameStatus.PAUSED);
+      const timer = setTimeout(() => setShowOverlay(false), 3000);
+      return () => clearTimeout(timer);
     }
 
-    return () => {
-      if (timeoutId) {
-        clearTimeout(timeoutId);
+    setShowOverlay(
+      status?.type === GameStatusType.PAUSED ||
+        status?.type === GameStatusType.WAITING
+    );
+  }, [status]);
+
+  // Handle ESC key press
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setShowMenu((prev) => !prev);
       }
     };
-  }, [status]);
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   return (
     <div className="relative w-full h-full">
       <div ref={containerRef} className="p-0 m-0 h-full flex" />
       <GameOverlay
-        status={status}
-        isVisible={
-          showOverlay ||
-          status === GameStatus.PAUSED ||
-          status === GameStatus.WAITING
-        }
-        gameData={snapshot}
+        isVisible={showOverlay}
+        showMenu={showMenu}
+        onMenuToggle={setShowMenu}
       />
     </div>
   );

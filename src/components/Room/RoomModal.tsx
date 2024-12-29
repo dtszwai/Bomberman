@@ -1,6 +1,6 @@
 import { useGame } from "@/hooks/useGame";
 import { useRoom } from "@/hooks/useRoom";
-import { GameStatus, RoomState, UserState } from "@/server/types";
+import { GameStatusType, RoomState, UserState } from "@/server/types";
 import { motion } from "framer-motion";
 import {
   Dialog,
@@ -121,14 +121,17 @@ export const RoomModal = ({ user, room, onClose }: RoomModalProps) => {
   );
 
   useEffect(() => {
-    if (room.gameStatus !== GameStatus.WAITING && room.startTime !== undefined) {
+    if (
+      room.status.type !== GameStatusType.WAITING &&
+      room.startTime !== undefined
+    ) {
       const timer = setInterval(() => {
         setElapsedTime(formatTime(Date.now() - room.startTime!));
       }, 1000);
 
       return () => clearInterval(timer);
     }
-  }, [room.gameStatus, room.startTime]);
+  }, [room.startTime, room.status.type]);
 
   const canStartGame =
     connectedPlayers >= 2 &&
@@ -171,7 +174,10 @@ export const RoomModal = ({ user, room, onClose }: RoomModalProps) => {
                   {room.name}
                 </h2>
                 {room.settings.isPrivate && (
-                  <Badge variant="outline" className="hidden md:inline-flex border-indigo-500/30 text-indigo-400">
+                  <Badge
+                    variant="outline"
+                    className="hidden md:inline-flex border-indigo-500/30 text-indigo-400"
+                  >
                     Private Room
                   </Badge>
                 )}
@@ -186,14 +192,16 @@ export const RoomModal = ({ user, room, onClose }: RoomModalProps) => {
                 </div>
                 <Badge
                   className={`${
-                    room.gameStatus === GameStatus.WAITING
+                    room.status.type === GameStatusType.WAITING
                       ? "bg-purple-500/10 text-purple-400 border-purple-500/20"
                       : "bg-green-500/10 text-green-400 border-green-500/20"
                   }`}
                 >
-                  {room.gameStatus === GameStatus.WAITING ? "Lobby" : "Playing"}
+                  {room.status.type === GameStatusType.WAITING
+                    ? "Lobby"
+                    : "Playing"}
                 </Badge>
-                {room.gameStatus !== GameStatus.WAITING && (
+                {room.status.type !== GameStatusType.WAITING && (
                   <Badge className="bg-purple-500/10 text-purple-400 border-purple-500/20 flex items-center gap-1">
                     <Timer className="w-3 h-3" />
                     {elapsedTime}

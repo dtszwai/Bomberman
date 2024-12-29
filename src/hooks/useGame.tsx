@@ -3,12 +3,12 @@ import { Events, ServerPayloads } from "../events";
 import { useSocket } from "./useSocket";
 import { ControlState, KeyTracker } from "@/utils/KeyTracker";
 import { GameSnapshot } from "@/game/types";
-import { GameStatus } from "@/server/types";
+import { GameStatus, GameStatusType, RoomType } from "@/server/types";
 
 export const useGame = () => {
   const { socket, emit } = useSocket();
   const [snapshot, setSnapshot] = useState<GameSnapshot>();
-  const [status, setStatus] = useState<GameStatus>(GameStatus.WAITING);
+  const [status, setStatus] = useState<GameStatus>();
   const keyTracker = useRef(new KeyTracker());
   const previousState = useRef<string>("");
 
@@ -17,36 +17,26 @@ export const useGame = () => {
 
     const handleGameSnapshot = (snapshot: ServerPayloads["game:snapshot"]) => {
       setSnapshot(snapshot);
-      setStatus(snapshot.status);
     };
 
-    const handleGamePaused = () => setStatus(GameStatus.PAUSED);
-    const handleGameResumed = () => setStatus(GameStatus.ACTIVE);
-    const handleRoundEnded = () => setStatus(GameStatus.ROUND_ENDED);
-    const handleGameEnded = () => {
-      setStatus(GameStatus.WAITING);
-      keyTracker.current.reset();
+    const handleGameStatus = (roomState: ServerPayloads["room:state"]) => {
+      if (roomState.type === RoomType.GAME) {
+        setStatus(roomState.status);
+      }
     };
 
     socket.on(Events.GAME_SNAPSHOT, handleGameSnapshot);
-    socket.on(Events.GAME_PAUSE, handleGamePaused);
-    socket.on(Events.GAME_RESUME, handleGameResumed);
-    socket.on(Events.GAME_END, handleGameEnded);
-    socket.on(Events.round_end, handleRoundEnded);
+    socket.on(Events.ROOM_STATE, handleGameStatus);
 
     return () => {
       socket.off(Events.GAME_SNAPSHOT);
-      socket.off(Events.GAME_PAUSE);
-      socket.off(Events.GAME_RESUME);
-      socket.off(Events.GAME_END);
-      socket.off(Events.round_end);
       keyTracker.current.reset();
     };
   }, [socket]);
 
   // Handle keyboard controls only during active gameplay
   useEffect(() => {
-    if (status === GameStatus.WAITING || !socket) return;
+    if (status?.type === GameStatusType.WAITING || !socket) return;
 
     const sendControlUpdate = (state: ControlState) => {
       const stateHash = JSON.stringify(state);
@@ -95,6 +85,6 @@ export const useGame = () => {
     status,
     startGame,
     setReady,
-    isActive: status !== GameStatus.WAITING,
+    isActive: status?.type !== GameStatusType.WAITING,
   };
 };

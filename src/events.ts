@@ -29,10 +29,6 @@ export const Events = {
   // Game Flow Events
   START_GAME: "game:start",
   GAME_SNAPSHOT: "game:snapshot",
-  GAME_PAUSE: "game:pause",
-  GAME_RESUME: "game:resume",
-  GAME_END: "game:end",
-  round_end: "game:round_end",
   USER_CONTROLS: "game:controls",
 
   // Message Events
@@ -61,13 +57,12 @@ export interface ServerPayloads {
   [Events.USER_STATE]: UserState;
   [Events.GLOBAL_STATE]: GlobalState;
   [Events.ROOM_STATE]: RoomState;
-  [Events.GAME_SNAPSHOT]: GameSnapshot & { status: GameStatus };
+  [Events.GAME_SNAPSHOT]: GameSnapshot;
   [Events.CREATE_ROOM]: OperationResult<RoomState>;
   [Events.JOIN_ROOM]: OperationResult<RoomState>;
   [Events.LEAVE_ROOM]: OperationResult;
   [Events.START_GAME]: OperationResult;
   [Events.USER_CONTROLS]: void;
-  [Events.GAME_END]: { winner: UserState; score: number[] };
   [Events.ROOM_READY]: OperationResult;
   [Events.GLOBAL_MESSAGE]: GlobalChatMessage;
   [Events.ROOM_MESSAGE]: RoomChatMessage;
