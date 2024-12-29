@@ -3,7 +3,6 @@ import { SCREEN_HEIGHT, SCREEN_WIDTH } from "@/game/constants";
 import { useGame } from "@/hooks/useGame";
 import { OnlineGameController } from "@/controller/OnlineGameController";
 import { GameOverlay } from "./GameOverlay";
-import { GameStatusType } from "@/server/types";
 
 interface OnlineGameContainerProps {
   width?: number;
