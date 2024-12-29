@@ -24,8 +24,8 @@ interface RoomCardProps {
 
 export const RoomCard = ({ room, onRoomClick }: RoomCardProps) => {
   const { me: currentUser } = useSocket();
-  const { joinRoom, leaveRoom } = useRoom();
-  const { setReady, startGame } = useGame();
+  const { joinRoom, leaveRoom, toggleReady: setReady } = useRoom();
+  const { start: startGame } = useGame();
   const isCurrentRoom = currentUser.position?.roomId === room.id;
   const isHost = isCurrentRoom && room.hostId === currentUser.id;
   const [elapsedTime, setElapsedTime] = useState<string>(

@@ -107,8 +107,8 @@ const PlayerAvatar = ({ seat, isHost, isCurrentUser }: PlayerAvatarProps) => (
 );
 
 export const RoomModal = ({ user, room, onClose }: RoomModalProps) => {
-  const { joinRoom, leaveRoom } = useRoom();
-  const { startGame, setReady } = useGame();
+  const { joinRoom, leaveRoom, toggleReady: setReady } = useRoom();
+  const { start: startGame } = useGame();
   const [showChat, setShowChat] = useState(false);
 
   const isHost = room.hostId === user.id;

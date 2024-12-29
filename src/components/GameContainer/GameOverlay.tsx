@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 interface OverlayProps {
   isVisible: boolean;
@@ -72,7 +72,6 @@ const GameMenu: React.FC<{
 
 const MessageLog: React.FC = () => {
   const [messages, setMessages] = useState<string[]>([]);
-  const messageIdRef = useRef(0);
 
   useEffect(() => {
     const demoMessages = [

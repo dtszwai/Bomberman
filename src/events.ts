@@ -2,7 +2,6 @@ import type { GameSnapshot } from "./game/types";
 import {
   RoomState,
   ChatMessagePayload,
-  GameStatus,
   GlobalChatMessage,
   GlobalState,
   OperationResult,
