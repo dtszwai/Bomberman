@@ -1,7 +1,9 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { SCREEN_HEIGHT, SCREEN_WIDTH } from "@/game/constants";
 import { useGame } from "@/hooks/useGame";
 import { OnlineGameController } from "@/controller/OnlineGameController";
+import { GameOverlay } from "./GameOverlay";
+import { GameStatusType } from "@/server/types";
 
 interface OnlineGameContainerProps {
   width?: number;
@@ -14,13 +16,16 @@ export const OnlineGameContainer = ({
 }: OnlineGameContainerProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const controllerRef = useRef<OnlineGameController | null>(null);
-  const { snapshot } = useGame();
+  const { snapshot, status } = useGame();
+  const [showMenu, setShowMenu] = useState(false);
 
+  // Initialize game controller
   useEffect(() => {
-    if (!containerRef.current || controllerRef.current) return;
+    const container = containerRef.current;
+    if (!container || controllerRef.current) return;
 
     controllerRef.current = new OnlineGameController({
-      container: containerRef.current,
+      container,
       width,
       height,
     });
@@ -29,13 +34,35 @@ export const OnlineGameContainer = ({
       controllerRef.current?.stop();
       controllerRef.current = null;
     };
-  }, [height, width]);
+  }, [width, height]);
 
+  // Handle game snapshot updates
   useEffect(() => {
     if (controllerRef.current && snapshot) {
       controllerRef.current.updateFromServer(snapshot);
     }
   }, [snapshot]);
 
-  return <div ref={containerRef} className="p-0 m-0 h-full flex" />;
+  // Handle ESC key press
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setShowMenu((prev) => !prev);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  return (
+    <div className="relative w-full h-full">
+      <div ref={containerRef} className="p-0 m-0 h-full flex" />
+      <GameOverlay
+        showMenu={showMenu}
+        onMenuToggle={setShowMenu}
+        status={status}
+      />
+    </div>
+  );
 };

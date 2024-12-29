@@ -1,4 +1,4 @@
-import { GameStatus } from "@/server/types";
+import { GameStatusType } from "@/server/types";
 import { OnlineGameContainer } from "./OnlineGameContainer";
 import { LocalGameContainer } from "./LocalGameContainer";
 import { Lobby } from "../Lobby/Lobby";
@@ -7,7 +7,9 @@ import { useRoom } from "@/hooks/useRoom";
 export const GameContainer = () => {
   const { room } = useRoom();
 
-  if (!room || room.gameStatus === GameStatus.WAITING) {
+  console.log(room);
+
+  if (!room || room.status.type === GameStatusType.WAITING) {
     return <Lobby />;
   }
 

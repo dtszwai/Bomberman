@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { RoomSettings, RoomState, UserState } from "@/server/types";
 import { useLobby } from "@/hooks/useLobby";
+import { useRoom } from "./useRoom";
 
 export const useLobbyState = () => {
   const {
     lobbyState: { rooms, users },
-    createRoom,
   } = useLobby();
+  const { createRoom } = useRoom();
 
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [selectedRoom, setSelectedRoom] = useState<RoomState>();

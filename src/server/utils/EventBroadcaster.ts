@@ -60,22 +60,6 @@ export class EventBroadcaster {
     this.io.to(room.id).emit(Events.GAME_SNAPSHOT, snapshot);
   }
 
-  public pause(room: Room): void {
-    this.io.to(room.id).emit(Events.GAME_PAUSE);
-  }
-
-  public resume(room: Room): void {
-    this.io.to(room.id).emit(Events.GAME_RESUME);
-  }
-
-  public end(room: Room, result: ServerPayloads["game:end"]): void {
-    this.io.to(room.id).emit(Events.GAME_END, result);
-  }
-
-  public start(room: Room): void {
-    this.io.to(room.id).emit(Events.round_end);
-  }
-
   public chat(message: BaseMessage): void {
     if (message instanceof LobbyMessage) {
       this.io.emit(

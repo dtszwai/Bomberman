@@ -5,6 +5,7 @@ import {
   GameRoomState,
   RoomSettings,
   RoomType,
+  GameStatusType,
 } from "../../types";
 import { BattleScene } from "@/game/scenes/BattleScene";
 import { GameState } from "@/game/types";
@@ -18,6 +19,7 @@ interface GameSettings {
   tickRate: number;
   maxWins: number;
   roundStartDelay: number;
+  gameTerminationDelay: number;
 }
 
 enum GameStateChangePermission {
@@ -27,7 +29,7 @@ enum GameStateChangePermission {
 }
 
 interface GameStateTransition {
-  fromStates: GameStatus[];
+  fromStates: GameStatusType[];
   permission: GameStateChangePermission;
   validationRules?: ((room: GameRoom, initiator?: User) => string | null)[];
 }
@@ -37,21 +39,22 @@ export class GameRoom extends Room {
     tickRate: FRAME_TIME,
     maxWins: MAX_WINS,
     roundStartDelay: 3000,
+    gameTerminationDelay: 10000,
   };
 
   private static readonly STATE_TRANSITIONS: Record<
-    GameStatus,
+    GameStatusType,
     GameStateTransition
   > = {
-    [GameStatus.ACTIVE]: {
-      fromStates: [GameStatus.WAITING, GameStatus.PAUSED],
+    [GameStatusType.ACTIVE]: {
+      fromStates: [GameStatusType.WAITING, GameStatusType.PAUSED],
       permission: GameStateChangePermission.HOST_ONLY,
       validationRules: [
         (room) =>
           room.getUserCount() < 2 ? "Need at least 2 users to start" : null,
         (room) => (!room.isAllReady() ? "Not all users are ready" : null),
         (room, initiator) => {
-          if (room.gameStatus === GameStatus.WAITING) {
+          if (room.status.type === GameStatusType.WAITING) {
             if (initiator?.id !== room.hostId) {
               return "Only the host can start the game";
             }
@@ -63,7 +66,7 @@ export class GameRoom extends Room {
             }
           }
           if (
-            room.gameStatus === GameStatus.PAUSED &&
+            room.status.type === GameStatusType.PAUSED &&
             initiator?.id !== room.hostId
           ) {
             return "Only the host can resume the game";
@@ -72,8 +75,8 @@ export class GameRoom extends Room {
         },
       ],
     },
-    [GameStatus.PAUSED]: {
-      fromStates: [GameStatus.ACTIVE],
+    [GameStatusType.PAUSED]: {
+      fromStates: [GameStatusType.ACTIVE],
       permission: GameStateChangePermission.HOST_ONLY,
       validationRules: [
         (room, initiator) =>
@@ -82,11 +85,11 @@ export class GameRoom extends Room {
             : null,
       ],
     },
-    [GameStatus.WAITING]: {
+    [GameStatusType.WAITING]: {
       fromStates: [
-        GameStatus.ACTIVE,
-        GameStatus.PAUSED,
-        GameStatus.ROUND_ENDED,
+        GameStatusType.ACTIVE,
+        GameStatusType.PAUSED,
+        GameStatusType.ROUND_ENDED,
       ],
       permission: GameStateChangePermission.SYSTEM,
       validationRules: [
@@ -94,8 +97,8 @@ export class GameRoom extends Room {
           initiator ? "Only system can set game to waiting state" : null,
       ],
     },
-    [GameStatus.ROUND_ENDED]: {
-      fromStates: [GameStatus.ACTIVE],
+    [GameStatusType.ROUND_ENDED]: {
+      fromStates: [GameStatusType.ACTIVE],
       permission: GameStateChangePermission.SYSTEM,
       validationRules: [
         (_, initiator) =>
@@ -109,7 +112,7 @@ export class GameRoom extends Room {
   // Game-specific properties
   private battleScene?: BattleScene;
   private gameLoop?: NodeJS.Timeout;
-  public gameStatus: GameStatus;
+  public status: GameStatus;
   private gameState: GameState;
   private inputHandlers: ActionHandler[];
   private readonly gameSettings: GameSettings;
@@ -117,7 +120,7 @@ export class GameRoom extends Room {
 
   constructor(host: User, roomName?: string) {
     super(host, roomName);
-    this.gameStatus = GameStatus.WAITING;
+    this.status = { type: GameStatusType.WAITING, timestamp: Date.now() };
     this.gameSettings = { ...GameRoom.DEFAULT_GAME_SETTINGS };
     this.gameState = {
       wins: new Array(this.seats.length),
@@ -126,9 +129,14 @@ export class GameRoom extends Room {
     this.inputHandlers = this.seats.map(() => new ActionHandler());
   }
 
+  private setStatus(status: GameStatus) {
+    this.status = status;
+    this.updateActivity();
+  }
+
   public startGame(initiator: User): OperationResult {
     const validationError = this.validateGameStateChange(
-      GameStatus.ACTIVE,
+      GameStatusType.ACTIVE,
       initiator
     );
     if (validationError) {
@@ -139,7 +147,12 @@ export class GameRoom extends Room {
       // Initialize wins array for occupied seats before starting the game
       this.gameState.wins = this.seats.map((seat) => (seat.user ? 0 : -1));
 
-      this.gameStatus = GameStatus.ACTIVE;
+      this.setStatus({
+        type: GameStatusType.ACTIVE,
+        timestamp: Date.now(),
+        roundNumber: 1,
+        roundStartTime: Date.now(),
+      });
       this.battleScene = this.createBattleScene();
       this.startGameLoop();
       this.startTime = Date.now();
@@ -160,7 +173,7 @@ export class GameRoom extends Room {
 
   public stopGame(initiator?: User): OperationResult {
     const validationError = this.validateGameStateChange(
-      GameStatus.WAITING,
+      GameStatusType.WAITING,
       initiator
     );
     if (validationError) {
@@ -169,12 +182,13 @@ export class GameRoom extends Room {
 
     try {
       this.stopGameLoop();
-      this.gameStatus = GameStatus.WAITING;
+      this.setStatus({ type: GameStatusType.WAITING, timestamp: Date.now() });
       this.battleScene = undefined;
       this.seats.forEach((seat) => {
         seat.ready = false;
       });
       this.updateActivity();
+      emitter.room(this);
       logger.info(`Game stopped for room ${this.id}`);
       return { success: true };
     } catch (error) {
@@ -190,7 +204,7 @@ export class GameRoom extends Room {
 
   public pauseGame(initiator: User): OperationResult {
     const validationError = this.validateGameStateChange(
-      GameStatus.PAUSED,
+      GameStatusType.PAUSED,
       initiator
     );
     if (validationError) {
@@ -198,10 +212,15 @@ export class GameRoom extends Room {
     }
 
     try {
-      this.gameStatus = GameStatus.PAUSED;
+      this.setStatus({
+        type: GameStatusType.PAUSED,
+        timestamp: Date.now(),
+        reason: "host_paused",
+        pausedBy: initiator.id,
+      });
       this.stopGameLoop();
       this.updateActivity();
-      emitter.pause(this);
+      emitter.room(this);
       return { success: true };
     } catch (error) {
       logger.error(`Failed to pause game for room ${this.id}`, error as Error);
@@ -216,7 +235,7 @@ export class GameRoom extends Room {
 
   public resumeGame(initiator: User): OperationResult {
     const validationError = this.validateGameStateChange(
-      GameStatus.ACTIVE,
+      GameStatusType.ACTIVE,
       initiator
     );
     if (validationError) {
@@ -224,11 +243,11 @@ export class GameRoom extends Room {
     }
 
     try {
-      this.gameStatus = GameStatus.ACTIVE;
+      this.status.type = GameStatusType.ACTIVE;
       this.updatedAt = Date.now();
       this.startGameLoop();
       this.updateActivity();
-      emitter.resume(this);
+      emitter.room(this);
       return { success: true };
     } catch (error) {
       logger.error(`Failed to resume game for room ${this.id}`, error as Error);
@@ -242,7 +261,7 @@ export class GameRoom extends Room {
   }
 
   public handleUserInput(user: User, controls: UserControls): void {
-    if (this.gameStatus !== GameStatus.ACTIVE) return;
+    if (this.status.type !== GameStatusType.ACTIVE) return;
 
     const seat = this.findUserSeat(user);
     if (seat) {
@@ -254,7 +273,7 @@ export class GameRoom extends Room {
     user: User,
     seatIndex: number
   ): OperationResult<GameRoomState> {
-    if (this.gameStatus !== GameStatus.WAITING) {
+    if (this.status.type !== GameStatusType.WAITING) {
       return { success: false, message: "Game is already in progress" };
     }
     const result = super.addUser(user, seatIndex);
@@ -277,7 +296,7 @@ export class GameRoom extends Room {
     }
 
     // Stop the game if there are not enough users
-    if (this.gameStatus === GameStatus.ACTIVE) {
+    if (this.status.type === GameStatusType.ACTIVE) {
       if (this.getUserCount() < 2) {
         this.stopGame();
       }
@@ -301,7 +320,7 @@ export class GameRoom extends Room {
   }
 
   private update() {
-    if (this.gameStatus !== GameStatus.ACTIVE || !this.battleScene) return;
+    if (this.status.type !== GameStatusType.ACTIVE || !this.battleScene) return;
 
     const currentTime = Date.now();
     const delta = (currentTime - this.updatedAt) / 1000;
@@ -315,34 +334,51 @@ export class GameRoom extends Room {
     new BattleScene(this.gameState, this.handleRoundEnd, this.inputHandlers);
 
   private handleRoundEnd = (seatIndex: number) => {
-    this.gameStatus = GameStatus.ROUND_ENDED;
+    const now = Date.now();
     this.gameState.wins[seatIndex]++;
 
     const isGameEnd =
       this.gameState.wins[seatIndex] >= this.gameSettings.maxWins;
 
+    this.setStatus({
+      type: GameStatusType.ROUND_ENDED,
+      timestamp: now,
+      roundNumber: this.gameState.wins.reduce((acc, wins) => acc + wins, 0),
+      roundEndTime: now,
+      winner: {
+        seatIndex,
+        userId: this.seats[seatIndex].user!.id,
+      },
+      state: isGameEnd
+        ? {
+            isGameOver: true,
+            finalScores: [...this.gameState.wins],
+            terminationTime: now + this.gameSettings.gameTerminationDelay,
+          }
+        : {
+            isGameOver: false,
+            nextRoundStartTime: now + this.gameSettings.roundStartDelay,
+          },
+    });
+
+    emitter.room(this);
     if (isGameEnd) {
-      this.handleGameEnd(this.seats[seatIndex].user!);
+      setTimeout(() => this.stopGame(), this.gameSettings.gameTerminationDelay);
     } else {
-      this.startNextRound();
+      this.startNextRound(now);
     }
   };
 
-  private handleGameEnd(winner: User) {
-    const winnerIndex = this.seats.findIndex((seat) => seat.user === winner);
-    const result = {
-      winner: this.seats[winnerIndex].user!,
-      score: this.gameState.wins,
-    };
-    emitter.end(this, result);
-    this.stopGame(winner);
-  }
-
-  private startNextRound() {
+  private startNextRound(time: number) {
     setTimeout(() => {
       this.battleScene = this.createBattleScene();
-      this.gameStatus = GameStatus.ACTIVE;
-      emitter.start(this);
+      this.setStatus({
+        type: GameStatusType.ACTIVE,
+        timestamp: time + this.gameSettings.roundStartDelay,
+        roundNumber: this.gameState.wins.reduce((acc, wins) => acc + wins, 0),
+        roundStartTime: time + this.gameSettings.roundStartDelay,
+      });
+      emitter.room(this);
     }, this.gameSettings.roundStartDelay);
   }
 
@@ -351,7 +387,7 @@ export class GameRoom extends Room {
 
     const snapshot = {
       ...this.battleScene.serialize(),
-      status: this.gameStatus,
+      status: this.status,
     };
     emitter.gameSnapshot(this, snapshot);
   }
@@ -359,20 +395,20 @@ export class GameRoom extends Room {
   public override getState = (): Readonly<GameRoomState> =>
     Object.freeze({
       ...this.getBaseState(),
-      gameStatus: this.gameStatus,
       gameState: this.gameState,
+      status: this.status,
       startTime: this.startTime,
     });
 
   private validateGameStateChange(
-    targetState: GameStatus,
+    targetState: GameStatusType,
     initiator?: User
   ): string | null {
     const transition = GameRoom.STATE_TRANSITIONS[targetState];
 
     // Validate state transition
-    if (!transition.fromStates.includes(this.gameStatus)) {
-      return `Cannot transition from ${this.gameStatus} to ${targetState}`;
+    if (!transition.fromStates.includes(this.status.type)) {
+      return `Cannot transition from ${this.status.type} to ${targetState}`;
     }
 
     // Handle system-initiated changes

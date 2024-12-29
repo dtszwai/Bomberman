@@ -3,6 +3,7 @@ import { RoomState, UserState } from ".";
 export * from "./room";
 export * from "./user";
 export * from "./chat";
+export * from "./game";
 
 export interface GlobalState {
   rooms: Readonly<Record<string, RoomState>>;

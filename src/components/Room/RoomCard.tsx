@@ -1,4 +1,4 @@
-import { GameStatus, RoomState } from "@/server/types";
+import { GameStatusType, RoomState } from "@/server/types";
 import { Card, CardContent } from "../ui/card";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import {
@@ -24,8 +24,8 @@ interface RoomCardProps {
 
 export const RoomCard = ({ room, onRoomClick }: RoomCardProps) => {
   const { me: currentUser } = useSocket();
-  const { joinRoom, leaveRoom } = useRoom();
-  const { setReady, startGame } = useGame();
+  const { joinRoom, leaveRoom, toggleReady: setReady } = useRoom();
+  const { start: startGame } = useGame();
   const isCurrentRoom = currentUser.position?.roomId === room.id;
   const isHost = isCurrentRoom && room.hostId === currentUser.id;
   const [elapsedTime, setElapsedTime] = useState<string>(
@@ -41,7 +41,7 @@ export const RoomCard = ({ room, onRoomClick }: RoomCardProps) => {
   // Game timer logic
   useEffect(() => {
     if (
-      room.gameStatus !== GameStatus.WAITING &&
+      room.status.type !== GameStatusType.WAITING &&
       room.startTime !== undefined
     ) {
       const timer = setInterval(() => {
@@ -50,7 +50,7 @@ export const RoomCard = ({ room, onRoomClick }: RoomCardProps) => {
 
       return () => clearInterval(timer);
     }
-  }, [room.gameStatus, room.startTime]);
+  }, [room.status.type, room.startTime]);
 
   const handleJoinRoom = (e: React.MouseEvent, seatIndex?: number) => {
     e.stopPropagation();
@@ -107,7 +107,7 @@ export const RoomCard = ({ room, onRoomClick }: RoomCardProps) => {
               <Badge className="bg-blue-600/50 text-xs">
                 {room.settings.isPrivate ? "Private" : "Public"}
               </Badge>
-              {room.gameStatus !== GameStatus.WAITING && (
+              {room.status.type !== GameStatusType.WAITING && (
                 <Tooltip delayDuration={200}>
                   <TooltipTrigger asChild>
                     <Badge className="bg-purple-600/50 text-xs flex items-center gap-1 cursor-help">
@@ -124,12 +124,14 @@ export const RoomCard = ({ room, onRoomClick }: RoomCardProps) => {
           </div>
           <Badge
             className={`text-xs ${
-              room.gameStatus === GameStatus.WAITING
+              room.status.type === GameStatusType.WAITING
                 ? "bg-purple-600/50"
                 : "bg-green-600/50"
             }`}
           >
-            {room.gameStatus === GameStatus.WAITING ? "Open" : "In Progress"}
+            {room.status.type === GameStatusType.WAITING
+              ? "Open"
+              : "In Progress"}
           </Badge>
         </div>
 

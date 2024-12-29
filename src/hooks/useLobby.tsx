@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useSocket } from "./useSocket";
 import { Events } from "@/events";
-import { GlobalState, RoomSettings } from "@/server/types";
+import { GlobalState } from "@/server/types";
 
 export const useLobby = () => {
   const { socket, emit, me } = useSocket();
@@ -21,8 +21,5 @@ export const useLobby = () => {
     };
   }, [emit, socket]);
 
-  const createRoom = (settings: Partial<RoomSettings> = {}) =>
-    emit(Events.CREATE_ROOM, settings);
-
-  return { lobbyState, createRoom, me };
+  return { lobbyState, me };
 };

@@ -1,49 +1,22 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { Events, ServerPayloads } from "../events";
+import { use, useEffect, useRef } from "react";
+import { Events } from "../events";
 import { useSocket } from "./useSocket";
 import { ControlState, KeyTracker } from "@/utils/KeyTracker";
-import { GameSnapshot } from "@/game/types";
-import { GameStatus } from "@/server/types";
+import { GameStatusType } from "@/server/types";
+import { GameContext } from "@/contexts/GameContext";
 
 export const useGame = () => {
   const { socket, emit } = useSocket();
-  const [snapshot, setSnapshot] = useState<GameSnapshot | null>(null);
-  const [status, setStatus] = useState<GameStatus>(GameStatus.WAITING);
+  const context = use(GameContext);
+  if (!context) {
+    throw new Error("useRoom must be used within a RoomProvider");
+  }
   const keyTracker = useRef(new KeyTracker());
   const previousState = useRef<string>("");
 
-  useEffect(() => {
-    if (!socket) return;
-
-    const handleGameSnapshot = (snapshot: ServerPayloads["game:snapshot"]) => {
-      setSnapshot(snapshot);
-      setStatus(snapshot.status);
-    };
-
-    const handleGamePaused = () => setStatus(GameStatus.PAUSED);
-    const handleGameResumed = () => setStatus(GameStatus.ACTIVE);
-    const handleGameEnded = () => {
-      setStatus(GameStatus.WAITING);
-      keyTracker.current.reset();
-    };
-
-    socket.on(Events.GAME_SNAPSHOT, handleGameSnapshot);
-    socket.on(Events.GAME_PAUSE, handleGamePaused);
-    socket.on(Events.GAME_RESUME, handleGameResumed);
-    socket.on(Events.GAME_END, handleGameEnded);
-
-    return () => {
-      socket.off(Events.GAME_SNAPSHOT);
-      socket.off(Events.GAME_PAUSE);
-      socket.off(Events.GAME_RESUME);
-      socket.off(Events.GAME_END);
-      keyTracker.current.reset();
-    };
-  }, [socket]);
-
   // Handle keyboard controls only during active gameplay
   useEffect(() => {
-    if (status === GameStatus.WAITING || !socket) return;
+    if (context.status?.type === GameStatusType.WAITING || !socket) return;
 
     const sendControlUpdate = (state: ControlState) => {
       const stateHash = JSON.stringify(state);
@@ -75,23 +48,9 @@ export const useGame = () => {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);
+      keyTracker.current.reset();
     };
-  }, [status, socket, emit]);
+  }, [socket, emit, context.status?.type]);
 
-  const startGame = useCallback(() => {
-    keyTracker.current.reset();
-    emit(Events.START_GAME, null);
-  }, [emit]);
-
-  const setReady = useCallback(() => {
-    emit(Events.ROOM_READY, null);
-  }, [emit]);
-
-  return {
-    snapshot,
-    status,
-    startGame,
-    setReady,
-    isActive: status !== GameStatus.WAITING,
-  };
+  return context;
 };

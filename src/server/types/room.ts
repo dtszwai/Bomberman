@@ -1,5 +1,6 @@
 import { GameState } from "@/game/types";
 import { User } from "../models";
+import { GameStatus } from "./game";
 
 export type Seat = Readonly<{
   index: number;
@@ -37,18 +38,11 @@ export interface BaseRoomState {
   updatedAt: number;
 }
 
-export type RoomState = GameRoomState;
-
-export enum GameStatus {
-  WAITING = "WAITING",
-  ACTIVE = "ACTIVE",
-  PAUSED = "PAUSED",
-  ROUND_ENDED = "ROUND_ENDED",
-}
-
 export interface GameRoomState extends BaseRoomState {
   type: RoomType.GAME;
-  gameStatus: GameStatus;
+  status: GameStatus;
   gameState: GameState;
   startTime?: number;
 }
+
+export type RoomState = GameRoomState;
