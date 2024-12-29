@@ -17,7 +17,6 @@ export const OnlineGameContainer = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const controllerRef = useRef<OnlineGameController | null>(null);
   const { snapshot, status } = useGame();
-  const [showOverlay, setShowOverlay] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
 
   // Initialize game controller
@@ -44,20 +43,6 @@ export const OnlineGameContainer = ({
     }
   }, [snapshot]);
 
-  // Handle game state changes
-  useEffect(() => {
-    if (status?.type === GameStatusType.ROUND_ENDED) {
-      setShowOverlay(true);
-      const timer = setTimeout(() => setShowOverlay(false), 3000);
-      return () => clearTimeout(timer);
-    }
-
-    setShowOverlay(
-      status?.type === GameStatusType.PAUSED ||
-        status?.type === GameStatusType.WAITING
-    );
-  }, [status]);
-
   // Handle ESC key press
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -74,9 +59,9 @@ export const OnlineGameContainer = ({
     <div className="relative w-full h-full">
       <div ref={containerRef} className="p-0 m-0 h-full flex" />
       <GameOverlay
-        isVisible={showOverlay}
         showMenu={showMenu}
         onMenuToggle={setShowMenu}
+        status={status}
       />
     </div>
   );

@@ -10,17 +10,17 @@ interface BaseGameStatus {
   timestamp: number;
 }
 
-interface WaitingStatus extends BaseGameStatus {
+export interface WaitingStatus extends BaseGameStatus {
   type: GameStatusType.WAITING;
 }
 
-interface ActiveStatus extends BaseGameStatus {
+export interface ActiveStatus extends BaseGameStatus {
   type: GameStatusType.ACTIVE;
   roundNumber: number;
   roundStartTime: number;
 }
 
-interface PausedStatus extends BaseGameStatus {
+export interface PausedStatus extends BaseGameStatus {
   type: GameStatusType.PAUSED;
   reason: "host_paused" | "player_disconnected" | "system";
   pausedBy: string | "system";
@@ -28,7 +28,7 @@ interface PausedStatus extends BaseGameStatus {
   autoResumeTime?: number;
 }
 
-interface RoundEndedStatus extends BaseGameStatus {
+export interface RoundEndedStatus extends BaseGameStatus {
   type: GameStatusType.ROUND_ENDED;
   roundNumber: number;
   winner: {
@@ -45,6 +45,7 @@ interface RoundEndedStatus extends BaseGameStatus {
     | {
         isGameOver: true;
         finalScores: number[];
+        terminationTime: number;
       };
 }
 

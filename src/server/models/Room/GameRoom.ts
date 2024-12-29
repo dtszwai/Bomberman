@@ -19,6 +19,7 @@ interface GameSettings {
   tickRate: number;
   maxWins: number;
   roundStartDelay: number;
+  gameTerminationDelay: number;
 }
 
 enum GameStateChangePermission {
@@ -38,6 +39,7 @@ export class GameRoom extends Room {
     tickRate: FRAME_TIME,
     maxWins: MAX_WINS,
     roundStartDelay: 3000,
+    gameTerminationDelay: 10000,
   };
 
   private static readonly STATE_TRANSITIONS: Record<
@@ -186,6 +188,7 @@ export class GameRoom extends Room {
         seat.ready = false;
       });
       this.updateActivity();
+      emitter.room(this);
       logger.info(`Game stopped for room ${this.id}`);
       return { success: true };
     } catch (error) {
@@ -350,6 +353,7 @@ export class GameRoom extends Room {
         ? {
             isGameOver: true,
             finalScores: [...this.gameState.wins],
+            terminationTime: now + this.gameSettings.gameTerminationDelay,
           }
         : {
             isGameOver: false,
@@ -357,22 +361,23 @@ export class GameRoom extends Room {
           },
     });
 
+    emitter.room(this);
     if (isGameEnd) {
-      this.handleGameEnd(this.seats[seatIndex].user!);
+      setTimeout(() => this.stopGame(), this.gameSettings.gameTerminationDelay);
     } else {
-      this.startNextRound();
+      this.startNextRound(now);
     }
   };
 
-  private handleGameEnd(winner: User) {
-    emitter.room(this);
-    this.stopGame(winner);
-  }
-
-  private startNextRound() {
+  private startNextRound(time: number) {
     setTimeout(() => {
       this.battleScene = this.createBattleScene();
-      this.status.type = GameStatusType.ACTIVE;
+      this.setStatus({
+        type: GameStatusType.ACTIVE,
+        timestamp: time + this.gameSettings.roundStartDelay,
+        roundNumber: this.gameState.wins.reduce((acc, wins) => acc + wins, 0),
+        roundStartTime: time + this.gameSettings.roundStartDelay,
+      });
       emitter.room(this);
     }, this.gameSettings.roundStartDelay);
   }
