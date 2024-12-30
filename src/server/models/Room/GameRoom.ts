@@ -38,8 +38,8 @@ export class GameRoom extends Room {
   private static readonly DEFAULT_GAME_SETTINGS: GameSettings = {
     tickRate: FRAME_TIME,
     maxWins: MAX_WINS,
-    roundStartDelay: 3000,
-    gameTerminationDelay: 10000,
+    roundStartDelay: 5000, // 5 seconds
+    gameTerminationDelay: 10000, // 10 seconds
   };
 
   private static readonly STATE_TRANSITIONS: Record<
@@ -117,6 +117,7 @@ export class GameRoom extends Room {
   private inputHandlers: ActionHandler[];
   private readonly gameSettings: GameSettings;
   public startTime?: number;
+  private roundNumber: number;
 
   constructor(host: User, roomName?: string) {
     super(host, roomName);
@@ -127,6 +128,7 @@ export class GameRoom extends Room {
       maxWins: this.gameSettings.maxWins,
     };
     this.inputHandlers = this.seats.map(() => new ActionHandler());
+    this.roundNumber = 1;
   }
 
   private setStatus(status: GameStatus) {
@@ -215,8 +217,8 @@ export class GameRoom extends Room {
       this.setStatus({
         type: GameStatusType.PAUSED,
         timestamp: Date.now(),
-        reason: "host_paused",
-        pausedBy: initiator.id,
+        reason: "user_paused",
+        pausedBy: initiator,
       });
       this.stopGameLoop();
       this.updateActivity();
@@ -343,16 +345,18 @@ export class GameRoom extends Room {
     this.setStatus({
       type: GameStatusType.ROUND_ENDED,
       timestamp: now,
-      roundNumber: this.gameState.wins.reduce((acc, wins) => acc + wins, 0),
+      roundNumber: this.roundNumber++,
       roundEndTime: now,
-      winner: {
-        seatIndex,
-        userId: this.seats[seatIndex].user!.id,
-      },
+      winner: this.seats[seatIndex].user!.getState(),
       state: isGameEnd
         ? {
             isGameOver: true,
-            finalScores: [...this.gameState.wins],
+            scoreboard: this.gameState.wins
+              .filter((wins) => wins >= 0)
+              .map((wins, index) => ({
+                user: this.seats[index].user!.getState(),
+                wins,
+              })),
             terminationTime: now + this.gameSettings.gameTerminationDelay,
           }
         : {

@@ -1,3 +1,5 @@
+import { UserState } from "./user";
+
 export enum GameStatusType {
   WAITING = "WAITING",
   ACTIVE = "ACTIVE",
@@ -22,19 +24,16 @@ export interface ActiveStatus extends BaseGameStatus {
 
 export interface PausedStatus extends BaseGameStatus {
   type: GameStatusType.PAUSED;
-  reason: "host_paused" | "player_disconnected" | "system";
-  pausedBy: string | "system";
-  disconnectedPlayers?: string[];
+  reason: "user_paused" | "player_disconnected" | "system";
+  pausedBy: UserState | "system";
+  disconnectedPlayers?: UserState[];
   autoResumeTime?: number;
 }
 
 export interface RoundEndedStatus extends BaseGameStatus {
   type: GameStatusType.ROUND_ENDED;
   roundNumber: number;
-  winner: {
-    seatIndex: number;
-    userId: string;
-  };
+  winner: UserState;
   roundEndTime: number;
 
   state:
@@ -44,7 +43,7 @@ export interface RoundEndedStatus extends BaseGameStatus {
       }
     | {
         isGameOver: true;
-        finalScores: number[];
+        scoreboard: { user: UserState; wins: number }[];
         terminationTime: number;
       };
 }
