@@ -1,5 +1,5 @@
 import { ChatMessage, MessageType } from "@/server/types";
-import { Room, User } from "../";
+import { Room, User } from "..";
 
 export abstract class BaseMessage {
   protected static counter = 0;

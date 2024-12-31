@@ -1,32 +1,14 @@
-import { MessageType, OperationResult, RoomChatMessage } from "@/server/types";
-import { User, Room, BaseMessage } from "../";
-import { logger } from "@/server/utils/logger";
+import { MessageType, RoomChatMessage } from "@/server/types";
+import { User, Room, BaseMessage } from "..";
 
 export class RoomMessage extends BaseMessage {
   constructor(from: User, content: string, public readonly to: Room) {
     super(from, content, MessageType.ROOM, to);
   }
 
-  public static create(
-    content: string,
-    from: User,
-    room: Room
-  ): OperationResult<RoomMessage> {
-    try {
-      BaseMessage.validateContent(content);
-      return {
-        success: true,
-        data: new RoomMessage(from, content, room),
-      };
-    } catch (error) {
-      logger.error("Failed to create room message", error as Error);
-      return {
-        success: false,
-        message: `Failed to create room message: ${
-          error instanceof Error ? error.message : "Unknown error"
-        }`,
-      };
-    }
+  public static create(from: User, content: string, room: Room): RoomMessage {
+    BaseMessage.validateContent(content);
+    return new RoomMessage(from, content, room);
   }
 
   public toChatMessage(): RoomChatMessage {
