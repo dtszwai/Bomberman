@@ -166,6 +166,7 @@ export class GameRoom extends Room {
     });
     this.updateActivity();
     emitter.room(this);
+    emitter.lobby();
     logger.info(`Game stopped for room ${this.id}`);
   }
 

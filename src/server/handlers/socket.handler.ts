@@ -93,6 +93,8 @@ export class SocketHandler {
 
     // Disconnect
     socket.on("disconnect", () => this.handleDisconnect(socket, user));
+
+    emitter.lobby();
   }
 
   private handleDisconnect(socket: Socket, user: User): void {
@@ -101,5 +103,7 @@ export class SocketHandler {
     if (user.position) {
       this.roomService.leaveRoom(user);
     }
+
+    emitter.lobby();
   }
 }
