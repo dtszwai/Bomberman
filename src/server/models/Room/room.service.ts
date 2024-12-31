@@ -7,6 +7,8 @@ import {
 import { GameRoom, Room } from ".";
 import { User } from "../user/User";
 import { UserService } from "../user";
+import { logger } from "@/server/utils/logger";
+import { emitter } from "@/server";
 
 export class RoomService {
   private rooms = new Map<string, Room>();
@@ -18,14 +20,20 @@ export class RoomService {
     settings: Partial<RoomSettings> = {}
   ): OperationResult<Room> {
     try {
+      if (host.position) {
+        this.leaveRoom(host);
+      }
+
       const room = GameRoom.create(host, undefined, settings);
       this.rooms.set(room.id, room);
+      emitter.lobby();
+      emitter.whoami(host);
+      emitter.room(room);
       return { success: true, data: room };
-    } catch (error) {
-      return {
-        success: false,
-        message: error instanceof Error ? error.message : "Unknown error",
-      };
+    } catch (e) {
+      const error = e instanceof Error ? e.message : "Unknown error";
+      logger.error(error);
+      return { success: false, message: error };
     }
   }
 
@@ -38,14 +46,25 @@ export class RoomService {
     if (!room) {
       return { success: false, message: "Room not found" };
     }
+    if (room.id === user.position?.roomId) {
+      // TODO: Allow user to change seat
+      return { success: false, message: "User is already in the room" };
+    }
+
+    if (user.position) {
+      this.leaveRoom(user);
+    }
+
     try {
       room.addUser(user, seatIndex);
+      emitter.lobby();
+      emitter.whoami(user);
+      emitter.room(room);
       return { success: true };
-    } catch (error) {
-      return {
-        success: false,
-        message: error instanceof Error ? error.message : "Unknown error",
-      };
+    } catch (e) {
+      const error = e instanceof Error ? e.message : "Unknown error";
+      logger.error(error);
+      return { success: false, message: error };
     }
   }
 
@@ -60,6 +79,13 @@ export class RoomService {
     }
 
     room.removeUser(user);
+    if (room.getUserCount() === 0) {
+      this.deleteRoom(room.id);
+    }
+
+    emitter.lobby();
+    emitter.room(room);
+    emitter.whoami(user);
     return { success: true };
   }
 

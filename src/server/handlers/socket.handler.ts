@@ -24,9 +24,6 @@ export class SocketHandler {
         const result = this.roomService.createRoom(user, settings);
         if (result.success) {
           socket.join(result.data!.id);
-          emitter.lobby();
-          emitter.whoami(user);
-          emitter.room(result.data!);
         }
         callback({ ...result, data: result.data?.getState() });
       }
@@ -46,9 +43,6 @@ export class SocketHandler {
 
         if (result.success) {
           socket.join(payload.roomId);
-          emitter.lobby();
-          emitter.whoami(user);
-          emitter.room(this.roomService.getRoom(payload.roomId)!);
         }
 
         callback(result);
@@ -57,17 +51,8 @@ export class SocketHandler {
 
     socket.on(
       Events.LEAVE_ROOM,
-      (_, callback: (result: ServerPayloads["room:leave"]) => void) => {
-        const roomId = user.position?.roomId;
-        const result = this.roomService.leaveRoom(user);
-        const room = this.roomService.getRoom(roomId!);
-        if (result.success) {
-          emitter.lobby();
-          emitter.room(room!);
-          emitter.whoami(user);
-        }
-        callback(result);
-      }
+      (_, callback: (result: ServerPayloads["room:leave"]) => void) =>
+        callback(this.roomService.leaveRoom(user))
     );
 
     socket.on(
@@ -114,13 +99,7 @@ export class SocketHandler {
     this.userService.setOffline(user);
 
     if (user.position) {
-      const room = this.roomService.getRoom(user.position.roomId);
-      if (room) {
-        room.removeUser(user);
-        emitter.room(room);
-      }
+      this.roomService.leaveRoom(user);
     }
-
-    emitter.lobby();
   }
 }

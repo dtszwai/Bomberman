@@ -2,6 +2,7 @@ import { OperationResult, UserControls } from "@/server/types";
 import { RoomService } from "./room.service";
 import { User } from "../user";
 import { GameRoom } from "./GameRoom";
+import { emitter } from "@/server";
 
 export class GameService {
   constructor(private roomService: RoomService) {}
@@ -20,6 +21,8 @@ export class GameService {
 
     try {
       room.startGame(user);
+      emitter.room(room);
+      emitter.lobby();
       return { success: true };
     } catch (error) {
       return {
@@ -42,6 +45,8 @@ export class GameService {
 
     try {
       room.setReady(user);
+      emitter.room(room);
+      emitter.lobby();
       return { success: true };
     } catch (error) {
       return {

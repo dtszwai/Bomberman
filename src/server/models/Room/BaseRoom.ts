@@ -88,6 +88,7 @@ export abstract class Room {
   /** Remove a user from the room */
   public removeUser(user: User) {
     const seat = this.findUserSeat(user);
+    if (!seat) throw new Error("User not found in room");
 
     Object.assign(seat, { user: null, ready: false });
     user.setPosition(undefined);
@@ -106,6 +107,7 @@ export abstract class Room {
   /** Set the ready state of a user */
   public setReady(user: User) {
     const seat = this.findUserSeat(user);
+    if (!seat) throw new Error("User not found in room");
     seat.ready = !seat.ready;
     user.updateActivity();
     this.updateActivity();
@@ -139,13 +141,8 @@ export abstract class Room {
     if (this.findUserSeat(user)) throw new Error("User is already in the room");
   }
 
-  protected findUserSeat(user: User): Seat {
-    const seat = this.seats.find((s) => s.user?.id === user.id);
-    if (!seat) {
-      throw new Error("User not found in room");
-    }
-    return seat;
-  }
+  protected findUserSeat = (user: User) =>
+    this.seats.find((s) => s.user?.id === user.id);
 
   protected cleanup() {
     this.seats.forEach((seat) => {
