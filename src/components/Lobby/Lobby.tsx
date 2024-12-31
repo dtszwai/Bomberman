@@ -1,8 +1,8 @@
 import { useLobby } from "@/hooks/useLobby";
-import { RoomModal } from "../room/RoomModal";
+import { RoomModal } from "../Room/RoomModal";
 import { useLobbyState } from "@/hooks/useLobbyState";
 import { Header } from "../layout/header";
-import { RoomGrid } from "../room";
+import { RoomGrid } from "../Room";
 import { ChatSession } from "../chat";
 import { PlayerDrawer } from "../Player";
 import { MessageSquare, X } from "lucide-react";
