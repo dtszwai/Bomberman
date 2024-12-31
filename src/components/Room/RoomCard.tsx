@@ -87,7 +87,7 @@ export const RoomCard = ({ room, onRoomClick }: RoomCardProps) => {
 
   return (
     <Card
-      className={`bg-gray-800/50 border-gray-700 transition-all duration-300
+      className={`w-full bg-gray-800/50 border-gray-700 transition-all duration-300
         ${
           isCurrentRoom
             ? "ring-2 ring-blue-500/50"
@@ -97,9 +97,9 @@ export const RoomCard = ({ room, onRoomClick }: RoomCardProps) => {
     >
       <CardContent className="p-2 sm:p-4">
         {/* Room Header */}
-        <div className="flex justify-between items-start mb-2 sm:mb-4">
-          <div>
-            <h3 className="font-semibold text-base sm:text-lg text-gray-200">
+        <div className="flex flex-col gap-1 mb-2 sm:mb-4">
+          <div className="flex items-start justify-between">
+            <h3 className="font-semibold text-base sm:text-lg text-gray-200 truncate">
               {room.name}
             </h3>
             <div className="flex flex-wrap items-center gap-1 mt-0.5">

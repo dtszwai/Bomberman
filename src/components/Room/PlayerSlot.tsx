@@ -11,9 +11,9 @@ interface PlayerSlotProps {
 
 const positionStyles: Record<number, string> = {
   0: "top-0 left-1/2 -translate-x-1/2",
-  1: "right-8 top-1/2 -translate-y-1/2",
+  1: "right-3 top-1/2 -translate-y-1/2",
   2: "bottom-0 left-1/2 -translate-x-1/2",
-  3: "left-8 top-1/2 -translate-y-1/2",
+  3: "left-3 top-1/2 -translate-y-1/2",
 };
 
 export const PlayerSlot = ({
