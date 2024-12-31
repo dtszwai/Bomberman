@@ -1,6 +1,5 @@
 import {
   UserControls,
-  OperationResult,
   GameStatus,
   GameRoomState,
   RoomSettings,
@@ -136,130 +135,62 @@ export class GameRoom extends Room {
     this.updateActivity();
   }
 
-  public startGame(initiator: User): OperationResult {
-    const validationError = this.validateGameStateChange(
-      GameStatusType.ACTIVE,
-      initiator
-    );
-    if (validationError) {
-      return { success: false, message: validationError };
-    }
+  public startGame(initiator: User): void {
+    this.validateGameStateChange(GameStatusType.ACTIVE, initiator);
 
-    try {
-      // Initialize wins array for occupied seats before starting the game
-      this.gameState.wins = this.seats.map((seat) => (seat.user ? 0 : -1));
+    // Initialize wins array for occupied seats before starting the game
+    this.gameState.wins = this.seats.map((seat) => (seat.user ? 0 : -1));
 
-      this.setStatus({
-        type: GameStatusType.ACTIVE,
-        timestamp: Date.now(),
-        roundNumber: 1,
-        roundStartTime: Date.now(),
-      });
-      this.battleScene = this.createBattleScene();
-      this.startGameLoop();
-      this.startTime = Date.now();
+    this.setStatus({
+      type: GameStatusType.ACTIVE,
+      timestamp: Date.now(),
+      roundNumber: 1,
+      roundStartTime: Date.now(),
+    });
+    this.battleScene = this.createBattleScene();
+    this.startGameLoop();
+    this.startTime = Date.now();
 
-      this.updateActivity();
-      logger.info(`Game started for room ${this.id}`);
-      return { success: true };
-    } catch (error) {
-      logger.error(`Failed to start game for room ${this.id}`, error as Error);
-      return {
-        success: false,
-        message: `Failed to start game: ${
-          error instanceof Error ? error.message : "Unknown error"
-        }`,
-      };
-    }
+    this.updateActivity();
+    logger.info(`Game started for room ${this.id}`);
   }
 
-  public stopGame(initiator?: User): OperationResult {
-    const validationError = this.validateGameStateChange(
-      GameStatusType.WAITING,
-      initiator
-    );
-    if (validationError) {
-      return { success: false, message: validationError };
-    }
+  public stopGame(initiator?: User): void {
+    this.validateGameStateChange(GameStatusType.WAITING, initiator);
 
-    try {
-      this.stopGameLoop();
-      this.setStatus({ type: GameStatusType.WAITING, timestamp: Date.now() });
-      this.battleScene = undefined;
-      this.seats.forEach((seat) => {
-        seat.ready = false;
-      });
-      this.updateActivity();
-      emitter.room(this);
-      logger.info(`Game stopped for room ${this.id}`);
-      return { success: true };
-    } catch (error) {
-      logger.error(`Failed to stop game for room ${this.id}`, error as Error);
-      return {
-        success: false,
-        message: `Failed to stop game: ${
-          error instanceof Error ? error.message : "Unknown error"
-        }`,
-      };
-    }
+    this.stopGameLoop();
+    this.setStatus({ type: GameStatusType.WAITING, timestamp: Date.now() });
+    this.battleScene = undefined;
+    this.seats.forEach((seat) => {
+      seat.ready = false;
+    });
+    this.updateActivity();
+    emitter.room(this);
+    logger.info(`Game stopped for room ${this.id}`);
   }
 
-  public pauseGame(initiator: User): OperationResult {
-    const validationError = this.validateGameStateChange(
-      GameStatusType.PAUSED,
-      initiator
-    );
-    if (validationError) {
-      return { success: false, message: validationError };
-    }
+  public pauseGame(initiator: User): void {
+    this.validateGameStateChange(GameStatusType.PAUSED, initiator);
 
-    try {
-      this.setStatus({
-        type: GameStatusType.PAUSED,
-        timestamp: Date.now(),
-        reason: "user_paused",
-        pausedBy: initiator,
-      });
-      this.stopGameLoop();
-      this.updateActivity();
-      emitter.room(this);
-      return { success: true };
-    } catch (error) {
-      logger.error(`Failed to pause game for room ${this.id}`, error as Error);
-      return {
-        success: false,
-        message: `Failed to pause game: ${
-          error instanceof Error ? error.message : "Unknown error"
-        }`,
-      };
-    }
+    this.setStatus({
+      type: GameStatusType.PAUSED,
+      timestamp: Date.now(),
+      reason: "user_paused",
+      pausedBy: initiator,
+    });
+    this.stopGameLoop();
+    this.updateActivity();
+    emitter.room(this);
   }
 
-  public resumeGame(initiator: User): OperationResult {
-    const validationError = this.validateGameStateChange(
-      GameStatusType.ACTIVE,
-      initiator
-    );
-    if (validationError) {
-      return { success: false, message: validationError };
-    }
+  public resumeGame(initiator: User): void {
+    this.validateGameStateChange(GameStatusType.ACTIVE, initiator);
 
-    try {
-      this.status.type = GameStatusType.ACTIVE;
-      this.updatedAt = Date.now();
-      this.startGameLoop();
-      this.updateActivity();
-      emitter.room(this);
-      return { success: true };
-    } catch (error) {
-      logger.error(`Failed to resume game for room ${this.id}`, error as Error);
-      return {
-        success: false,
-        message: `Failed to resume game: ${
-          error instanceof Error ? error.message : "Unknown error"
-        }`,
-      };
-    }
+    this.status.type = GameStatusType.ACTIVE;
+    this.updatedAt = Date.now();
+    this.startGameLoop();
+    this.updateActivity();
+    emitter.room(this);
   }
 
   public handleUserInput(user: User, controls: UserControls): void {
@@ -271,31 +202,15 @@ export class GameRoom extends Room {
     }
   }
 
-  public override addUser(
-    user: User,
-    seatIndex: number
-  ): OperationResult<GameRoomState> {
+  public override addUser(user: User, seatIndex: number): GameRoomState {
     if (this.status.type !== GameStatusType.WAITING) {
-      return { success: false, message: "Game is already in progress" };
+      throw new Error("Game is already in progress");
     }
-    const result = super.addUser(user, seatIndex);
-    if (result.success) {
-      return {
-        success: true,
-        data: this.getState(),
-      };
-    }
-    return {
-      success: false,
-      message: result.message,
-    };
+    return super.addUser(user, seatIndex);
   }
 
-  public override removeUser(user: User): OperationResult {
+  public override removeUser(user: User): void {
     const result = super.removeUser(user);
-    if (!result.success) {
-      return result;
-    }
 
     // Stop the game if there are not enough users
     if (this.status.type === GameStatusType.ACTIVE) {
@@ -407,12 +322,14 @@ export class GameRoom extends Room {
   private validateGameStateChange(
     targetState: GameStatusType,
     initiator?: User
-  ): string | null {
+  ): void {
     const transition = GameRoom.STATE_TRANSITIONS[targetState];
 
     // Validate state transition
     if (!transition.fromStates.includes(this.status.type)) {
-      return `Cannot transition from ${this.status.type} to ${targetState}`;
+      throw new Error(
+        `Cannot transition from ${this.status.type} to ${targetState}`
+      );
     }
 
     // Handle system-initiated changes
@@ -420,7 +337,7 @@ export class GameRoom extends Room {
       transition.permission === GameStateChangePermission.SYSTEM &&
       initiator
     ) {
-      return "This state change can only be initiated by the system";
+      throw new Error("This state change can only be initiated by the system");
     }
 
     // Handle disconnected users
@@ -428,7 +345,7 @@ export class GameRoom extends Room {
       !initiator &&
       transition.permission !== GameStateChangePermission.SYSTEM
     ) {
-      return "Initiator is required for this state change";
+      throw new Error("Initiator is required for this state change");
     }
 
     // Validate permissions
@@ -436,44 +353,32 @@ export class GameRoom extends Room {
       transition.permission === GameStateChangePermission.HOST_ONLY &&
       initiator?.id !== this.hostId
     ) {
-      return "Only the host can perform this action";
+      throw new Error("Only the host can perform this action");
     }
 
     // Run additional validation rules
     if (transition.validationRules) {
       for (const rule of transition.validationRules) {
         const error = rule(this, initiator);
-        if (error) return error;
+        if (error) throw new Error(error);
       }
     }
-
-    return null;
   }
 
   public static create(
     host: User,
     roomName?: string,
     settings: Partial<RoomSettings> = {}
-  ): OperationResult<GameRoom | void> {
+  ): GameRoom {
     try {
       const room = new GameRoom(host, roomName);
-      const settingsResult = room.updateSettings(settings);
-      if (!settingsResult.success) {
-        Room.counter--;
-        host.setPosition(undefined);
-        return settingsResult;
-      }
+      room.updateSettings(settings);
       room.seats[0].user = host;
-      return { success: true, data: room };
+      return room;
     } catch (error) {
       logger.error("Failed to create game room", error as Error);
       host.setPosition(undefined);
-      return {
-        success: false,
-        message: `Failed to create game room: ${
-          error instanceof Error ? error.message : "Unknown error"
-        }`,
-      };
+      throw new Error("Failed to create game room");
     }
   }
 }
