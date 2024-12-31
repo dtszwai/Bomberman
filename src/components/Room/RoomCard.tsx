@@ -102,37 +102,37 @@ export const RoomCard = ({ room, onRoomClick }: RoomCardProps) => {
             <h3 className="font-semibold text-base sm:text-lg text-gray-200 truncate">
               {room.name}
             </h3>
-            <Badge
-              className={`text-xs whitespace-nowrap ml-2 shrink-0 ${
-                room.status.type === GameStatusType.WAITING
-                  ? "bg-purple-600/50"
-                  : "bg-green-600/50"
-              }`}
-            >
-              {room.status.type === GameStatusType.WAITING
-                ? "Open"
-                : "In Progress"}
-            </Badge>
+            <div className="flex flex-wrap items-center gap-1 mt-0.5">
+              <Badge className="bg-gray-700 text-xs">Classic</Badge>
+              <Badge className="bg-blue-600/50 text-xs">
+                {room.settings.isPrivate ? "Private" : "Public"}
+              </Badge>
+              {room.status.type !== GameStatusType.WAITING && (
+                <Tooltip delayDuration={200}>
+                  <TooltipTrigger asChild>
+                    <Badge className="bg-purple-600/50 text-xs flex items-center gap-1 cursor-help">
+                      <Timer className="w-3 h-3" />
+                      {elapsedTime}
+                    </Badge>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Game running time</p>
+                  </TooltipContent>
+                </Tooltip>
+              )}
+            </div>
           </div>
-          <div className="flex flex-wrap items-center gap-1">
-            <Badge className="bg-gray-700 text-xs">Classic</Badge>
-            <Badge className="bg-blue-600/50 text-xs">
-              {room.settings.isPrivate ? "Private" : "Public"}
-            </Badge>
-            {room.status.type !== GameStatusType.WAITING && (
-              <Tooltip delayDuration={200}>
-                <TooltipTrigger asChild>
-                  <Badge className="bg-purple-600/50 text-xs flex items-center gap-1 cursor-help">
-                    <Timer className="w-3 h-3" />
-                    {elapsedTime}
-                  </Badge>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Game running time</p>
-                </TooltipContent>
-              </Tooltip>
-            )}
-          </div>
+          <Badge
+            className={`text-xs ${
+              room.status.type === GameStatusType.WAITING
+                ? "bg-purple-600/50"
+                : "bg-green-600/50"
+            }`}
+          >
+            {room.status.type === GameStatusType.WAITING
+              ? "Open"
+              : "In Progress"}
+          </Badge>
         </div>
 
         {/* Game Table */}

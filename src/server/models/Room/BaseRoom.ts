@@ -1,6 +1,5 @@
 import {
   RoomState,
-  OperationResult,
   RoomSettings,
   Seat,
   BaseRoomState,
@@ -41,7 +40,7 @@ export abstract class Room {
     host.setPosition({ roomId: this.id, seatIndex: 0 });
   }
 
-  private validateConstructorParams(host: User, name?: string): void {
+  private validateConstructorParams(host: User, name?: string) {
     if (!host) {
       throw new Error("Host are required");
     }
@@ -71,75 +70,47 @@ export abstract class Room {
   });
 
   /** Add a user to the room */
-  public addUser(user: User, seatIndex: number): OperationResult<RoomState> {
-    const validationError = this.validateUserAddition(user, seatIndex);
-    if (validationError) {
-      return { success: false, message: validationError };
-    }
+  public addUser(user: User, seatIndex: number): RoomState {
+    this.validateUserAddition(user, seatIndex);
     try {
       Object.assign(this.seats[seatIndex], { user, ready: false });
       user.setPosition({ roomId: this.id, seatIndex });
       this.updateActivity();
-      return { success: true, data: this.getState() };
+      return this.getState();
     } catch (error) {
-      logger.error(`Failed to add user to room ${this.id}`, error as Error);
       Object.assign(this.seats[seatIndex], { user: null, ready: false });
       user.setPosition(undefined);
-      return {
-        success: false,
-        message: `Failed to join Room: ${
-          error instanceof Error ? error.message : "Unknown error"
-        }`,
-      };
+      logger.error(`Failed to add user to room ${this.id}`, error as Error);
+      throw new Error("Failed to add user to room");
     }
   }
 
   /** Remove a user from the room */
-  public removeUser(user: User): OperationResult {
+  public removeUser(user: User) {
     const seat = this.findUserSeat(user);
-    if (!seat) {
-      return { success: false, message: "User not found in room" };
+    if (!seat) throw new Error("User not found in room");
+
+    Object.assign(seat, { user: null, ready: false });
+    user.setPosition(undefined);
+
+    if (user.id === this.hostId && this.getUserCount() > 0) {
+      this.transferHost();
     }
 
-    try {
-      Object.assign(seat, { user: null, ready: false });
-      user.setPosition(undefined);
-
-      if (user.id === this.hostId && this.getUserCount() > 0) {
-        this.transferHost();
-      }
-
-      this.updateActivity();
-
-      if (this.getUserCount() === 0) {
-        this.cleanup();
-      }
-
-      return { success: true };
-    } catch (error) {
-      logger.error(
-        `Failed to remove user from room ${this.id}`,
-        error as Error
-      );
-      return {
-        success: false,
-        message: `Failed to remove user: ${
-          error instanceof Error ? error.message : "Unknown error"
-        }`,
-      };
+    if (this.getUserCount() === 0) {
+      this.cleanup();
     }
+
+    this.updateActivity();
   }
 
   /** Set the ready state of a user */
-  public setReady(user: User): OperationResult {
+  public setReady(user: User) {
     const seat = this.findUserSeat(user);
-    if (!seat) {
-      return { success: false, message: "User not found in room" };
-    }
+    if (!seat) throw new Error("User not found in room");
     seat.ready = !seat.ready;
     user.updateActivity();
     this.updateActivity();
-    return { success: true };
   }
 
   protected getBaseState = (): BaseRoomState =>
@@ -160,20 +131,18 @@ export abstract class Room {
     return Date.now() - this.updatedAt > Room.ROOM_CONSTANTS.INACTIVITY_TIMEOUT;
   }
 
-  protected validateUserAddition(user: User, seatIndex: number): string | null {
-    if (!user) return "User is required";
+  protected validateUserAddition(user: User, seatIndex: number) {
+    if (!user) throw new Error("User is required");
     if (seatIndex < 0 || seatIndex >= this.seats.length)
-      return "Invalid seat index";
-    if (this.getUserCount() >= this.settings.maxUsers) return "Room is full";
-    if (this.seats[seatIndex].user)
-      return "Seat is already taken by another user";
-    if (this.findUserSeat(user)) return "User already in this room";
-    return null;
+      throw new Error("Invalid seat index");
+    if (this.getUserCount() >= this.settings.maxUsers)
+      throw new Error("Room is full");
+    if (this.seats[seatIndex].user) throw new Error("Seat is already taken");
+    if (this.findUserSeat(user)) throw new Error("User is already in the room");
   }
 
-  protected findUserSeat(user: User): Seat | undefined {
-    return this.seats.find((s) => s.user?.id === user.id);
-  }
+  protected findUserSeat = (user: User) =>
+    this.seats.find((s) => s.user?.id === user.id);
 
   protected cleanup() {
     this.seats.forEach((seat) => {
@@ -203,35 +172,19 @@ export abstract class Room {
   }
 
   /** Update the room settings */
-  public updateSettings(newSettings: Partial<RoomSettings>): OperationResult {
+  public updateSettings(newSettings: Partial<RoomSettings>) {
     const minUsers = Room.ROOM_CONSTANTS.MIN_USERS;
     const maxUsers = Room.ROOM_CONSTANTS.MAX_USERS;
-    try {
-      if (
-        newSettings?.maxUsers &&
-        (newSettings?.maxUsers < minUsers || newSettings.maxUsers > maxUsers)
-      ) {
-        return {
-          success: false,
-          message: `Max users must be between ${minUsers} and ${maxUsers}`,
-        };
-      }
 
-      this.settings = {
-        ...this.settings,
-        ...newSettings,
-      };
-
-      this.updateActivity();
-      return { success: true };
-    } catch (error) {
-      return {
-        success: false,
-        message: `Failed to update settings: ${
-          error instanceof Error ? error.message : "Unknown error"
-        }`,
-      };
+    if (
+      newSettings?.maxUsers &&
+      (newSettings?.maxUsers < minUsers || newSettings.maxUsers > maxUsers)
+    ) {
+      throw new Error(`Max users must be between ${minUsers} and ${maxUsers}`);
     }
+
+    this.settings = { ...this.settings, ...newSettings };
+    this.updateActivity();
   }
 
   public toString(): string {

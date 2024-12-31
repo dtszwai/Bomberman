@@ -1,32 +1,14 @@
-import { ChatMessage, MessageType, OperationResult } from "@/server/types";
+import { ChatMessage, MessageType } from "@/server/types";
 import { User, BaseMessage } from "..";
-import { logger } from "@/server/utils/logger";
 
 export class PrivateMessage extends BaseMessage {
   constructor(from: User, content: string, public readonly to: User) {
     super(from, content, MessageType.PRIVATE, to);
   }
 
-  public static create(
-    content: string,
-    from: User,
-    to: User
-  ): OperationResult<PrivateMessage> {
-    try {
-      BaseMessage.validateContent(content);
-      return {
-        success: true,
-        data: new PrivateMessage(from, content, to),
-      };
-    } catch (error) {
-      logger.error("Failed to create private message", error as Error);
-      return {
-        success: false,
-        message: `Failed to create private message: ${
-          error instanceof Error ? error.message : "Unknown error"
-        }`,
-      };
-    }
+  public static create(from: User, content: string, to: User): PrivateMessage {
+    BaseMessage.validateContent(content);
+    return new PrivateMessage(from, content, to);
   }
 
   public toChatMessage(): ChatMessage {

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   ArrowDown,
   ArrowLeft,
@@ -8,7 +8,6 @@ import {
   Loader,
   MenuIcon,
   Space,
-  Timer,
 } from "lucide-react";
 import {
   GameStatus,
@@ -16,6 +15,7 @@ import {
   PausedStatus,
   RoundEndedStatus,
 } from "@/server/types";
+import { PausedOverlay, RoundEndOverlay } from "./overlay";
 
 interface OverlayProps {
   status?: GameStatus;
@@ -77,102 +77,6 @@ const WaitingOverlay = () => (
   </div>
 );
 
-const PausedOverlay = ({ status }: { status: PausedStatus }) => {
-  const getPauseMessage = () => {
-    switch (status.reason) {
-      case "host_paused":
-        return "Game paused by host";
-      case "player_disconnected":
-        return `Waiting for ${status.disconnectedPlayers?.join(", ")}`;
-      case "system":
-        return "Game paused by system";
-      default:
-        return "Game paused";
-    }
-  };
-
-  return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black/80">
-      <div className="text-center font-mono">
-        <div className="flex items-center justify-center gap-3 text-yellow-400 mb-4">
-          <Timer size={24} />
-          <h2 className="text-2xl">GAME PAUSED</h2>
-        </div>
-        <p className="text-gray-400">{getPauseMessage()}</p>
-        {status.autoResumeTime && (
-          <p className="text-gray-400 mt-2">
-            Auto-resuming in{" "}
-            {Math.ceil((status.autoResumeTime - status.timestamp) / 1000)}s
-          </p>
-        )}
-      </div>
-    </div>
-  );
-};
-
-const RoundEndOverlay = ({ status }: { status: RoundEndedStatus }) => {
-  const [timeLeft, setTimeLeft] = useState(() => {
-    if (status.state.isGameOver) {
-      return Math.ceil(
-        (status.state.terminationTime - status.timestamp) / 1000
-      );
-    }
-    return Math.ceil(
-      (status.state.nextRoundStartTime - status.timestamp) / 1000
-    );
-  });
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setTimeLeft((prev) => Math.max(0, prev - 1));
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black/80">
-      <div className="text-center font-mono">
-        <h2 className="text-4xl text-yellow-400 mb-8">
-          {status.state.isGameOver ? "GAME OVER" : "ROUND OVER"}
-        </h2>
-        <p className="text-2xl text-gray-200 mb-4">
-          WINNER:{" "}
-          <span className="text-yellow-400">
-            PLAYER {status.winner.seatIndex + 1}
-          </span>
-        </p>
-        {status.state.isGameOver ? (
-          <>
-            <div className="space-y-2 mb-8">
-              <p className="text-xl text-gray-200">FINAL SCORES</p>
-              {status.state.finalScores.map(
-                (score, index) =>
-                  // Display only scores greater than or equal to 0
-                  // negative scores are used to indicate empty seats
-                  score >= 0 && (
-                    <p key={index} className="text-gray-400">
-                      PLAYER {index + 1}:{" "}
-                      <span className="text-yellow-400">{score}</span>
-                    </p>
-                  )
-              )}
-            </div>
-            <p className="text-gray-200">
-              RETURNING TO LOBBY IN:{" "}
-              <span className="text-yellow-400">{timeLeft}</span>
-            </p>
-          </>
-        ) : (
-          <p className="text-2xl text-gray-200">
-            NEXT ROUND IN: <span className="text-yellow-400">{timeLeft}</span>
-          </p>
-        )}
-      </div>
-    </div>
-  );
-};
-
 const GameMenu = ({
   isVisible,
   onClose,
@@ -208,7 +112,7 @@ const GameMenu = ({
   );
 };
 
-const MessageLog: React.FC = () => {
+const MessageLog = () => {
   const [messages, _setMessages] = useState<string[]>([]);
 
   return (
@@ -222,11 +126,25 @@ const MessageLog: React.FC = () => {
   );
 };
 
-export const GameOverlay: React.FC<OverlayProps> = ({
+export const GameOverlay = ({
   status,
   showMenu,
   onMenuToggle,
-}) => {
+}: OverlayProps) => {
+  const renderOverlay = () => {
+    if (!status) return null;
+    switch (status.type) {
+      case GameStatusType.WAITING:
+        return <WaitingOverlay />;
+      case GameStatusType.PAUSED:
+        return <PausedOverlay status={status as PausedStatus} />;
+      case GameStatusType.ROUND_ENDED:
+        return <RoundEndOverlay status={status as RoundEndedStatus} />;
+      default:
+        return null;
+    }
+  };
+
   return (
     <>
       <MessageLog />
@@ -240,14 +158,7 @@ export const GameOverlay: React.FC<OverlayProps> = ({
         <span>MENU</span>
       </button>
       <GameMenu isVisible={showMenu} onClose={() => onMenuToggle(false)} />
-
-      {status?.type === GameStatusType.WAITING && <WaitingOverlay />}
-      {status?.type === GameStatusType.PAUSED && (
-        <PausedOverlay status={status} />
-      )}
-      {status?.type === GameStatusType.ROUND_ENDED && (
-        <RoundEndOverlay status={status} />
-      )}
+      {renderOverlay()}
     </>
   );
 };
