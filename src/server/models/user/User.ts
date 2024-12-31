@@ -1,5 +1,5 @@
-import { Position, UserState } from "../types";
-import { generateUserName } from "../utils/name";
+import { Position, UserState } from "../../types";
+import { generateUserName } from "../../utils/name";
 
 export const USER_CONSTANTS = {
   IDLE_TIMEOUT: 10 * 60 * 1000, // 10 minutes

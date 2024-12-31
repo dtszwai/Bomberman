@@ -1,3 +1,3 @@
-export * from "./Message";
-export * from "./User";
-export * from "./Room";
+export * from "./message";
+export * from "./user/User";
+export * from "./room";

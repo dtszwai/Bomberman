@@ -7,15 +7,17 @@ import {
   LobbyMessage,
   RoomMessage,
   PrivateMessage,
+  RoomService,
 } from "../models";
+import { UserService } from "../models/user";
 
 export class EventBroadcaster {
   private static instance: EventBroadcaster;
 
   constructor(
     private readonly io: Server,
-    private readonly users: Map<string, User>,
-    private readonly rooms: Map<string, Room>
+    private readonly userService: UserService,
+    private readonly roomService: RoomService
   ) {
     EventBroadcaster.instance = this;
   }
@@ -34,12 +36,15 @@ export class EventBroadcaster {
   }
 
   public lobby() {
+    const rooms = this.roomService.getRooms();
+    const users = this.userService.getOnlineUsers();
+
     const lobbyState: ServerPayloads["global:state"] = {
       rooms: Object.fromEntries(
-        [...this.rooms].map(([id, r]) => [id, r.getState()])
+        [...rooms].map(([id, r]) => [id, r.getState()])
       ),
       users: Object.fromEntries(
-        [...this.users]
+        [...users]
           .filter(([_, user]) => user.online)
           .map(([id, u]) => [id, u.getState()])
       ),
