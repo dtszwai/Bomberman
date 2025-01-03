@@ -38,6 +38,7 @@ export abstract class Room {
     this.seats = this.initializeSeats();
     this.hostId = host.id;
     host.setPosition({ roomId: this.id, seatIndex: 0 });
+    logger.info(`${host} created ${this}`);
   }
 
   private validateConstructorParams(host: User, name?: string) {
@@ -76,6 +77,7 @@ export abstract class Room {
       Object.assign(this.seats[seatIndex], { user, ready: false });
       user.setPosition({ roomId: this.id, seatIndex });
       this.updateActivity();
+      logger.info(`${user} joined ${this}`);
       return this.getState();
     } catch (error) {
       Object.assign(this.seats[seatIndex], { user: null, ready: false });
@@ -101,6 +103,7 @@ export abstract class Room {
       this.cleanup();
     }
 
+    logger.info(`${user} left ${this}`);
     this.updateActivity();
   }
 
@@ -188,6 +191,6 @@ export abstract class Room {
   }
 
   public toString(): string {
-    return `Room ${this.id} (${this.name})`;
+    return `Room(${this.name})`;
   }
 }

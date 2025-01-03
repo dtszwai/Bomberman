@@ -73,8 +73,6 @@ export class User {
 
   /** Get formatted user info */
   public toString(): string {
-    return `${this.name}[${this.id}]${
-      this.position ? ` in room ${this.position.roomId}` : ""
-    }`;
+    return `${this.name}[${this.id}]`;
   }
 }

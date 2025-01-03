@@ -152,7 +152,7 @@ export class GameRoom extends Room {
     this.startTime = Date.now();
 
     this.updateActivity();
-    logger.info(`Game started for room ${this.id}`);
+    logger.info(`Game started by ${initiator} in ${this}`);
   }
 
   public stopGame(initiator?: User): void {
@@ -167,7 +167,7 @@ export class GameRoom extends Room {
     this.updateActivity();
     emitter.room(this);
     emitter.lobby();
-    logger.info(`Game stopped for room ${this.id}`);
+    logger.info(`Game stopped in ${this}`);
   }
 
   public pauseGame(initiator: User): void {
@@ -182,6 +182,7 @@ export class GameRoom extends Room {
     this.stopGameLoop();
     this.updateActivity();
     emitter.room(this);
+    logger.info(`Game paused by ${initiator} in ${this}`);
   }
 
   public resumeGame(initiator: User): void {
@@ -192,6 +193,7 @@ export class GameRoom extends Room {
     this.startGameLoop();
     this.updateActivity();
     emitter.room(this);
+    logger.info(`Game resumed by ${initiator} in ${this}`);
   }
 
   public handleUserInput(user: User, controls: UserControls): void {
