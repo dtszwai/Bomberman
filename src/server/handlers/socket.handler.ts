@@ -1,9 +1,10 @@
 import { ClientPayloads, Events, ServerPayloads } from "@/events";
-import { Socket } from "socket.io";
+import { DisconnectReason, Socket } from "socket.io";
 import { MessageService, RoomService, User } from "../models";
 import { UserService } from "../models/user";
 import { emitter } from "..";
 import { GameService } from "../models/room/game.service";
+import { logger } from "../utils/logger";
 
 export class SocketHandler {
   constructor(
@@ -14,6 +15,14 @@ export class SocketHandler {
   ) {}
 
   bindEvents(socket: Socket, user: User): void {
+    logger.info("Socket connected\n", {
+      name: user.name,
+      id: user.id,
+      socketId: socket.id,
+      address: socket.handshake.address,
+      userAgent: socket.handshake.headers["user-agent"],
+    });
+
     // Room events
     socket.on(
       Events.CREATE_ROOM,
@@ -92,12 +101,18 @@ export class SocketHandler {
     );
 
     // Disconnect
-    socket.on("disconnect", () => this.handleDisconnect(socket, user));
+    socket.on("disconnect", (reason: DisconnectReason) =>
+      this.handleDisconnect(socket, user, reason)
+    );
 
     emitter.lobby();
   }
 
-  private handleDisconnect(socket: Socket, user: User): void {
+  private handleDisconnect(
+    socket: Socket,
+    user: User,
+    reason: DisconnectReason
+  ): void {
     this.userService.setOffline(user);
 
     if (user.position) {
@@ -105,5 +120,10 @@ export class SocketHandler {
     }
 
     emitter.lobby();
+    logger.info("Socket disconnected\n", {
+      name: user.name,
+      id: socket.id,
+      reason,
+    });
   }
 }
