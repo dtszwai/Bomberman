@@ -19,7 +19,8 @@ export class SocketHandler {
       name: user.name,
       id: user.id,
       socketId: socket.id,
-      address: socket.handshake.address,
+      address:
+        socket.handshake.headers["x-forwarded-for"] || socket.handshake.address,
       userAgent: socket.handshake.headers["user-agent"],
     });
 
