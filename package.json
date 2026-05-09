@@ -13,6 +13,7 @@
     "build": "pnpm --filter @arcade/web build",
     "preview": "pnpm --filter @arcade/web preview",
     "lint": "eslint .",
+    "test:bot-levels": "pnpm --filter @arcade/games-bomberman test:bot-levels",
     "verify:bots": "pnpm --filter @arcade/games-bomberman verify:bots",
     "server": "pnpm --filter @arcade/server start",
     "server:dev": "pnpm --filter @arcade/server dev"

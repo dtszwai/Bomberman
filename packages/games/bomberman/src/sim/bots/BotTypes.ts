@@ -34,41 +34,41 @@ export const BOT_DIFFICULTY_CONFIG: Record<
 > = {
   easy: {
     decisionIntervalTicks: 18,
-    dangerLookaheadMs: 2800,
-    maxSearchDepth: 16,
-    bombCooldownTicks: 95,
-    aggression: 0.25,
-    randomMoveChance: 0.35,
-    powerupBias: 1.4,
+    dangerLookaheadMs: 300,
+    maxSearchDepth: 6,
+    bombCooldownTicks: 140,
+    aggression: 0.08,
+    randomMoveChance: 0.8,
+    powerupBias: 0.05,
     blockBias: 1.0,
   },
   normal: {
     decisionIntervalTicks: 10,
-    dangerLookaheadMs: 3600,
-    maxSearchDepth: 26,
-    bombCooldownTicks: 65,
-    aggression: 0.55,
-    randomMoveChance: 0.16,
-    powerupBias: 1.8,
+    dangerLookaheadMs: 3200,
+    maxSearchDepth: 24,
+    bombCooldownTicks: 84,
+    aggression: 0.4,
+    randomMoveChance: 0.26,
+    powerupBias: 1.4,
     blockBias: 1.35,
   },
   hard: {
     decisionIntervalTicks: 5,
-    dangerLookaheadMs: 4400,
-    maxSearchDepth: 36,
-    bombCooldownTicks: 42,
-    aggression: 0.8,
-    randomMoveChance: 0.06,
-    powerupBias: 2.2,
-    blockBias: 1.55,
+    dangerLookaheadMs: 5400,
+    maxSearchDepth: 48,
+    bombCooldownTicks: 16,
+    aggression: 1,
+    randomMoveChance: 0,
+    powerupBias: 2.6,
+    blockBias: 1.75,
   },
   hell: {
     decisionIntervalTicks: 2,
-    dangerLookaheadMs: 5200,
-    maxSearchDepth: 48,
-    bombCooldownTicks: 24,
-    aggression: 0.96,
-    randomMoveChance: 0.015,
+    dangerLookaheadMs: 6200,
+    maxSearchDepth: 56,
+    bombCooldownTicks: 8,
+    aggression: 1,
+    randomMoveChance: 0,
     powerupBias: 2.8,
     blockBias: 1.9,
   },
@@ -82,6 +82,7 @@ export interface BotRng {
 
 export interface BotMemory {
   path: Tile[];
+  planIntent?: string;
   bombCooldownUntilTick: number;
   lastDecisionTick: number;
 }

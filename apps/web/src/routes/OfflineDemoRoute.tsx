@@ -57,6 +57,7 @@ export const OfflineDemoRoute = () => {
             <Button
               variant="outline"
               size="sm"
+              className="border-zinc-700 bg-zinc-900 text-zinc-100 hover:bg-zinc-800 hover:text-white disabled:border-zinc-800 disabled:bg-zinc-900/60 disabled:text-zinc-500 disabled:opacity-100"
               onClick={() => adjustBots(-1)}
               disabled={botCount <= MIN_BOTS}
             >
@@ -66,6 +67,7 @@ export const OfflineDemoRoute = () => {
             <Button
               variant="outline"
               size="sm"
+              className="border-zinc-700 bg-zinc-900 text-zinc-100 hover:bg-zinc-800 hover:text-white disabled:border-zinc-800 disabled:bg-zinc-900/60 disabled:text-zinc-500 disabled:opacity-100"
               onClick={() => adjustBots(1)}
               disabled={botCount >= MAX_BOTS}
             >

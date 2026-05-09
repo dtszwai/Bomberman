@@ -253,6 +253,16 @@ const hardPlanFor = (view: BotWorldView) =>
     bombCooldownUntilTick: 0,
   });
 
+const hellPlanFor = (view: BotWorldView) =>
+  createBotPlan({
+    seatIndex: 0,
+    tick: 120,
+    view,
+    config: BOT_DIFFICULTY_CONFIG.hell,
+    rng: fixedRng,
+    bombCooldownUntilTick: 0,
+  });
+
 const assertHardPolicyFixtures = () => {
   const selfTrap = hardPlanFor(
     fixtureView(
@@ -296,7 +306,24 @@ const assertHardPolicyFixtures = () => {
       [playerAt(0, { row: 3, column: 1 }), playerAt(1, { row: 3, column: 3 })]
     )
   );
-  assert(!openField.action, "hard bot accepted a low-value open-field bomb");
+  assert(openField.action, "hard bot refused a safe pressure bomb");
+
+  const breakoutBomb = hellPlanFor(
+    fixtureView(
+      [
+        "#####",
+        "#..x#",
+        "#.#.#",
+        "#x###",
+        "#####",
+      ],
+      [playerAt(0, { row: 2, column: 1 })]
+    )
+  );
+  assert(
+    breakoutBomb.action,
+    "hell bot refused a safe breakout block bomb"
+  );
 };
 
 const first = runScenario(baseSeeds);

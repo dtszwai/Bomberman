@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "test:bot-levels": "tsx scripts/test-bot-levels.ts",
     "verify:bots": "tsx scripts/verify-bots.ts"
   },
   "exports": {
