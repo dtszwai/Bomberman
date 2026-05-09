@@ -47,6 +47,7 @@ export type {
   OperationResult,
 } from "@arcade/protocol";
 export {
+  BOT_DIFFICULTIES,
   RoomType,
   MessageType,
   GameStatusType,

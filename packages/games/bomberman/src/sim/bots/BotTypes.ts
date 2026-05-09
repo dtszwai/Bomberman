@@ -62,6 +62,16 @@ export const BOT_DIFFICULTY_CONFIG: Record<
     powerupBias: 2.2,
     blockBias: 1.55,
   },
+  hell: {
+    decisionIntervalTicks: 2,
+    dangerLookaheadMs: 5200,
+    maxSearchDepth: 48,
+    bombCooldownTicks: 24,
+    aggression: 0.96,
+    randomMoveChance: 0.015,
+    powerupBias: 2.8,
+    blockBias: 1.9,
+  },
 };
 
 export interface BotRng {

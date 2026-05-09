@@ -81,6 +81,7 @@ on `0.0.0.0:3000`.
 ```bash
 # Frontend
 VITE_SOCKET_URL=ws://localhost:3000
+VITE_OFFLINE_DEMO=true # static GitHub Pages build without Socket.IO
 
 # Server
 PORT=3000
@@ -92,6 +93,13 @@ DATABASE_URL=postgres://user:password@localhost:5432/arcade
 ```
 
 If `DATABASE_URL` is unset, the server still runs and disables replay storage.
+
+## GitHub Pages Demo
+
+The GitHub Pages workflow builds the frontend with `VITE_OFFLINE_DEMO=true`.
+That mode skips the Socket.IO lobby and opens a local Bomberman match directly
+in the browser. Visitors can add or remove CPU players, but there is no online
+room, chat, or multiplayer backend in this build.
 
 ## Commands
 

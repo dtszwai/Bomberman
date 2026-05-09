@@ -1,5 +1,12 @@
 import type { Seat } from "@/types";
-import type { BotDifficulty } from "@/types";
+import { BOT_DIFFICULTIES, type BotDifficulty } from "@/types";
+
+const DIFFICULTY_LABELS: Record<BotDifficulty, string> = {
+  easy: "E",
+  normal: "N",
+  hard: "H",
+  hell: "X",
+};
 
 export const isHumanSeat = (seat: Seat) => seat.actor?.kind === "human";
 export const isBotSeat = (seat: Seat) => seat.actor?.kind === "bot";
@@ -28,13 +35,9 @@ export const getSeatInitial = (seat: Seat) =>
 export const nextBotDifficulty = (
   difficulty: BotDifficulty
 ): BotDifficulty => {
-  if (difficulty === "easy") return "normal";
-  if (difficulty === "normal") return "hard";
-  return "easy";
+  const index = BOT_DIFFICULTIES.indexOf(difficulty);
+  return BOT_DIFFICULTIES[(index + 1) % BOT_DIFFICULTIES.length];
 };
 
-export const getDifficultyLabel = (difficulty: BotDifficulty) => {
-  if (difficulty === "easy") return "E";
-  if (difficulty === "normal") return "N";
-  return "H";
-};
+export const getDifficultyLabel = (difficulty: BotDifficulty): string =>
+  DIFFICULTY_LABELS[difficulty];

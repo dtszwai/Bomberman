@@ -18,7 +18,7 @@ type StoredMatchSeat = {
         kind: "bot";
         botId: string;
         name: string;
-        difficulty: "easy" | "normal" | "hard";
+        difficulty: "easy" | "normal" | "hard" | "hell";
         seed: number;
       }
     | null;

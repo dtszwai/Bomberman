@@ -1,6 +1,7 @@
 import type { UserState } from "./user";
 
-export type BotDifficulty = "easy" | "normal" | "hard";
+export const BOT_DIFFICULTIES = ["easy", "normal", "hard", "hell"] as const;
+export type BotDifficulty = (typeof BOT_DIFFICULTIES)[number];
 
 export interface BotSpec {
   id: string;

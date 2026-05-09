@@ -1,10 +1,11 @@
-import type {
-  BotDifficulty,
-  BotSpec,
-  PublicSeatActor,
-  Seat,
-  SeatActor,
-  StoredMatchSeat,
+import {
+  BOT_DIFFICULTIES,
+  type BotDifficulty,
+  type BotSpec,
+  type PublicSeatActor,
+  type Seat,
+  type SeatActor,
+  type StoredMatchSeat,
 } from "@arcade/protocol";
 import type { User } from "./user/User";
 
@@ -12,11 +13,7 @@ export type LobbySeat = Seat<User>;
 export type LobbySeatActor = SeatActor<User>;
 
 const BOT_NAME_PREFIX = "CPU";
-const VALID_BOT_DIFFICULTIES = new Set<BotDifficulty>([
-  "easy",
-  "normal",
-  "hard",
-]);
+const VALID_BOT_DIFFICULTIES = new Set<BotDifficulty>(BOT_DIFFICULTIES);
 
 export const isOccupiedSeat = (seat: LobbySeat): boolean =>
   seat.actor !== null;
