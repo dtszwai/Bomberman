@@ -1,0 +1,29 @@
+{
+  "name": "@arcade/transport",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./client": {
+      "types": "./src/client.ts",
+      "default": "./src/client.ts"
+    },
+    "./server": {
+      "types": "./src/server.ts",
+      "default": "./src/server.ts"
+    }
+  },
+  "dependencies": {
+    "@arcade/protocol": "workspace:*"
+  },
+  "peerDependencies": {
+    "socket.io": "^4",
+    "socket.io-client": "^4"
+  }
+}
