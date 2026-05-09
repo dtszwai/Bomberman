@@ -1,9 +1,6 @@
 # Bomberman Online
 
-A multiplayer Bomberman arcade game built as a TypeScript monorepo. The
-frontend is a Vite + React app, the backend is a Node + Socket.IO server, and
-the reusable game, lobby, transport, storage, rendering, and netcode engines
-live under workspace packages.
+A multiplayer Bomberman arcade game built as a TypeScript monorepo. The frontend is a Vite + React app, the backend is a Node + Socket.IO server, and the reusable game, lobby, transport, storage, rendering, and netcode engines live under workspace packages. The deployed GitHub Pages build also includes an offline bot arena so the game can be tried without running the backend.
 
 <p align="center">
   <img src="./screenshots/in-game.png" alt="Gameplay screenshot" width="600" />
@@ -18,11 +15,9 @@ live under workspace packages.
 - Online rooms with realtime Socket.IO lobby and game state updates.
 - Seat-based rooms for 2-4 players with ready states and host-controlled starts.
 - CPU players with configurable names and difficulty.
-- Room settings for player count, privacy, map, power-up preset, tournament mode,
-  and max wins.
+- Room settings for player count, privacy, map, power-up preset, tournament mode, and max wins.
 - Chat in the lobby and rooms.
-- Deterministic Bomberman simulation with server snapshots, discrete game
-  events, client resync payloads, and bot verification coverage.
+- Deterministic Bomberman simulation with server snapshots, discrete game events, client resync payloads, and bot verification coverage.
 - Optional Postgres-backed match/replay persistence through Drizzle.
 
 <p align="center">
@@ -73,8 +68,7 @@ Start the frontend in a second terminal:
 pnpm dev
 ```
 
-By default, the web app connects to `ws://localhost:3000` and the server listens
-on `0.0.0.0:3000`.
+By default, the web app connects to `ws://localhost:3000` and the server listens on `0.0.0.0:3000`.
 
 ## Environment
 
@@ -96,22 +90,11 @@ If `DATABASE_URL` is unset, the server still runs and disables replay storage.
 
 ## GitHub Pages Demo
 
-The GitHub Pages workflow builds the frontend with `VITE_OFFLINE_DEMO=true`.
-That mode skips the Socket.IO lobby and opens a local Bomberman match directly
-in the browser. Visitors can add or remove CPU players, but there is no online
-room, chat, or multiplayer backend in this build.
+The GitHub Pages workflow builds the frontend with `VITE_OFFLINE_DEMO=true`. That mode skips the Socket.IO lobby and opens a local Bomberman match directly in the browser. Visitors can add or remove CPU players, but there is no online room, chat, or multiplayer backend in this build.
 
-## Commands
-
-```bash
-pnpm dev          # run @arcade/web with Vite
-pnpm build        # type-check and build @arcade/web
-pnpm preview      # preview the built web app
-pnpm lint         # run eslint across the workspace
-pnpm server       # run @arcade/server once
-pnpm server:dev   # run @arcade/server in watch mode
-pnpm verify:bots  # run deterministic bot verification
-```
+<p align="center">
+  <img src="./screenshots/bot-demo.png" alt="Offline bot demo with three CPU players" width="600" />
+</p>
 
 ## Workspace Layout
 
@@ -140,16 +123,11 @@ import { OnlineGameContainer } from "@arcade/games-bomberman/ui";
 
 ## Architecture Notes
 
-- Shared protocol types live in `@arcade/protocol`; apps and packages use those
-  instead of app-local wire shapes.
-- The server composes `@arcade/lobby`, `@arcade/games-bomberman/room`, and
-  `@arcade/storage` to create rooms, broadcast lobby updates, and run matches.
-- The game simulation emits snapshots for continuous state and one-shot events
-  for bombs, explosions, block destruction, power-ups, and player deaths.
-- The web app imports game UI from `@arcade/games-bomberman/ui` and keeps the
-  app-specific route, socket context, and room controls in `apps/web`.
-- The `@/*` alias is scoped to `apps/web/src/*`; workspace packages should use
-  package imports instead of reaching into app code.
+- Shared protocol types live in `@arcade/protocol`; apps and packages use those instead of app-local wire shapes.
+- The server composes `@arcade/lobby`, `@arcade/games-bomberman/room`, and `@arcade/storage` to create rooms, broadcast lobby updates, and run matches.
+- The game simulation emits snapshots for continuous state and one-shot events for bombs, explosions, block destruction, power-ups, and player deaths.
+- The web app imports game UI from `@arcade/games-bomberman/ui` and keeps the app-specific route, socket context, and room controls in `apps/web`.
+- The `@/*` alias is scoped to `apps/web/src/*`; workspace packages should use package imports instead of reaching into app code.
 
 ## Validation
 
